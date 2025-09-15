@@ -1,6 +1,6 @@
 [Unit]
 Description=Rambo Bot - serving my personal Discord Server
-Documentation=https://github.com/khoanduy/rambo-bot
+Documentation=https://github.com/kdngnx/rambo-bot
 After=network.target
 
 [Service]

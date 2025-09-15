@@ -2,10 +2,8 @@ import { REST, Routes } from 'discord.js';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'url';
 import { join, dirname } from 'node:path';
-import * as dotenv from 'dotenv';
 import logger from './utils/logger.js';
 
-dotenv.config();
 const commands = [];
 
 // Grab all the command files from the commands directory you created earlier

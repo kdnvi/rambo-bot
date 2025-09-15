@@ -2,11 +2,7 @@ import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'url';
 import { join, dirname } from 'node:path';
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
-import * as dotenv from 'dotenv';
 import logger from './utils/logger.js';
-
-// Load env variables
-dotenv.config();
 
 const client = new Client({
   intents: [

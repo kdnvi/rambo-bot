@@ -27,11 +27,26 @@ npm start
 GCP Deployment (e2-micro free tier)
 -----
 
-1. Create an e2-micro VM in us-central1 with a service account that has
-   Firebase Realtime Database access. No credential key file is needed --
-   the Firebase Admin SDK uses Application Default Credentials on GCP.
+Prerequisites: the VM and Firebase must be in the same GCP project.
 
-2. Set instance metadata (via console or gcloud CLI):
+1. Find your VM's service account:
+   gcloud compute instances describe <INSTANCE> --zone <ZONE> --format='get(serviceAccounts[0].email)'
+
+2. Grant it Firebase Realtime Database access:
+   gcloud projects add-iam-policy-binding <PROJECT_ID> \
+     --member="serviceAccount:<VM_SERVICE_ACCOUNT_EMAIL>" \
+     --role="roles/firebasedatabase.admin"
+
+3. Create an e2-micro VM (if not already created):
+   gcloud compute instances create <INSTANCE> \
+     --project=<PROJECT_ID> \
+     --zone=<ZONE> \
+     --machine-type=e2-micro \
+     --image-family=debian-12 \
+     --image-project=debian-cloud \
+     --scopes=https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email
+
+4. Set instance metadata (via console or gcloud CLI):
    gcloud compute instances add-metadata <INSTANCE> --zone <ZONE> --metadata \
      token=<BOT_TOKEN>,\
      app-id=<APP_ID>,\
@@ -43,16 +58,16 @@ GCP Deployment (e2-micro free tier)
      audited-users=<COMMA_SEPARATED_USER_IDS>,\
      firebase-db-url=<FIREBASE_DB_URL>
 
-3. SSH into the VM and run the setup script:
+5. SSH into the VM and run the setup script:
    curl -fsSL https://codeberg.org/khoan/rambo-bot/raw/branch/main/deploy/setup.sh | sudo bash
 
-4. Start the bot:
+6. Start the bot:
    sudo systemctl start rambo-bot
 
-5. View logs:
+7. View logs:
    sudo journalctl -fu rambo-bot
 
-6. Deploy updates:
+8. Deploy updates:
    cd /opt/rambo-bot && sudo git pull && sudo npm ci --omit=dev
    sudo systemctl restart rambo-bot
 

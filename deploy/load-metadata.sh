@@ -24,4 +24,5 @@ AUDITED_USERS=$(fetch_meta audited-users)
 FIREBASE_DB_URL=$(fetch_meta firebase-db-url)
 EOF
 
+chown rambo:rambo "$ENV_FILE"
 chmod 600 "$ENV_FILE"

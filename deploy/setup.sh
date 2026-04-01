@@ -39,7 +39,7 @@ echo "==> Setting ownership"
 chown -R rambo:rambo "$APP_DIR"
 
 echo "==> Installing systemd service"
-cp "$APP_DIR/deploy/rambo-bot.service" /etc/systemd/system/
+ln -sf "$APP_DIR/deploy/rambo-bot.service" /etc/systemd/system/rambo-bot.service
 systemctl daemon-reload
 systemctl enable rambo-bot
 

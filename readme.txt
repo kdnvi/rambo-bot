@@ -44,7 +44,13 @@ Prerequisites: the VM and Firebase must be in the same GCP project.
      --machine-type=e2-micro \
      --image-family=debian-12 \
      --image-project=debian-cloud \
-     --scopes=https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email
+     --scopes=https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/logging.write
+
+   If the VM already exists with default scopes, update them (requires stop/start):
+   gcloud compute instances stop <INSTANCE> --zone=<ZONE>
+   gcloud compute instances set-service-account <INSTANCE> --zone=<ZONE> \
+     --scopes=https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/logging.write
+   gcloud compute instances start <INSTANCE> --zone=<ZONE>
 
 4. Set instance metadata (via console or gcloud CLI):
    gcloud compute instances add-metadata <INSTANCE> --zone <ZONE> --metadata \

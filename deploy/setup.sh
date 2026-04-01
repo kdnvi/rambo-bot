@@ -15,7 +15,9 @@ apt-get update -y < /dev/null
 apt-get install -y curl git < /dev/null
 
 echo "==> Installing Node.js ${NODE_MAJOR}.x"
-curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - < /dev/null
+curl -fsSL -o /tmp/nodesource_setup.sh https://deb.nodesource.com/setup_${NODE_MAJOR}.x
+bash /tmp/nodesource_setup.sh < /dev/null
+rm -f /tmp/nodesource_setup.sh
 apt-get install -y nodejs < /dev/null
 
 echo "==> Creating rambo user"

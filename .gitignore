@@ -93,3 +93,5 @@ Thumbs.db
 
 # Config vars
 config.json
+
+google-credentials.json

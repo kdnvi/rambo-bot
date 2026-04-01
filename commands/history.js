@@ -1,18 +1,20 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readOnceEuroInfoByPath } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('euro-history')
-  .setDescription('Euro 2024 player vote history')
+  .setName('history')
+  .setDescription('Player vote history for the current tournament')
   .addIntegerOption(option => option.setName('match-id')
     .setDescription('Match ID')
     .setRequired(false));
 
 export async function execute(interaction) {
   try {
+    const config = await readTournamentConfig();
+    const tournamentName = config?.name || 'Tournament';
     const optionalMatchId = interaction.options.get('match-id');
-    let matches = (await readOnceEuroInfoByPath('matches')).val();
+    let matches = (await readTournamentData('matches')).val();
     if (optionalMatchId === null) {
       matches = matches.filter((match) => match.hasResult).slice(-3);
     } else {
@@ -24,7 +26,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const votes = (await readOnceEuroInfoByPath('votes')).val();
+    const votes = (await readTournamentData('votes')).val();
     const users = interaction.client.cachedUsers;
     const embeds = [];
     matches.forEach((match) => {
@@ -47,7 +49,7 @@ export async function execute(interaction) {
     });
 
     interaction.reply({
-      content: 'EURO Vote History',
+      content: `${tournamentName} Vote History`,
       embeds: embeds
     });
   } catch (err) {

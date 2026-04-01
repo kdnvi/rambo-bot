@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
-import { ComponentType, Events, ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { updateEuroMatchVote, readOnceEuroMatchVotes } from '../utils/firebase.js';
+import { Events } from 'discord.js';
+import { updateMatchVote, readMatchVotes } from '../utils/firebase.js';
 
 export const name = Events.InteractionCreate;
 export async function execute(interaction) {
@@ -13,9 +13,9 @@ export async function execute(interaction) {
         return;
       }
 
-      await updateEuroMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
+      await updateMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
       const users = interaction.client.cachedUsers;
-      const votes = (await readOnceEuroMatchVotes(matchId, interaction.message.id)).val();
+      const votes = (await readMatchVotes(matchId, interaction.message.id)).val();
 
       const members = [];
       for (const [key, _] of Object.entries(votes)) {

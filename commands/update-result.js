@@ -1,10 +1,10 @@
 import { SlashCommandBuilder } from 'discord.js';
-import { updateEuroMatchResult } from '../utils/firebase.js';
+import { updateMatchResult } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('euro-update-result')
-  .setDescription('Update result of specific Euro match')
+  .setName('update-result')
+  .setDescription('Update result of a specific match')
   .addIntegerOption(option => option.setName('match-id')
     .setDescription('Match ID')
     .setRequired(true))
@@ -21,7 +21,7 @@ export async function execute(interaction) {
     const homeScore = interaction.options.get('home-score').value;
     const awayScore = interaction.options.get('away-score').value;
 
-    const msg = await updateEuroMatchResult(matchId, homeScore, awayScore);
+    const msg = await updateMatchResult(matchId, homeScore, awayScore);
     interaction.reply(msg);
   } catch (err) {
     logger.error(err);

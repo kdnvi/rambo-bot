@@ -1,14 +1,16 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readOnceEuroPlayer } from '../utils/firebase.js';
+import { readPlayers, readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('euro-rank')
-  .setDescription('Euro 2024 player ranking');
+  .setName('rank')
+  .setDescription('Player ranking for the current tournament');
 
 export async function execute(interaction) {
   try {
-    const players = (await readOnceEuroPlayer()).val();
+    const config = await readTournamentConfig();
+    const tournamentName = config?.name || 'Tournament';
+    const players = (await readPlayers()).val();
     const users = interaction.client.cachedUsers;
     const rankedPlayers = [];
 
@@ -36,7 +38,7 @@ export async function execute(interaction) {
     });
 
     interaction.reply({
-      content: 'EURO Leaderboard',
+      content: `${tournamentName} Leaderboard`,
       embeds: embeds
     });
   } catch (err) {

@@ -1,26 +1,27 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readOnceEuroInfoByPath, updateEuroMatch, updatePlayerPoints } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers } from './firebase.js';
 import { isOneDayAhead } from './helper.js';
 import { CronJob } from 'cron';
 
-export function euroDailyMorningJob(client) {
+export function dailyMatchPostJob(client) {
   return CronJob.from({
     cronTime: '0 30 1 * * *',
-    // cronTime: '0,30 * * * * *',
     onTick: async () => {
       try {
-        const resp = await readOnceEuroInfoByPath('matches');
+        const config = await readTournamentConfig();
+        const resp = await readTournamentData('matches');
         const matches = resp.val().filter((match) => {
           const date = new Date(Date.parse(match.date));
           return isOneDayAhead(date);
         });
-        const channel = await client.channels.fetch(process.env.FOOTBALL_CHANNEL_ID);
+        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+        const channel = await client.channels.fetch(channelId);
         matches.forEach((match) => {
-          const message = matchVoteMessageComponent(match);
+          const message = matchVoteMessageComponent(match, config);
           channel.send(message).then((msg) => {
             logger.info(`Match between ${match.home} and ${match.away} is sent with message ID [${msg.id}]`);
-            updateEuroMatch(match, { 'messageId': msg.id });
+            updateMatch(match, { 'messageId': msg.id });
           });
         });
       } catch (err) {
@@ -32,13 +33,12 @@ export function euroDailyMorningJob(client) {
   });
 }
 
-export function euroDailyCalculatingJob() {
+export function dailyCalculatingJob() {
   return CronJob.from({
     cronTime: '0 0 * * * *',
-    // cronTime: '15,45 * * * * *',
     onTick: async () => {
       try {
-        const resp = await readOnceEuroInfoByPath('matches');
+        const resp = await readTournamentData('matches');
         const matches = resp.val().filter((match) => {
           return match.hasResult && !match.isCalculated;
         });
@@ -48,8 +48,8 @@ export function euroDailyCalculatingJob() {
           return;
         }
 
-        const votingObj = (await readOnceEuroInfoByPath('votes')).val();
-        const players = (await readOnceEuroInfoByPath('players')).val();
+        const votingObj = (await readTournamentData('votes')).val();
+        const players = (await readTournamentData('players')).val();
 
         for (const match of matches) {
           if (!match.messageId) {
@@ -63,7 +63,7 @@ export function euroDailyCalculatingJob() {
               const votes = votingObj[key][match.messageId];
               const votedPlayers = await calculatePlayerPoints(players, votes, match);
               await calculateRemainingPlayerPoints(players, match, votedPlayers);
-              await updateEuroMatch(match, { isCalculated: true });
+              await updateMatch(match, { isCalculated: true });
               logger.info(`Calculated match ${match.id} successfully`);
             } else {
               logger.warn(`Match ${match.id} message ID is not correct, consider to update manually!`);
@@ -74,7 +74,7 @@ export function euroDailyCalculatingJob() {
             await calculateRemainingPlayerPoints(players, match, votedPlayers);
           }
         }
-        await updatePlayerPoints(players);
+        await updatePlayers(players);
         logger.info('Players updated');
       } catch (err) {
         logger.error(err);
@@ -85,7 +85,7 @@ export function euroDailyCalculatingJob() {
   });
 }
 
-function matchVoteMessageComponent(match) {
+function matchVoteMessageComponent(match, config) {
   const home = new ButtonBuilder()
     .setCustomId(`${match.home}_${match.id}_${match.date}`)
     .setLabel(match.home.toUpperCase())
@@ -101,9 +101,10 @@ function matchVoteMessageComponent(match) {
     .setLabel(match.away.toUpperCase())
     .setStyle(ButtonStyle.Danger);
 
+  const tournamentName = config?.name || 'Tournament';
   const embed = new EmbedBuilder()
     .setTitle(`${match.home.toUpperCase()} vs. ${match.away.toUpperCase()}`)
-    .setDescription(`Time: **${(new Date(match.date)).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}**`)
+    .setDescription(`**${tournamentName}**\nTime: **${(new Date(match.date)).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}**`)
     .setFields(
       {
         name: ' Odds ',

@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/kdngnx/rambo-bot.git"
+    "url": "git+https://codeberg.org/khoan/rambo-bot.git"
   },
   "keywords": [
     "discord-bot"
@@ -19,9 +19,9 @@
   "author": "Khoa Nguyen",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/kdngnx/rambo-bot/issues"
+    "url": "https://codeberg.org/khoan/rambo-bot/issues"
   },
-  "homepage": "https://github.com/kdngnx/rambo-bot#readme",
+  "homepage": "https://codeberg.org/khoan/rambo-bot",
   "dependencies": {
     "cron": "^4.3.3",
     "discord.js": "^14.22.1",

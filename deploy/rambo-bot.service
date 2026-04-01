@@ -1,0 +1,22 @@
+[Unit]
+Description=Rambo Discord Bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=rambo
+Group=rambo
+WorkingDirectory=/opt/rambo-bot
+EnvironmentFile=/opt/rambo-bot/.env.runtime
+ExecStartPre=/usr/bin/bash /opt/rambo-bot/deploy/load-metadata.sh
+ExecStart=/usr/bin/node index.js
+Restart=on-failure
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=rambo-bot
+
+[Install]
+WantedBy=multi-user.target

@@ -11,12 +11,12 @@ APP_DIR="/opt/rambo-bot"
 NODE_MAJOR=22
 
 echo "==> Installing prerequisites"
-apt-get update -y
-apt-get install -y curl git
+apt-get update -y < /dev/null
+apt-get install -y curl git < /dev/null
 
 echo "==> Installing Node.js ${NODE_MAJOR}.x"
-curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash -
-apt-get install -y nodejs
+curl -fsSL https://deb.nodesource.com/setup_${NODE_MAJOR}.x | bash - < /dev/null
+apt-get install -y nodejs < /dev/null
 
 echo "==> Creating rambo user"
 id -u rambo &>/dev/null || useradd -r -s /usr/sbin/nologin rambo

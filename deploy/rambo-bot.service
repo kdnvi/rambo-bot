@@ -8,9 +8,8 @@ Type=simple
 User=rambo
 Group=rambo
 WorkingDirectory=/opt/rambo-bot
-EnvironmentFile=/opt/rambo-bot/.env.runtime
 ExecStartPre=+/bin/bash /opt/rambo-bot/deploy/load-metadata.sh
-ExecStart=/usr/bin/node index.js
+ExecStart=/bin/bash -c 'set -a; . /opt/rambo-bot/.env.runtime; set +a; exec /usr/bin/node index.js'
 Restart=on-failure
 RestartSec=10
 

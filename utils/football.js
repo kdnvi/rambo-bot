@@ -1,29 +1,97 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers } from './firebase.js';
-import { isOneDayAhead } from './helper.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes } from './firebase.js';
 import { CronJob } from 'cron';
 
-export function dailyMatchPostJob(client) {
+const MATCH_POST_BEFORE_MS = (parseInt(process.env.MATCH_POST_BEFORE_MINS) || 90) * 60 * 1000;
+const VOTE_REMINDER_BEFORE_MS = (parseInt(process.env.VOTE_REMINDER_BEFORE_MINS) || 15) * 60 * 1000;
+
+export function matchPostJob(client) {
   return CronJob.from({
-    cronTime: '0 30 1 * * *',
+    cronTime: '0 */5 * * * *',
     onTick: async () => {
       try {
         const config = await readTournamentConfig();
         const resp = await readTournamentData('matches');
+        const now = Date.now();
+
         const matches = resp.val().filter((match) => {
-          const date = new Date(Date.parse(match.date));
-          return isOneDayAhead(date);
+          if (match.messageId) return false;
+          const kickoff = Date.parse(match.date);
+          const timeUntil = kickoff - now;
+          return timeUntil > 0 && timeUntil <= MATCH_POST_BEFORE_MS;
         });
+
+        if (matches.length === 0) return;
+
         const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
         const channel = await client.channels.fetch(channelId);
-        matches.forEach((match) => {
+
+        for (const match of matches) {
           const message = matchVoteMessageComponent(match, config);
-          channel.send(message).then((msg) => {
-            logger.info(`Match between ${match.home} and ${match.away} is sent with message ID [${msg.id}]`);
-            updateMatch(match, { 'messageId': msg.id });
-          });
+          const msg = await channel.send(message);
+          logger.info(`Match between ${match.home} and ${match.away} is sent with message ID [${msg.id}]`);
+          await updateMatch(match, { 'messageId': msg.id });
+        }
+      } catch (err) {
+        logger.error(err);
+      }
+    },
+    start: true,
+    timeZone: 'utc',
+  });
+}
+
+export function voteReminderJob(client) {
+  return CronJob.from({
+    cronTime: '0 */5 * * * *',
+    onTick: async () => {
+      try {
+        const config = await readTournamentConfig();
+        const resp = await readTournamentData('matches');
+        const now = Date.now();
+
+        const matches = resp.val().filter((match) => {
+          if (!match.messageId || match.reminded) return false;
+          const kickoff = Date.parse(match.date);
+          const timeUntil = kickoff - now;
+          return timeUntil > 0 && timeUntil <= VOTE_REMINDER_BEFORE_MS;
         });
+
+        if (matches.length === 0) return;
+
+        const players = (await readTournamentData('players')).val();
+        if (!players) return;
+
+        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+        const channel = await client.channels.fetch(channelId);
+        const allPlayerIds = Object.keys(players);
+
+        for (const match of matches) {
+          const votes = (await readMatchVotes(match.id, match.messageId)).val();
+          const votedIds = votes ? Object.keys(votes) : [];
+          const unvoted = allPlayerIds.filter((id) => !votedIds.includes(id));
+
+          if (unvoted.length === 0) {
+            await updateMatch(match, { reminded: true });
+            continue;
+          }
+
+          const mentions = unvoted.map((id) => `<@${id}>`).join(' ');
+          const ts = Math.floor(Date.parse(match.date) / 1000);
+
+          const embed = new EmbedBuilder()
+            .setTitle(`⏰  Vote Reminder — Match #${match.id}`)
+            .setDescription(
+              `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
+              `Kickoff <t:${ts}:R> — vote now or your pick will be **randomized**!`
+            )
+            .setColor(0xFEE75C);
+
+          await channel.send({ content: mentions, embeds: [embed] });
+          await updateMatch(match, { reminded: true });
+          logger.info(`Sent vote reminder for match ${match.id} to ${unvoted.length} player(s)`);
+        }
       } catch (err) {
         logger.error(err);
       }

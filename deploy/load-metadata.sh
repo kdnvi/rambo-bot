@@ -12,6 +12,10 @@ fetch_meta() {
   curl -sf -H "$HEADER" "$METADATA_URL/$1"
 }
 
+fetch_meta_or() {
+  curl -sf -H "$HEADER" "$METADATA_URL/$1" 2>/dev/null || echo "$2"
+}
+
 cat > "$ENV_FILE" <<EOF
 TOKEN=$(fetch_meta token)
 APP_ID=$(fetch_meta app-id)
@@ -22,6 +26,8 @@ FOOTBALL_CHANNEL_ID=$(fetch_meta football-channel-id)
 VOICE_CHANNEL_ID=$(fetch_meta voice-channel-id)
 AUDITED_USERS=$(fetch_meta audited-users)
 FIREBASE_DB_URL=$(fetch_meta firebase-db-url)
+MATCH_POST_BEFORE_MINS=$(fetch_meta_or match-post-before-mins 90)
+VOTE_REMINDER_BEFORE_MINS=$(fetch_meta_or vote-reminder-before-mins 15)
 EOF
 
 chown rambo:rambo "$ENV_FILE"

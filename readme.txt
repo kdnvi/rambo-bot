@@ -11,6 +11,8 @@ FOOTBALL_CHANNEL_ID=<your_football_specific_channel_id>
 VOICE_CHANNEL_ID=<your_target_voice_channel_id>
 AUDITED_USERS=<list_of_users_separated_by_comma>
 FIREBASE_DB_URL=<your_firebase_realtime_database_url>
+MATCH_POST_BEFORE_MINS=90          (optional, default 90 — post match vote N mins before kickoff)
+VOTE_REMINDER_BEFORE_MINS=15       (optional, default 15 — remind unvoted players N mins before kickoff)
 
 Local development
 -----
@@ -62,7 +64,9 @@ Prerequisites: the VM and Firebase must be in the same GCP project.
      football-channel-id=<FOOTBALL_CHANNEL_ID>,\
      voice-channel-id=<VOICE_CHANNEL_ID>,\
      audited-users=<COMMA_SEPARATED_USER_IDS>,\
-     firebase-db-url=<FIREBASE_DB_URL>
+     firebase-db-url=<FIREBASE_DB_URL>,\
+     match-post-before-mins=90,\
+     vote-reminder-before-mins=15
 
 5. SSH into the VM and run the setup script:
    curl -fsSL https://raw.githubusercontent.com/kdnvi/rambo-bot/main/deploy/setup.sh | sudo bash

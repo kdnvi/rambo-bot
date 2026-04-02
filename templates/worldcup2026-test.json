@@ -1,0 +1,2539 @@
+{
+  "config": {
+    "name": "World Cup 2026",
+    "shortName": "WC2026",
+    "rulesText": "Rules:\n- Bets open 1 day before each match and are posted via Rambo on the football channel.\n- Vote by clicking the corresponding button. You can change your vote anytime before kickoff.\n- Each match has odds displayed as home / draw / away. The default stake is 10k per match.\n- Winnings = 10 × odds. Losses = -10.\n- Players who don't vote before kickoff get a random pick.\n- Results are based on 90 minutes + extra time (if applicable).\n- Use /register to join. GLHF!"
+  },
+  "groups": {
+    "a": {
+      "mexico": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "south korea": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "south africa": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "czechia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "b": {
+      "canada": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "switzerland": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "qatar": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "bosnia and herzegovina": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "c": {
+      "brazil": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "morocco": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "scotland": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "haiti": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "d": {
+      "usa": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "australia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "paraguay": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "turkey": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "e": {
+      "germany": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "ecuador": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "ivory coast": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "curacao": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "f": {
+      "netherlands": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "japan": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "tunisia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "sweden": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "g": {
+      "belgium": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "iran": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "egypt": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "new zealand": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "h": {
+      "spain": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "uruguay": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "saudi arabia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "cape verde": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "i": {
+      "france": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "senegal": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "norway": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "iraq": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "j": {
+      "argentina": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "austria": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "algeria": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "jordan": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "k": {
+      "portugal": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "colombia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "uzbekistan": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "dr congo": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    },
+    "l": {
+      "england": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "croatia": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "panama": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      },
+      "ghana": {
+        "rank": 0,
+        "played": 0,
+        "won": 0,
+        "drawn": 0,
+        "lost": 0,
+        "for": 0,
+        "against": 0,
+        "goalDifference": 0,
+        "points": 0
+      }
+    }
+  },
+  "matches": [
+    {
+      "id": 1,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-02T09:00:00Z",
+      "home": "mexico",
+      "away": "south africa",
+      "location": "Mexico City Stadium, Mexico City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.6,
+        "draw": 3.5,
+        "away": 4.8
+      }
+    },
+    {
+      "id": 2,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-03T02:00:00Z",
+      "home": "south korea",
+      "away": "czechia",
+      "location": "Estadio Guadalajara, Guadalajara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.3,
+        "draw": 3.2,
+        "away": 2.8
+      }
+    },
+    {
+      "id": 3,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-03T09:00:00Z",
+      "home": "canada",
+      "away": "bosnia and herzegovina",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.1,
+        "draw": 3.2,
+        "away": 3.1
+      }
+    },
+    {
+      "id": 4,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-04T02:00:00Z",
+      "home": "usa",
+      "away": "paraguay",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 4.2
+      }
+    },
+    {
+      "id": 5,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-04T09:00:00Z",
+      "home": "qatar",
+      "away": "switzerland",
+      "location": "Levi's Stadium, San Francisco",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.8,
+        "draw": 3.3,
+        "away": 1.8
+      }
+    },
+    {
+      "id": 6,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-05T02:00:00Z",
+      "home": "brazil",
+      "away": "morocco",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.3,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 7,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-05T09:00:00Z",
+      "home": "haiti",
+      "away": "scotland",
+      "location": "Gillette Stadium, Boston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4.5,
+        "draw": 3.5,
+        "away": 1.6
+      }
+    },
+    {
+      "id": 8,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-06T02:00:00Z",
+      "home": "australia",
+      "away": "turkey",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.8,
+        "draw": 3.2,
+        "away": 2.3
+      }
+    },
+    {
+      "id": 9,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-06T09:00:00Z",
+      "home": "germany",
+      "away": "curacao",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.15,
+        "draw": 6,
+        "away": 12
+      }
+    },
+    {
+      "id": 10,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-07T02:00:00Z",
+      "home": "netherlands",
+      "away": "japan",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 11,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-07T09:00:00Z",
+      "home": "ivory coast",
+      "away": "ecuador",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.5,
+        "draw": 3.1,
+        "away": 2.6
+      }
+    },
+    {
+      "id": 12,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-08T02:00:00Z",
+      "home": "sweden",
+      "away": "tunisia",
+      "location": "Estadio BBVA, Monterrey",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.1,
+        "draw": 3.2,
+        "away": 3.1
+      }
+    },
+    {
+      "id": 13,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-08T09:00:00Z",
+      "home": "spain",
+      "away": "cape verde",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.15,
+        "draw": 6,
+        "away": 12
+      }
+    },
+    {
+      "id": 14,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-09T02:00:00Z",
+      "home": "belgium",
+      "away": "egypt",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.6,
+        "draw": 3.6,
+        "away": 4.8
+      }
+    },
+    {
+      "id": 15,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-09T09:00:00Z",
+      "home": "saudi arabia",
+      "away": "uruguay",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4.5,
+        "draw": 3.4,
+        "away": 1.6
+      }
+    },
+    {
+      "id": 16,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-10T02:00:00Z",
+      "home": "iran",
+      "away": "new zealand",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 4.2
+      }
+    },
+    {
+      "id": 17,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-10T09:00:00Z",
+      "home": "france",
+      "away": "senegal",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.5,
+        "draw": 3.8,
+        "away": 5.5
+      }
+    },
+    {
+      "id": 18,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-11T02:00:00Z",
+      "home": "iraq",
+      "away": "norway",
+      "location": "Gillette Stadium, Foxborough",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.5,
+        "draw": 3.2,
+        "away": 1.9
+      }
+    },
+    {
+      "id": 19,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-11T09:00:00Z",
+      "home": "argentina",
+      "away": "algeria",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.3,
+        "draw": 4.5,
+        "away": 8
+      }
+    },
+    {
+      "id": 20,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-12T02:00:00Z",
+      "home": "austria",
+      "away": "jordan",
+      "location": "Levi's Stadium, Santa Clara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.5,
+        "draw": 3.8,
+        "away": 5.5
+      }
+    },
+    {
+      "id": 21,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-12T09:00:00Z",
+      "home": "portugal",
+      "away": "dr congo",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.25,
+        "draw": 5,
+        "away": 9
+      }
+    },
+    {
+      "id": 22,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-13T02:00:00Z",
+      "home": "england",
+      "away": "croatia",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3.2
+      }
+    },
+    {
+      "id": 23,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-13T09:00:00Z",
+      "home": "ghana",
+      "away": "panama",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.2,
+        "draw": 3.1,
+        "away": 3
+      }
+    },
+    {
+      "id": 24,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-14T02:00:00Z",
+      "home": "uzbekistan",
+      "away": "colombia",
+      "location": "Estadio Azteca, Mexico City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4,
+        "draw": 3.4,
+        "away": 1.7
+      }
+    },
+    {
+      "id": 25,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-14T09:00:00Z",
+      "home": "czechia",
+      "away": "south africa",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3.2
+      }
+    },
+    {
+      "id": 26,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-15T02:00:00Z",
+      "home": "bosnia and herzegovina",
+      "away": "switzerland",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3,
+        "draw": 3.2,
+        "away": 2.1
+      }
+    },
+    {
+      "id": 27,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-15T09:00:00Z",
+      "home": "canada",
+      "away": "qatar",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.5,
+        "away": 4.2
+      }
+    },
+    {
+      "id": 28,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-16T02:00:00Z",
+      "home": "mexico",
+      "away": "south korea",
+      "location": "Estadio Guadalajara, Guadalajara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.1,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 29,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-16T09:00:00Z",
+      "home": "usa",
+      "away": "australia",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 4.2
+      }
+    },
+    {
+      "id": 30,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-17T02:00:00Z",
+      "home": "scotland",
+      "away": "morocco",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.2,
+        "draw": 3.2,
+        "away": 2
+      }
+    },
+    {
+      "id": 31,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-17T09:00:00Z",
+      "home": "brazil",
+      "away": "haiti",
+      "location": "Gillette Stadium, Boston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.1,
+        "draw": 7,
+        "away": 18
+      }
+    },
+    {
+      "id": 32,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-18T02:00:00Z",
+      "home": "turkey",
+      "away": "paraguay",
+      "location": "Levi's Stadium, Santa Clara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3.2
+      }
+    },
+    {
+      "id": 33,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-18T09:00:00Z",
+      "home": "tunisia",
+      "away": "japan",
+      "location": "Estadio BBVA, Monterrey",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.5,
+        "draw": 3.2,
+        "away": 1.9
+      }
+    },
+    {
+      "id": 34,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-19T02:00:00Z",
+      "home": "germany",
+      "away": "ivory coast",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.5,
+        "draw": 3.8,
+        "away": 5.5
+      }
+    },
+    {
+      "id": 35,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-19T09:00:00Z",
+      "home": "ecuador",
+      "away": "curacao",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.3,
+        "draw": 4.5,
+        "away": 8
+      }
+    },
+    {
+      "id": 36,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-20T02:00:00Z",
+      "home": "netherlands",
+      "away": "sweden",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.5,
+        "draw": 3.8,
+        "away": 5.5
+      }
+    },
+    {
+      "id": 37,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-20T09:00:00Z",
+      "home": "spain",
+      "away": "saudi arabia",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.3,
+        "draw": 4.5,
+        "away": 8
+      }
+    },
+    {
+      "id": 38,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-21T02:00:00Z",
+      "home": "belgium",
+      "away": "iran",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.5,
+        "draw": 3.8,
+        "away": 5.5
+      }
+    },
+    {
+      "id": 39,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-21T09:00:00Z",
+      "home": "uruguay",
+      "away": "cape verde",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.25,
+        "draw": 5,
+        "away": 9
+      }
+    },
+    {
+      "id": 40,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-22T02:00:00Z",
+      "home": "new zealand",
+      "away": "egypt",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.2,
+        "draw": 3.2,
+        "away": 2
+      }
+    },
+    {
+      "id": 41,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-22T09:00:00Z",
+      "home": "argentina",
+      "away": "austria",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.6,
+        "draw": 3.6,
+        "away": 4.8
+      }
+    },
+    {
+      "id": 42,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-23T02:00:00Z",
+      "home": "france",
+      "away": "iraq",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.2,
+        "draw": 5.5,
+        "away": 10
+      }
+    },
+    {
+      "id": 43,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-23T09:00:00Z",
+      "home": "norway",
+      "away": "senegal",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.3,
+        "draw": 3.2,
+        "away": 2.8
+      }
+    },
+    {
+      "id": 44,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-24T02:00:00Z",
+      "home": "jordan",
+      "away": "algeria",
+      "location": "Levi's Stadium, Santa Clara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3,
+        "draw": 3.1,
+        "away": 2.2
+      }
+    },
+    {
+      "id": 45,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-24T09:00:00Z",
+      "home": "portugal",
+      "away": "uzbekistan",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.3,
+        "draw": 4.5,
+        "away": 8
+      }
+    },
+    {
+      "id": 46,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-25T02:00:00Z",
+      "home": "england",
+      "away": "ghana",
+      "location": "Gillette Stadium, Foxborough",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.4,
+        "draw": 4,
+        "away": 6.5
+      }
+    },
+    {
+      "id": 47,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-25T09:00:00Z",
+      "home": "panama",
+      "away": "croatia",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4.5,
+        "draw": 3.4,
+        "away": 1.6
+      }
+    },
+    {
+      "id": 48,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-26T02:00:00Z",
+      "home": "colombia",
+      "away": "dr congo",
+      "location": "Estadio Akron, Guadalajara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.4,
+        "draw": 4,
+        "away": 6.5
+      }
+    },
+    {
+      "id": 49,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-26T09:00:00Z",
+      "home": "czechia",
+      "away": "mexico",
+      "location": "Mexico City Stadium, Mexico City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.8,
+        "draw": 3.2,
+        "away": 2.3
+      }
+    },
+    {
+      "id": 50,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-27T02:00:00Z",
+      "home": "south africa",
+      "away": "south korea",
+      "location": "Estadio Monterrey, Monterrey",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.5,
+        "draw": 3.2,
+        "away": 1.9
+      }
+    },
+    {
+      "id": 51,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-27T09:00:00Z",
+      "home": "switzerland",
+      "away": "canada",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.2,
+        "draw": 3.2,
+        "away": 2.9
+      }
+    },
+    {
+      "id": 52,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-28T02:00:00Z",
+      "home": "bosnia and herzegovina",
+      "away": "qatar",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3.2
+      }
+    },
+    {
+      "id": 53,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-28T09:00:00Z",
+      "home": "scotland",
+      "away": "brazil",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 6,
+        "draw": 4,
+        "away": 1.4
+      }
+    },
+    {
+      "id": 54,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-29T02:00:00Z",
+      "home": "morocco",
+      "away": "haiti",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.3,
+        "draw": 4.5,
+        "away": 8
+      }
+    },
+    {
+      "id": 55,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-29T09:00:00Z",
+      "home": "ecuador",
+      "away": "germany",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4.5,
+        "draw": 3.5,
+        "away": 1.6
+      }
+    },
+    {
+      "id": 56,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-30T02:00:00Z",
+      "home": "curacao",
+      "away": "ivory coast",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 5,
+        "draw": 3.5,
+        "away": 1.5
+      }
+    },
+    {
+      "id": 57,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-04-30T09:00:00Z",
+      "home": "tunisia",
+      "away": "netherlands",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 5,
+        "draw": 3.5,
+        "away": 1.5
+      }
+    },
+    {
+      "id": 58,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-01T02:00:00Z",
+      "home": "japan",
+      "away": "sweden",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 59,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-01T09:00:00Z",
+      "home": "turkey",
+      "away": "usa",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.5,
+        "draw": 3.2,
+        "away": 2.5
+      }
+    },
+    {
+      "id": 60,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-02T02:00:00Z",
+      "home": "paraguay",
+      "away": "australia",
+      "location": "Levi's Stadium, Santa Clara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.3,
+        "draw": 3.2,
+        "away": 2.8
+      }
+    },
+    {
+      "id": 61,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-02T09:00:00Z",
+      "home": "norway",
+      "away": "france",
+      "location": "Gillette Stadium, Foxborough",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 4.5,
+        "draw": 3.5,
+        "away": 1.6
+      }
+    },
+    {
+      "id": 62,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-03T02:00:00Z",
+      "home": "senegal",
+      "away": "iraq",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 4.2
+      }
+    },
+    {
+      "id": 63,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-03T09:00:00Z",
+      "home": "new zealand",
+      "away": "belgium",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 7,
+        "draw": 4.2,
+        "away": 1.3
+      }
+    },
+    {
+      "id": 64,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-04T02:00:00Z",
+      "home": "egypt",
+      "away": "iran",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.3,
+        "draw": 3.1,
+        "away": 2.8
+      }
+    },
+    {
+      "id": 65,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-04T09:00:00Z",
+      "home": "uruguay",
+      "away": "spain",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.8,
+        "draw": 3.2,
+        "away": 2.3
+      }
+    },
+    {
+      "id": 66,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-05T02:00:00Z",
+      "home": "cape verde",
+      "away": "saudi arabia",
+      "location": "Estadio Akron, Guadalajara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 3.5,
+        "draw": 3.2,
+        "away": 1.9
+      }
+    },
+    {
+      "id": 67,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-05T09:00:00Z",
+      "home": "jordan",
+      "away": "argentina",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 8,
+        "draw": 4.5,
+        "away": 1.3
+      }
+    },
+    {
+      "id": 68,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-06T02:00:00Z",
+      "home": "algeria",
+      "away": "austria",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.8,
+        "draw": 3.2,
+        "away": 2.3
+      }
+    },
+    {
+      "id": 69,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-06T09:00:00Z",
+      "home": "panama",
+      "away": "england",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 6.5,
+        "draw": 4,
+        "away": 1.4
+      }
+    },
+    {
+      "id": 70,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-07T02:00:00Z",
+      "home": "croatia",
+      "away": "ghana",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.6,
+        "draw": 3.5,
+        "away": 4.8
+      }
+    },
+    {
+      "id": 71,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-07T09:00:00Z",
+      "home": "colombia",
+      "away": "portugal",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.8,
+        "draw": 3.2,
+        "away": 2.3
+      }
+    },
+    {
+      "id": 72,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-08T02:00:00Z",
+      "home": "dr congo",
+      "away": "uzbekistan",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.5,
+        "draw": 3.1,
+        "away": 2.6
+      }
+    },
+    {
+      "id": 73,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-08T09:00:00Z",
+      "home": "2A",
+      "away": "2B",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 74,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-09T02:00:00Z",
+      "home": "1C",
+      "away": "2F",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 75,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-09T09:00:00Z",
+      "home": "1E",
+      "away": "3rd",
+      "location": "Gillette Stadium, Foxborough",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 3.8
+      }
+    },
+    {
+      "id": 76,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-10T02:00:00Z",
+      "home": "1F",
+      "away": "2C",
+      "location": "Estadio BBVA, Monterrey",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 77,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-10T09:00:00Z",
+      "home": "2E",
+      "away": "2I",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 78,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-11T02:00:00Z",
+      "home": "1I",
+      "away": "3rd",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 3.8
+      }
+    },
+    {
+      "id": 79,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-11T09:00:00Z",
+      "home": "1A",
+      "away": "3rd",
+      "location": "Estadio Azteca, Mexico City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.3,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 80,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-12T02:00:00Z",
+      "home": "1L",
+      "away": "3rd",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 3.8
+      }
+    },
+    {
+      "id": 81,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-12T09:00:00Z",
+      "home": "1G",
+      "away": "3rd",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 82,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-13T02:00:00Z",
+      "home": "1D",
+      "away": "3rd",
+      "location": "Levi's Stadium, Santa Clara",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.3,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 83,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-13T09:00:00Z",
+      "home": "1H",
+      "away": "2J",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 84,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-14T02:00:00Z",
+      "home": "2K",
+      "away": "2L",
+      "location": "BMO Field, Toronto",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 85,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-14T09:00:00Z",
+      "home": "1B",
+      "away": "3rd",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 3.8
+      }
+    },
+    {
+      "id": 86,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-15T02:00:00Z",
+      "home": "2D",
+      "away": "2G",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 87,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-15T09:00:00Z",
+      "home": "1J",
+      "away": "2H",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 3.5
+      }
+    },
+    {
+      "id": 88,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-16T02:00:00Z",
+      "home": "1K",
+      "away": "3rd",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.7,
+        "draw": 3.4,
+        "away": 3.8
+      }
+    },
+    {
+      "id": 89,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-16T09:00:00Z",
+      "home": "W75",
+      "away": "W78",
+      "location": "Lincoln Financial Field, Philadelphia",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 90,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-17T02:00:00Z",
+      "home": "W73",
+      "away": "W76",
+      "location": "NRG Stadium, Houston",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 91,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-17T09:00:00Z",
+      "home": "W74",
+      "away": "W77",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 92,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-18T02:00:00Z",
+      "home": "W79",
+      "away": "W80",
+      "location": "Estadio Azteca, Mexico City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 93,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-18T09:00:00Z",
+      "home": "W84",
+      "away": "W83",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.1,
+        "draw": 3.2,
+        "away": 2.9
+      }
+    },
+    {
+      "id": 94,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-19T02:00:00Z",
+      "home": "W82",
+      "away": "W81",
+      "location": "Lumen Field, Seattle",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 95,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-19T09:00:00Z",
+      "home": "W87",
+      "away": "W86",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 96,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-20T02:00:00Z",
+      "home": "W85",
+      "away": "W88",
+      "location": "BC Place, Vancouver",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 97,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-20T09:00:00Z",
+      "home": "W89",
+      "away": "W90",
+      "location": "Gillette Stadium, Foxborough",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 98,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-21T02:00:00Z",
+      "home": "W93",
+      "away": "W94",
+      "location": "SoFi Stadium, Inglewood",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 99,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-21T09:00:00Z",
+      "home": "W91",
+      "away": "W92",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    },
+    {
+      "id": 100,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-22T02:00:00Z",
+      "home": "W95",
+      "away": "W96",
+      "location": "Arrowhead Stadium, Kansas City",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 101,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-22T09:00:00Z",
+      "home": "W97",
+      "away": "W98",
+      "location": "AT&T Stadium, Arlington",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.8,
+        "draw": 3.2,
+        "away": 2.1
+      }
+    },
+    {
+      "id": 102,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-23T02:00:00Z",
+      "home": "W99",
+      "away": "W100",
+      "location": "Mercedes-Benz Stadium, Atlanta",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2.1,
+        "draw": 3.2,
+        "away": 1.8
+      }
+    },
+    {
+      "id": 103,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-23T09:00:00Z",
+      "home": "L101",
+      "away": "L102",
+      "location": "Hard Rock Stadium, Miami Gardens",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 2,
+        "draw": 3.2,
+        "away": 3
+      }
+    },
+    {
+      "id": 104,
+      "messageId": "",
+      "hasResult": false,
+      "isCalculated": false,
+      "date": "2026-05-24T02:00:00Z",
+      "home": "W101",
+      "away": "W102",
+      "location": "MetLife Stadium, East Rutherford",
+      "result": {
+        "home": 0,
+        "away": 0
+      },
+      "odds": {
+        "home": 1.9,
+        "draw": 3.3,
+        "away": 3.3
+      }
+    }
+  ]
+}

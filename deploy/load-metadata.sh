@@ -26,8 +26,10 @@ FOOTBALL_CHANNEL_ID=$(fetch_meta football-channel-id)
 VOICE_CHANNEL_ID=$(fetch_meta voice-channel-id)
 AUDITED_USERS=$(fetch_meta audited-users)
 FIREBASE_DB_URL=$(fetch_meta firebase-db-url)
-MATCH_POST_BEFORE_MINS=$(fetch_meta_or match-post-before-mins 90)
-VOTE_REMINDER_BEFORE_MINS=$(fetch_meta_or vote-reminder-before-mins 15)
+MATCH_POST_BEFORE_MINS=$(fetch_meta_or match-post-before-mins 720)
+VOTE_REMINDER_BEFORE_MINS=$(fetch_meta_or vote-reminder-before-mins 30)
+RESULT_REMINDER_AFTER_MINS=$(fetch_meta_or result-reminder-after-mins 180)
+RESULT_REMINDER_INTERVAL_MINS=$(fetch_meta_or result-reminder-interval-mins 30)
 EOF
 
 chown rambo:rambo "$ENV_FILE"

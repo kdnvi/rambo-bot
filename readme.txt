@@ -65,7 +65,7 @@ Prerequisites: the VM and Firebase must be in the same GCP project.
      firebase-db-url=<FIREBASE_DB_URL>
 
 5. SSH into the VM and run the setup script:
-   curl -fsSL https://codeberg.org/khoan/rambo-bot/raw/branch/main/deploy/setup.sh | sudo bash
+   curl -fsSL https://raw.githubusercontent.com/kdnvi/rambo-bot/main/deploy/setup.sh | sudo bash
 
 6. Start the bot:
    sudo systemctl start rambo-bot

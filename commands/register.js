@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { registerPlayer } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -8,9 +8,30 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction) {
   try {
-    const msg = await registerPlayer(interaction.user.id);
-    interaction.reply(msg);
+    const result = await registerPlayer(interaction.user.id);
+
+    const embed = new EmbedBuilder()
+      .setAuthor({
+        name: interaction.user.displayName,
+        iconURL: interaction.user.displayAvatarURL(),
+      })
+      .setTimestamp();
+
+    if (result.success) {
+      embed
+        .setTitle('✅  Registration Complete')
+        .setDescription('You have joined the tournament! Use `/rank` to see the leaderboard.')
+        .setColor(0x57F287);
+    } else {
+      embed
+        .setTitle('ℹ️  Already Registered')
+        .setDescription(result.message)
+        .setColor(0xFEE75C);
+    }
+
+    interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
+    interaction.reply({ content: '❌ Registration failed. Please try again later.', ephemeral: true });
   }
 }

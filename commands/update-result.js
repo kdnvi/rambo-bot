@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { updateMatchResult } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -21,9 +21,43 @@ export async function execute(interaction) {
     const homeScore = interaction.options.get('home-score').value;
     const awayScore = interaction.options.get('away-score').value;
 
-    const msg = await updateMatchResult(matchId, homeScore, awayScore);
-    interaction.reply(msg);
+    const result = await updateMatchResult(matchId, homeScore, awayScore);
+
+    if (!result.success) {
+      const embed = new EmbedBuilder().setTimestamp();
+
+      if (result.error === 'not_found') {
+        embed
+          .setTitle('❌  Match Not Found')
+          .setDescription(`No match found with ID \`${matchId + 1}\`.`)
+          .setColor(0xED4245);
+      } else if (result.error === 'already_exists') {
+        const m = result.match;
+        embed
+          .setTitle('⚠️  Result Already Exists')
+          .setDescription(`**${m.home.toUpperCase()}** ${m.result.home} - ${m.result.away} **${m.away.toUpperCase()}**`)
+          .setColor(0xFEE75C);
+      }
+
+      interaction.reply({ embeds: [embed], ephemeral: true });
+      return;
+    }
+
+    const m = result.match;
+    const embed = new EmbedBuilder()
+      .setTitle('✅  Match Result Updated')
+      .setDescription(`**${m.home.toUpperCase()}** ${homeScore} - ${awayScore} **${m.away.toUpperCase()}**`)
+      .setColor(0x57F287)
+      .addFields(
+        { name: '🏟️ Location', value: m.location, inline: true },
+        { name: '🆔 Match ID', value: `${matchId + 1}`, inline: true },
+      )
+      .setFooter({ text: `Updated by ${interaction.user.displayName}` })
+      .setTimestamp();
+
+    interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
+    interaction.reply({ content: '❌ Failed to update the match result.', ephemeral: true });
   }
 }

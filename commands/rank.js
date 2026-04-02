@@ -2,6 +2,13 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { readPlayers, readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
+const MEDAL = ['🥇', '🥈', '🥉'];
+
+const formatter = new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+});
+
 export const data = new SlashCommandBuilder()
   .setName('rank')
   .setDescription('Player ranking for the current tournament');
@@ -16,32 +23,34 @@ export async function execute(interaction) {
 
     for (const [key, value] of Object.entries(players)) {
       rankedPlayers.push({
-        nickname: users[key].nickname,
+        nickname: users[key]?.nickname || 'Unknown',
         balance: value.points,
-        avatar: users[key].avatarURL,
+        matches: value.matches || 0,
+        avatar: users[key]?.avatarURL,
       });
     }
     rankedPlayers.sort((a, b) => b.balance - a.balance);
 
-    const embeds = [];
-    const formatter = new Intl.NumberFormat('vi-VN', {
-      style: 'currency',
-      currency: 'VND',
+    const lines = rankedPlayers.map((player, i) => {
+      const rank = MEDAL[i] || `\`${i + 1}.\``;
+      const balance = formatter.format(player.balance * 1000);
+      return `${rank} **${player.nickname}** — ${balance}  *(${player.matches} matches)*`;
     });
 
-    rankedPlayers.forEach((player, index) => {
-      embeds.push(new EmbedBuilder()
-        .setTitle(`Rank No. ${index + 1}`)
-        .setDescription(`Balance: ${formatter.format(player.balance * 1000)}`)
-        .setAuthor({ name: player.nickname, iconURL: player.avatar })
-      );
-    });
+    const embed = new EmbedBuilder()
+      .setTitle(`🏆  ${tournamentName} Leaderboard`)
+      .setDescription(lines.join('\n'))
+      .setColor(0xFFD700)
+      .setFooter({ text: `${rankedPlayers.length} players registered` })
+      .setTimestamp();
 
-    interaction.reply({
-      content: `${tournamentName} Leaderboard`,
-      embeds: embeds
-    });
+    if (rankedPlayers.length > 0 && rankedPlayers[0].avatar) {
+      embed.setThumbnail(rankedPlayers[0].avatar);
+    }
+
+    interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
+    interaction.reply({ content: '❌ Failed to load the leaderboard.', ephemeral: true });
   }
 }

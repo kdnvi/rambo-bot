@@ -102,26 +102,25 @@ function matchVoteMessageComponent(match, config) {
     .setStyle(ButtonStyle.Danger);
 
   const tournamentName = config?.name || 'Tournament';
+  const kickoff = new Date(match.date);
+  const timeStr = kickoff.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+  const timestamp = Math.floor(kickoff.getTime() / 1000);
+
   const embed = new EmbedBuilder()
-    .setTitle(`${match.home.toUpperCase()} vs. ${match.away.toUpperCase()}`)
-    .setDescription(`**${tournamentName}**\nTime: **${(new Date(match.date)).toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' })}**`)
-    .setFields(
-      {
-        name: ' Odds ',
-        value: `Home: \`${match.odds.home}\`  Draw: \`${match.odds.draw}\`  Away: \`${match.odds.away}\``,
-        inline: false,
-      },
-      {
-        name: ' Location ',
-        value: match.location,
-        inline: false,
-      },
-      {
-        name: ' Match ID ',
-        value: `${match.id}`,
-        inline: false,
-      },
-    );
+    .setTitle(`⚽  ${match.home.toUpperCase()}  vs  ${match.away.toUpperCase()}`)
+    .setDescription(
+      `**${tournamentName}** — Match #${match.id}\n\n` +
+      `🕐 **Kickoff:** ${timeStr} *(VN)* — <t:${timestamp}:R>\n` +
+      `🏟️ **Venue:** ${match.location}`
+    )
+    .setColor(0x5865F2)
+    .addFields(
+      { name: '🏠 Home', value: `\`${match.odds.home}\``, inline: true },
+      { name: '🤝 Draw', value: `\`${match.odds.draw}\``, inline: true },
+      { name: '✈️ Away', value: `\`${match.odds.away}\``, inline: true },
+    )
+    .setFooter({ text: 'Vote below before kickoff!' })
+    .setTimestamp(kickoff);
 
   const row = new ActionRowBuilder()
     .addComponents(home, draw, away);

@@ -1,5 +1,5 @@
 import logger from '../utils/logger.js';
-import { Events } from 'discord.js';
+import { Events, EmbedBuilder } from 'discord.js';
 import { updateMatchVote, readMatchVotes } from '../utils/firebase.js';
 
 export const name = Events.InteractionCreate;
@@ -9,7 +9,10 @@ export async function execute(interaction) {
 
     try {
       if (Date.parse(date) < Date.now()) {
-        interaction.reply('This match is not available anymore!');
+        const embed = new EmbedBuilder()
+          .setDescription('⏰ This match has already started — voting is closed.')
+          .setColor(0xFEE75C);
+        interaction.reply({ embeds: [embed], ephemeral: true });
         return;
       }
 
@@ -18,13 +21,13 @@ export async function execute(interaction) {
       const votes = (await readMatchVotes(matchId, interaction.message.id)).val();
 
       const members = [];
-      for (const [key, _] of Object.entries(votes)) {
-        members.push(users[key].nickname);
+      for (const [key] of Object.entries(votes)) {
+        members.push(users[key]?.nickname || 'Unknown');
       }
 
       const names = members.join(', ');
       interaction.update({
-        content: `Voted: ${names}`,
+        content: `🗳️ **Voted (${members.length}):** ${names}`,
       });
     } catch (err) {
       logger.error(err);

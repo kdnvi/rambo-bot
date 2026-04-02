@@ -1,4 +1,4 @@
-import { SlashCommandBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -9,13 +9,25 @@ export const data = new SlashCommandBuilder()
 export async function execute(interaction) {
   try {
     const config = await readTournamentConfig();
+    const tournamentName = config?.name || 'Tournament';
     const rulesText = config?.rulesText;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📋  ${tournamentName} — Rules`)
+      .setColor(0x5865F2)
+      .setTimestamp();
+
     if (rulesText) {
-      await interaction.reply(rulesText);
+      embed.setDescription(rulesText);
     } else {
-      await interaction.reply('No rules have been configured for this tournament yet.');
+      embed
+        .setDescription('No rules have been configured for this tournament yet.')
+        .setColor(0xFEE75C);
     }
+
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
+    await interaction.reply({ content: '❌ Failed to load tournament rules.', ephemeral: true });
   }
 }

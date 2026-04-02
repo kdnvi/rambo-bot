@@ -47,20 +47,19 @@ export async function registerPlayer(userId) {
     const ref = db.ref(`tournament/players/${userId}`);
     const snapshot = await ref.once('value');
     if (snapshot.val() !== null) {
-      return 'You are already registered';
+      return { success: false, message: 'You are already registered for this tournament.' };
     } else {
       await ref.set({
         points: 0,
         matches: 0,
       });
       logger.info(`User [${userId}] successfully set`);
-      return 'Registered successfully';
+      return { success: true, message: 'Registered successfully.' };
     }
   } catch (err) {
     logger.error(err);
+    throw err;
   }
-
-  return 'Something wrong happened!';
 }
 
 export async function updatePlayers(content) {
@@ -78,29 +77,28 @@ export async function updateMatchResult(matchId, homeScore, awayScore) {
     const ref = db.ref(`tournament/matches/${matchId}`);
     const snapshot = await ref.once('value');
     if (snapshot.val() === null) {
-      return `Match \`${matchId}\` does not exist!`;
-    } else {
-      const match = snapshot.val();
-      if (match.hasResult) {
-        return `Match \`${matchId}\` result exist!`;
-      }
-
-      await ref.update({
-        hasResult: true,
-        result: {
-          home: homeScore,
-          away: awayScore,
-        }
-      });
-
-      logger.info(`Updated match ID [${matchId}] with result ${homeScore} - ${awayScore}`);
-      return 'Match result is updated successfully';
+      return { success: false, error: 'not_found' };
     }
+
+    const match = snapshot.val();
+    if (match.hasResult) {
+      return { success: false, error: 'already_exists', match };
+    }
+
+    await ref.update({
+      hasResult: true,
+      result: {
+        home: homeScore,
+        away: awayScore,
+      }
+    });
+
+    logger.info(`Updated match ID [${matchId}] with result ${homeScore} - ${awayScore}`);
+    return { success: true, match };
   } catch (err) {
     logger.error(err);
+    throw err;
   }
-
-  return 'Something wrong happened!';
 }
 
 export async function readPlayers() {

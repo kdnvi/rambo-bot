@@ -17,18 +17,16 @@ export async function execute(interaction) {
       }
 
       await updateMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
-      const users = interaction.client.cachedUsers;
       const votes = (await readMatchVotes(matchId, interaction.message.id)).val();
+      const voteCount = votes ? Object.keys(votes).length : 0;
 
-      const members = [];
-      for (const [key] of Object.entries(votes)) {
-        members.push(users[key]?.nickname || 'Unknown');
-      }
-
-      const names = members.join(', ');
-      interaction.update({
-        content: `🗳️ **Voted (${members.length}):** ${names}`,
+      await interaction.update({
+        content: `🗳️ **${voteCount}** vote(s) cast`,
       });
+      const embed = new EmbedBuilder()
+        .setDescription(`✅ Your vote: **${teamId.toUpperCase()}**`)
+        .setColor(0x57F287);
+      await interaction.followUp({ embeds: [embed], ephemeral: true });
     } catch (err) {
       logger.error(err);
     }

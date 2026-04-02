@@ -10,7 +10,7 @@ const RESULT_REMINDER_INTERVAL_MS = (parseInt(process.env.RESULT_REMINDER_INTERV
 
 export function matchPostJob(client) {
   return CronJob.from({
-    cronTime: '0 */5 * * * *',
+    cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
         const config = await readTournamentConfig();
@@ -46,7 +46,7 @@ export function matchPostJob(client) {
 
 export function voteReminderJob(client) {
   return CronJob.from({
-    cronTime: '0 */5 * * * *',
+    cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
         const config = await readTournamentConfig();
@@ -105,7 +105,7 @@ export function voteReminderJob(client) {
 
 export function resultReminderJob(client) {
   return CronJob.from({
-    cronTime: '0 */5 * * * *',
+    cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
         const config = await readTournamentConfig();

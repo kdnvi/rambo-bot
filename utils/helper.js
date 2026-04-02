@@ -3,7 +3,7 @@ import { CronJob } from 'cron';
 
 export function syncDiscordUsersJob(client) {
   return CronJob.from({
-    cronTime: '0 0,30 * * * *',
+    cronTime: '0 0 2 * * *',
     onTick: async () => {
       client.cachedUsers = await fetchDiscordUsers(client);
     },

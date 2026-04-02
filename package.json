@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "deplc": "node deploy-commands.js",
+    "deplc": "node --env-file=.env deploy-commands.js",
+    "deplc:runtime": "node --env-file=.env.runtime deploy-commands.js",
     "dev": "node --env-file=.env index.js"
   },
   "repository": {

@@ -16,7 +16,7 @@ TOTAL=6
 
 step 1 "Installing prerequisites"
 apt-get update -y < /dev/null
-apt-get install -y curl git < /dev/null
+apt-get install -y curl git make < /dev/null
 
 step 2 "Installing Node.js ${NODE_MAJOR}.x"
 curl -fsSL -o /tmp/nodesource_setup.sh https://deb.nodesource.com/setup_${NODE_MAJOR}.x

@@ -4,7 +4,7 @@ SERVICE := rambo-bot
 .PHONY: deplc update restart logs status
 
 deplc: ## Deploy slash commands using .env.runtime
-	npm run deplc:runtime
+	sudo node --env-file=$(APP_DIR)/.env.runtime deploy-commands.js
 
 update: ## Pull latest code and reinstall deps
 	sudo git -C $(APP_DIR) pull

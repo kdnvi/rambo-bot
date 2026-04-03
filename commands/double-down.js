@@ -1,6 +1,20 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerWagers, setPlayerWager } from '../utils/firebase.js';
+import { getMatchStake } from '../utils/football.js';
 import logger from '../utils/logger.js';
+
+const HYPE_LINES = [
+  'is feeling dangerous today!',
+  'said "normal stakes are for the weak".',
+  'just turned up the heat!',
+  'is putting their money where their mouth is.',
+  'chose to live life on the edge.',
+  'thinks they can see the future.',
+  'is either very smart or very brave.',
+  'just raised the stakes. Literally.',
+  'has entered beast mode.',
+  'is not here to play it safe.',
+];
 
 export const data = new SlashCommandBuilder()
   .setName('double-down')
@@ -9,6 +23,10 @@ export const data = new SlashCommandBuilder()
     .setDescription('Match ID to double down on')
     .setMinValue(1)
     .setRequired(true));
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export async function execute(interaction) {
   try {
@@ -63,22 +81,26 @@ export async function execute(interaction) {
       const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Already Used')
-        .setDescription(`You already used double-down on match \`#${usedId}\` today.`)
+        .setDescription(`You already used double-down on match \`#${usedId}\` today. One per matchday!`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
+    const stake = getMatchStake(match.id);
     await setPlayerWager(userId, matchId, 'double-down');
 
     const embed = new EmbedBuilder()
-      .setTitle('⏫  Double Down Activated!')
+      .setTitle('⏫  DOUBLE DOWN!')
       .setDescription(
-        `**Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n\n` +
-        'Your stake is now **2x** for this match. Good luck!'
+        `**${interaction.user}** ${pick(HYPE_LINES)}\n\n` +
+        `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
+        `💰 Stake: ${stake} → **${stake * 2} pts**\n\n` +
+        '✅ Win → **2x the winnings**\n' +
+        '❌ Lose → **2x the pain**'
       )
       .setColor(0x57F287)
-      .setFooter({ text: `${interaction.user.displayName}` })
+      .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

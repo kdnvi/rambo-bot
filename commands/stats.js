@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerWagers, readPlayerAllIn } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerWagers, readPlayerAllIns } from '../utils/firebase.js';
 import { computeBadges, formatBadgesDetailed } from '../utils/badges.js';
 import logger from '../utils/logger.js';
 
@@ -95,7 +95,7 @@ export async function execute(interaction) {
     }
 
     const wagers = await readPlayerWagers();
-    const allIn = await readPlayerAllIn(userId);
+    const allIn = await readPlayerAllIns(userId);
     const badges = computeBadges({
       userId,
       completedMatches,

@@ -4,81 +4,101 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('history')
-  .setDescription('Player vote history for the current tournament')
-  .addIntegerOption(option => option.setName('match-id')
-    .setDescription('Match ID')
+  .setDescription('View vote history for a player')
+  .addUserOption(option => option.setName('user')
+    .setDescription('Player to view (defaults to yourself)')
+    .setRequired(false))
+  .addIntegerOption(option => option.setName('count')
+    .setDescription('Number of recent matches to show (default 5)')
+    .setMinValue(1)
+    .setMaxValue(20)
     .setRequired(false));
 
 export async function execute(interaction) {
   try {
     const config = await readTournamentConfig();
     const tournamentName = config?.name || 'Tournament';
-    const optionalMatchId = interaction.options.get('match-id');
-    let matches = (await readTournamentData('matches')).val();
-    if (!matches) {
+    const targetUser = interaction.options.get('user')?.user || interaction.user;
+    const userId = targetUser.id;
+    const count = interaction.options.get('count')?.value || 5;
+
+    const allMatches = (await readTournamentData('matches')).val();
+    if (!allMatches) {
       await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    if (optionalMatchId === null) {
-      matches = matches.filter((match) => match.hasResult).slice(-3);
-    } else {
-      matches = matches.filter((match) => match.hasResult && match.id === parseInt(optionalMatchId.value));
-    }
-
-    if (matches.length === 0) {
-      const embed = new EmbedBuilder()
-        .setTitle('🔍  No Results Found')
-        .setDescription('Either the match does not exist or has not produced a result yet.')
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
     const votes = await readAllVotes();
     const users = interaction.client.cachedUsers;
-    const embeds = [];
+    const nickname = users[userId]?.nickname || targetUser.displayName;
 
-    matches.forEach((match) => {
-      const matchId = `${match.id - 1}`;
+    const completedMatches = allMatches
+      .filter((m) => m.hasResult)
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+
+    const userHistory = [];
+    for (const match of completedMatches) {
+      const key = `${match.id - 1}`;
       const winner = getWinner(match);
-      const resultLine = `**${match.home.toUpperCase()}** ${match.result.home} - ${match.result.away} **${match.away.toUpperCase()}**`;
+      let userVote = null;
 
-      const embed = new EmbedBuilder()
-        .setTitle(`⚽  Match ${match.id}: ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}`)
-        .setColor(0x5865F2)
-        .addFields(
-          { name: '📊 Result', value: resultLine, inline: false },
-        );
-
-      if (votes && matchId in votes && match.messageId && match.messageId in votes[matchId]) {
-        const voteEntries = Object.entries(votes[matchId][match.messageId]);
-        const voteLines = voteEntries.map(([k, v]) => {
-          const name = users[k]?.nickname || 'Unknown';
-          const isCorrect = v.vote === winner;
-          const icon = isCorrect ? '✅' : '❌';
-          return `${icon} **${name}** — ${v.vote.toUpperCase()}`;
-        });
-
-        embed.addFields({ name: '🗳️ Votes', value: voteLines.join('\n') || 'No votes', inline: false });
-      } else {
-        embed.addFields({ name: '🗳️ Votes', value: '*No votes recorded*', inline: false });
+      if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
+        const matchVotes = votes[key][match.messageId];
+        if (userId in matchVotes) {
+          userVote = matchVotes[userId].vote;
+        }
       }
 
-      embeds.push(embed);
+      userHistory.push({
+        matchId: match.id,
+        home: match.home,
+        away: match.away,
+        result: match.result,
+        winner,
+        vote: userVote,
+        correct: userVote ? userVote === winner : null,
+      });
+    }
+
+    const recent = userHistory.slice(-count).reverse();
+
+    if (recent.length === 0) {
+      const embed = new EmbedBuilder()
+        .setTitle('🔍  No History')
+        .setDescription(`No completed matches found for **${nickname}**.`)
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    const lines = recent.map((r) => {
+      const score = `${r.result.home}-${r.result.away}`;
+      if (r.vote === null) {
+        return `🎲 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *randomized*`;
+      }
+      const icon = r.correct ? '👑' : '🤡';
+      return `${icon} **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
     });
 
-    const header = new EmbedBuilder()
-      .setTitle(`📜  ${tournamentName} — Vote History`)
-      .setColor(0x5865F2)
+    const totalVoted = userHistory.filter((r) => r.vote !== null).length;
+    const totalCorrect = userHistory.filter((r) => r.correct === true).length;
+    const totalRandomized = userHistory.filter((r) => r.vote === null).length;
+    const winRate = totalVoted > 0 ? `${Math.round((totalCorrect / totalVoted) * 100)}%` : '—';
+
+    const embed = new EmbedBuilder()
+      .setTitle(`📜  ${nickname}'s Vote History`)
       .setDescription(
-        optionalMatchId
-          ? `Showing match #${optionalMatchId.value}`
-          : `Showing last ${matches.length} completed match(es)`
+        `**${tournamentName}**\n\n` +
+        lines.join('\n') +
+        `\n\n🎯 **${winRate}** win rate (${totalCorrect}/${totalVoted})` +
+        (totalRandomized > 0 ? ` · 🎲 ${totalRandomized} randomized` : '')
       )
+      .setColor(0x5865F2)
+      .setThumbnail(targetUser.displayAvatarURL())
+      .setFooter({ text: `Showing last ${recent.length} of ${userHistory.length} match(es)` })
       .setTimestamp();
 
-    await interaction.reply({ embeds: [header, ...embeds] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {

@@ -84,7 +84,7 @@ export function computeBadges({ userId, completedMatches, votes, playerData, wag
     }
   }
 
-  if (allIn) earned.push('yolo');
+  if (allIn && Object.keys(allIn).length > 0) earned.push('yolo');
 
   const ddCount = wagers ? Object.values(wagers).filter((w) => w.type === 'double-down').length : 0;
   if (ddCount >= 5) earned.push('double_trouble');

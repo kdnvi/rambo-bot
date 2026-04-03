@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIn } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIns } from './firebase.js';
 import { CronJob } from 'cron';
 
 const STAGE_STAKES = [
@@ -256,7 +256,7 @@ export async function calculateMatches(matches) {
   const wagers = await readPlayerWagers();
   const allIns = {};
   for (const userId of Object.keys(players)) {
-    allIns[userId] = await readPlayerAllIn(userId);
+    allIns[userId] = await readPlayerAllIns(userId);
   }
 
   const calculatedIds = [];
@@ -393,8 +393,8 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
       delta = -playerStakes[k];
     }
 
-    const allIn = allIns?.[k];
-    if (allIn && allIn.matchId === match.id) {
+    const allIn = allIns?.[k]?.[match.id];
+    if (allIn) {
       delta += isWinner ? allIn.amount : -allIn.amount;
     }
 

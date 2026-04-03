@@ -123,13 +123,13 @@ export async function setPlayerWager(userId, matchId, type) {
   logger.info(`Set ${type} wager for user [${userId}] on match [${matchId}]`);
 }
 
-export async function readPlayerAllIn(userId) {
+export async function readPlayerAllIns(userId) {
   const ref = db.ref(`tournament/allins/${userId}`);
-  return (await ref.once('value')).val();
+  return (await ref.once('value')).val() || {};
 }
 
 export async function setPlayerAllIn(userId, matchId, amount) {
-  const ref = db.ref(`tournament/allins/${userId}`);
-  await ref.set({ matchId, amount });
+  const ref = db.ref(`tournament/allins/${userId}/${matchId}`);
+  await ref.set({ amount });
   logger.info(`Set all-in for user [${userId}] on match [${matchId}] with amount [${amount}]`);
 }

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readPlayerAllIn, setPlayerAllIn } from '../utils/firebase.js';
+import { readTournamentData, readPlayers, readPlayerAllIns, setPlayerAllIn } from '../utils/firebase.js';
+import { getMatchStake } from '../utils/football.js';
 import logger from '../utils/logger.js';
 
 const formatter = new Intl.NumberFormat('vi-VN', {
@@ -7,13 +8,38 @@ const formatter = new Intl.NumberFormat('vi-VN', {
   currency: 'VND',
 });
 
+const HYPE_LINES = [
+  'The absolute MADLAD just went all-in!',
+  'Someone call an ambulance... but not for them!',
+  'This is either genius or insanity. No in-between.',
+  'They woke up and chose VIOLENCE (financial).',
+  'Legend or clown? We\'ll find out soon.',
+  'The balls on this one... astronomical.',
+  'Mom would NOT approve of this bet.',
+  'This is what zero fear looks like.',
+  'History will remember this moment.',
+  'Their palms are sweaty, knees weak, arms heavy...',
+];
+
+const BROKE_LINES = [
+  'tried to go all-in with empty pockets 💀',
+  'wants to bet it all... but "it all" is nothing 🕳️',
+  'is out here acting rich with a broke balance 🤡',
+  'went to the casino with no money and got escorted out 🚪',
+  'has the confidence but not the funds 📉',
+];
+
 export const data = new SlashCommandBuilder()
   .setName('all-in')
-  .setDescription('Bet your ENTIRE balance on a match (once per tournament!)')
+  .setDescription('Bet your ENTIRE balance on a match!')
   .addIntegerOption(option => option.setName('match-id')
     .setDescription('Match ID to go all-in on')
     .setMinValue(1)
     .setRequired(true));
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
 
 export async function execute(interaction) {
   try {
@@ -33,25 +59,13 @@ export async function execute(interaction) {
     const balance = players[userId].points;
     if (balance <= 0) {
       const embed = new EmbedBuilder()
-        .setTitle('💸  No Balance')
+        .setTitle('💸  ALL IN DENIED')
         .setDescription(
-          `Your balance is **${formatter.format(balance * 1000)}**. You need a positive balance to go all-in.`
+          `**${interaction.user}** ${pick(BROKE_LINES)}\n\nBalance: **${formatter.format(balance * 1000)}**`
         )
-        .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    const existing = await readPlayerAllIn(userId);
-    if (existing) {
-      const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already Used')
-        .setDescription(
-          `You already went all-in on match \`#${existing.matchId}\` with **${formatter.format(existing.amount * 1000)}**.` +
-          '\nThis can only be used **once** per tournament.'
-        )
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        .setColor(0xED4245)
+        .setThumbnail(interaction.user.displayAvatarURL());
+      await interaction.reply({ embeds: [embed] });
       return;
     }
 
@@ -80,18 +94,33 @@ export async function execute(interaction) {
       return;
     }
 
+    const existing = await readPlayerAllIns(userId);
+    if (existing[matchId]) {
+      const embed = new EmbedBuilder()
+        .setTitle('⚠️  Already All-In')
+        .setDescription(`You already went all-in on this match with **${formatter.format(existing[matchId].amount * 1000)}**.`)
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    const stake = getMatchStake(match.id);
     await setPlayerAllIn(userId, matchId, balance);
 
     const embed = new EmbedBuilder()
-      .setTitle('🔥  ALL IN!')
+      .setTitle('🔥  ALL IN! 🔥')
       .setDescription(
-        `**Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n\n` +
-        `You are betting **${formatter.format(balance * 1000)}** on this match.\n` +
-        'Win → **double your balance**. Lose → **back to zero**.\n\n' +
-        '⚠️ This cannot be undone!'
+        `${pick(HYPE_LINES)}\n\n` +
+        `**${interaction.user}** just put **${formatter.format(balance * 1000)}** on the line!\n\n` +
+        `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
+        `💰 Base stake: ${stake} pts\n` +
+        `🎰 All-in amount: **${formatter.format(balance * 1000)}**\n\n` +
+        '✅ Win → **double your balance**\n' +
+        '❌ Lose → **back to zero**\n\n' +
+        '⚠️ *This cannot be undone. May the odds be ever in your favor.*'
       )
-      .setColor(0xED4245)
-      .setFooter({ text: `${interaction.user.displayName} — one-time use` })
+      .setColor(0xFF4500)
+      .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });

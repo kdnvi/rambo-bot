@@ -28,6 +28,8 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    await interaction.reply({ content: '❌ Failed to load tournament rules.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load tournament rules.', ephemeral: true }).catch(() => {});
+    }
   }
 }

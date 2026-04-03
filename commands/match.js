@@ -16,6 +16,12 @@ export async function execute(interaction) {
     const tournamentName = config?.name || 'Tournament';
     const matchId = interaction.options.get('id').value;
     const allMatches = (await readTournamentData('matches')).val();
+
+    if (!allMatches) {
+      await interaction.reply({ content: '❌ No match data available.', ephemeral: true });
+      return;
+    }
+
     const match = allMatches.find((m) => m.id === matchId);
 
     if (!match) {
@@ -23,7 +29,7 @@ export async function execute(interaction) {
         .setTitle('❌  Match Not Found')
         .setDescription(`No match with ID \`${matchId}\`.`)
         .setColor(0xED4245);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
@@ -51,7 +57,7 @@ export async function execute(interaction) {
       )
       .setTimestamp();
 
-    const hasOdds = match.odds.home || match.odds.draw || match.odds.away;
+    const hasOdds = match.odds && (match.odds.home > 0 || match.odds.draw > 0 || match.odds.away > 0);
     if (hasOdds) {
       embed.addFields(
         { name: '🏠 Home', value: `\`${match.odds.home}\``, inline: true },
@@ -60,9 +66,11 @@ export async function execute(interaction) {
       );
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load match details.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load match details.', ephemeral: true }).catch(() => {});
+    }
   }
 }

@@ -8,14 +8,20 @@ export const data = new SlashCommandBuilder()
     .setRequired(true));
 
 export async function execute(interaction) {
-  const user = interaction.options.get('user').user;
+  try {
+    const user = interaction.options.get('user').user;
 
-  const embed = new EmbedBuilder()
-    .setTitle('📢  ATTENTION REQUIRED')
-    .setDescription(`${user} `.repeat(20))
-    .setColor(0xED4245)
-    .setThumbnail(user.displayAvatarURL())
-    .setFooter({ text: `Summoned by ${interaction.user.displayName}` });
+    const embed = new EmbedBuilder()
+      .setTitle('📢  ATTENTION REQUIRED')
+      .setDescription(`${user} `.repeat(20))
+      .setColor(0xED4245)
+      .setThumbnail(user.displayAvatarURL())
+      .setFooter({ text: `Summoned by ${interaction.user.displayName}` });
 
-  await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+  } catch {
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
+    }
+  }
 }

@@ -17,29 +17,49 @@ export async function readTournamentData(path) {
   return db.ref(`tournament/${path}`).once('value');
 }
 
-export async function updateMatch(match, content) {
+export async function updateMatch(matchIndex, content) {
   try {
-    const ref = db.ref(`tournament/matches/${match.id - 1}`);
+    const ref = db.ref(`tournament/matches/${matchIndex}`);
     await ref.update(content);
-    logger.info(`Updated match ID [${match.id}] between ${match.home} and ${match.away}`);
+    logger.info(`Updated match index [${matchIndex}]: ${Object.keys(content).join(', ')}`);
   } catch (err) {
     logger.error(err);
   }
 }
 
-export async function updateMatchVote(matchId, userId, vote, messageId) {
+export async function updateMatchResult(matchIndex, homeScore, awayScore) {
   try {
-    const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
-    await ref.update({ vote: vote });
-    logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
+    const ref = db.ref(`tournament/matches/${matchIndex}`);
+    const snapshot = await ref.once('value');
+    if (snapshot.val() === null) {
+      return { success: false, error: 'not_found' };
+    }
+
+    const match = snapshot.val();
+    if (match.hasResult) {
+      return { success: false, error: 'already_exists', match };
+    }
+
+    await ref.update({
+      hasResult: true,
+      isCalculated: false,
+      result: {
+        home: homeScore,
+        away: awayScore,
+      }
+    });
+
+    logger.info(`Updated match index [${matchIndex}] with result ${homeScore} - ${awayScore}`);
+    return { success: true, match };
   } catch (err) {
     logger.error(err);
+    throw err;
   }
 }
 
-export async function readMatchVotes(matchId, messageId) {
-  const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
-  return ref.once('value');
+export async function readPlayers() {
+  const ref = db.ref('tournament/players');
+  return ref.orderByChild('points').once('value');
 }
 
 export async function registerPlayer(userId) {
@@ -66,42 +86,28 @@ export async function updatePlayers(content) {
   try {
     const ref = db.ref('tournament/players');
     await ref.update(content);
-    logger.info(`Updated players with content ${content}`);
+    logger.info(`Updated ${Object.keys(content).length} player(s)`);
   } catch (err) {
     logger.error(err);
   }
 }
 
-export async function updateMatchResult(matchId, homeScore, awayScore) {
+export async function readAllVotes() {
+  const ref = db.ref('tournament/votes');
+  return (await ref.once('value')).val();
+}
+
+export async function updateMatchVote(matchId, userId, vote, messageId) {
   try {
-    const ref = db.ref(`tournament/matches/${matchId}`);
-    const snapshot = await ref.once('value');
-    if (snapshot.val() === null) {
-      return { success: false, error: 'not_found' };
-    }
-
-    const match = snapshot.val();
-    if (match.hasResult) {
-      return { success: false, error: 'already_exists', match };
-    }
-
-    await ref.update({
-      hasResult: true,
-      result: {
-        home: homeScore,
-        away: awayScore,
-      }
-    });
-
-    logger.info(`Updated match ID [${matchId}] with result ${homeScore} - ${awayScore}`);
-    return { success: true, match };
+    const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
+    await ref.update({ vote: vote });
+    logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
   } catch (err) {
     logger.error(err);
-    throw err;
   }
 }
 
-export async function readPlayers() {
-  const ref = db.ref('tournament/players');
-  return ref.orderByChild('points').once('value');
+export async function readMatchVotes(matchId, messageId) {
+  const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
+  return ref.once('value');
 }

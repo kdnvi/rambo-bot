@@ -15,7 +15,12 @@ export function syncDiscordUsersJob(client) {
 export async function fetchDiscordUsers(client) {
   try {
     const guild = await client.guilds.fetch(process.env.GUILD_ID);
-    const guildMembers = await guild.members.fetch({ user: process.env.AUDITED_USERS.split(','), withPresences: true });
+    const userIds = (process.env.AUDITED_USERS || '').split(',').filter(Boolean);
+    if (userIds.length === 0) {
+      logger.warn('AUDITED_USERS is empty, skipping user fetch');
+      return {};
+    }
+    const guildMembers = await guild.members.fetch({ user: userIds, withPresences: true });
     const members = {};
     for (const [key, value] of guildMembers.entries()) {
       members[key] = {

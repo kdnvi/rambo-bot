@@ -2,8 +2,6 @@ import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
 import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
-const VALID_GROUPS = 'abcdefghijkl'.split('');
-
 export const data = new SlashCommandBuilder()
   .setName('group')
   .setDescription('View group standings')
@@ -22,18 +20,19 @@ export async function execute(interaction) {
         .setTitle('📊  No Groups Available')
         .setDescription('Group data has not been configured yet.')
         .setColor(0xFEE75C);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
     const requested = interaction.options.get('name')?.value?.toLowerCase();
 
     if (requested && !groups[requested]) {
+      const validGroups = Object.keys(groups).sort().map((g) => `\`${g.toUpperCase()}\``).join(', ');
       const embed = new EmbedBuilder()
         .setTitle('❌  Group Not Found')
-        .setDescription(`No group \`${requested.toUpperCase()}\`. Valid groups: ${VALID_GROUPS.filter((g) => groups[g]).map((g) => `\`${g.toUpperCase()}\``).join(', ')}`)
+        .setDescription(`No group \`${requested.toUpperCase()}\`. Valid groups: ${validGroups}`)
         .setColor(0xED4245);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
@@ -74,9 +73,11 @@ export async function execute(interaction) {
       title.setDescription(`Showing Group ${requested.toUpperCase()}`);
     }
 
-    interaction.reply({ embeds: [title, ...embeds].slice(0, 10) });
+    await interaction.reply({ embeds: [title, ...embeds].slice(0, 10) });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load group standings.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load group standings.', ephemeral: true }).catch(() => {});
+    }
   }
 }

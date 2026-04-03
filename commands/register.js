@@ -29,9 +29,11 @@ export async function execute(interaction) {
         .setColor(0xFEE75C);
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Registration failed. Please try again later.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Registration failed. Please try again later.', ephemeral: true }).catch(() => {});
+    }
   }
 }

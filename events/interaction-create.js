@@ -1,18 +1,22 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder } from 'discord.js';
-import { updateMatchVote, readMatchVotes } from '../utils/firebase.js';
+import { updateMatchVote, readMatchVotes, readTournamentData } from '../utils/firebase.js';
 
 export const name = Events.InteractionCreate;
 export async function execute(interaction) {
   if (interaction.isButton()) {
-    const [teamId, matchId, date] = interaction.customId.split('_');
+    const [matchIdStr, teamId] = interaction.customId.split('|');
+    const matchId = parseInt(matchIdStr);
 
     try {
-      if (Date.parse(date) < Date.now()) {
+      const allMatches = (await readTournamentData('matches')).val();
+      const match = allMatches?.find((m) => m.id === matchId);
+
+      if (!match || Date.parse(match.date) < Date.now()) {
         const embed = new EmbedBuilder()
           .setDescription('⏰ This match has already started — voting is closed.')
           .setColor(0xFEE75C);
-        interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], ephemeral: true });
         return;
       }
 
@@ -29,6 +33,9 @@ export async function execute(interaction) {
       await interaction.followUp({ embeds: [embed], ephemeral: true });
     } catch (err) {
       logger.error(err);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: '❌ Something went wrong with your vote.', ephemeral: true }).catch(() => {});
+      }
     }
 
     return;
@@ -47,6 +54,9 @@ export async function execute(interaction) {
     } catch (error) {
       logger.error(`Error executing ${interaction.commandName}`);
       logger.error(error);
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
+      }
     }
 
     return;

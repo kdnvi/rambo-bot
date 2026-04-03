@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
 const formatter = new Intl.NumberFormat('vi-VN', {
@@ -21,7 +21,7 @@ export async function execute(interaction) {
     const targetUser = interaction.options.get('user')?.user || interaction.user;
     const userId = targetUser.id;
 
-    const players = (await readTournamentData('players')).val();
+    const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
       const embed = new EmbedBuilder()
         .setTitle('❌  Not Registered')
@@ -31,19 +31,19 @@ export async function execute(interaction) {
             : `${targetUser} is not registered in this tournament.`
         )
         .setColor(0xED4245);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
     const player = players[userId];
     const allMatches = (await readTournamentData('matches')).val();
-    const votes = (await readTournamentData('votes')).val();
+    const votes = await readAllVotes();
 
     let correctVotes = 0;
     let totalVotes = 0;
     const recentResults = [];
 
-    const completedMatches = allMatches
+    const completedMatches = (allMatches || [])
       .filter((m) => m.hasResult && m.isCalculated)
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
@@ -93,10 +93,12 @@ export async function execute(interaction) {
       embed.addFields({ name: '🕐 Recent Votes', value: lines.join('\n'), inline: false });
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load stats.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load stats.', ephemeral: true }).catch(() => {});
+    }
   }
 }
 

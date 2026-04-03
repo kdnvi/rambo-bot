@@ -18,6 +18,11 @@ export async function execute(interaction) {
     const count = interaction.options.get('count')?.value || 5;
     const allMatches = (await readTournamentData('matches')).val();
 
+    if (!allMatches) {
+      await interaction.reply({ content: '❌ No match data available.', ephemeral: true });
+      return;
+    }
+
     const now = Date.now();
     const upcoming = allMatches
       .filter((m) => Date.parse(m.date) > now && !m.hasResult)
@@ -29,7 +34,7 @@ export async function execute(interaction) {
         .setTitle('📅  No Upcoming Matches')
         .setDescription('All matches have been played or no schedule is available.')
         .setColor(0xFEE75C);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
@@ -47,9 +52,11 @@ export async function execute(interaction) {
       .setFooter({ text: `Showing next ${upcoming.length} match(es)` })
       .setTimestamp();
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load the schedule.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load the schedule.', ephemeral: true }).catch(() => {});
+    }
   }
 }

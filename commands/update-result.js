@@ -1,6 +1,39 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { updateMatchResult } from '../utils/firebase.js';
+import { updateMatchResult, readPlayers } from '../utils/firebase.js';
+import { calculateMatches } from '../utils/football.js';
 import logger from '../utils/logger.js';
+
+const formatter = new Intl.NumberFormat('vi-VN', {
+  style: 'currency',
+  currency: 'VND',
+});
+
+const LEADER_LINES = [
+  'is on fire right now!',
+  'is flexing on everyone!',
+  'can\'t stop winning!',
+  'is built different!',
+  'is the GOAT (for now)!',
+  'eats predictions for breakfast!',
+  'has a crystal ball or something...',
+  'is making this look too easy!',
+  'woke up and chose domination!',
+  'is living rent-free in everyone\'s head!',
+];
+
+const BOTTOM_LINES = [
+  'is down bad... real bad.',
+  'might want to try coin flipping instead.',
+  'should consider a career change from betting.',
+  'is making everyone else feel better about themselves.',
+  'is generously donating points to the pool.',
+  'is proof that random picks might be better.',
+  'thought this was a charity event.',
+  'is speedrunning bankruptcy.',
+  'has entered the shadow realm of the leaderboard.',
+  'is singlehandedly keeping the bottom warm.',
+  'looked at the odds and chose violence (against their own wallet).',
+];
 
 export const data = new SlashCommandBuilder()
   .setName('update-result')
@@ -39,7 +72,7 @@ export async function execute(interaction) {
           .setColor(0xFEE75C);
       }
 
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
@@ -55,9 +88,64 @@ export async function execute(interaction) {
       .setFooter({ text: `Updated by ${interaction.user.displayName}` })
       .setTimestamp();
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
+
+    const updatedMatch = {
+      ...m,
+      hasResult: true,
+      result: { home: homeScore, away: awayScore },
+    };
+    await calculateMatches([updatedMatch]);
+    logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
+
+    await postStandings(interaction);
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to update the match result.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to update the match result.', ephemeral: true }).catch(() => {});
+    }
+  }
+}
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+async function postStandings(interaction) {
+  try {
+    const players = (await readPlayers()).val();
+    if (!players) return;
+    const users = interaction.client.cachedUsers;
+
+    const ranked = [];
+    for (const [key, value] of Object.entries(players)) {
+      ranked.push({
+        id: key,
+        nickname: users[key]?.nickname || 'Unknown',
+        points: value.points,
+      });
+    }
+    ranked.sort((a, b) => b.points - a.points);
+
+    if (ranked.length < 2) return;
+
+    const leader = ranked[0];
+    const bottom = ranked[ranked.length - 1];
+
+    const lines = [
+      `👑 **${leader.nickname}** ${pick(LEADER_LINES)} (${formatter.format(leader.points * 1000)})`,
+      '',
+      `💀 **${bottom.nickname}** ${pick(BOTTOM_LINES)} (${formatter.format(bottom.points * 1000)})`,
+    ];
+
+    const embed = new EmbedBuilder()
+      .setTitle('📊  Updated Standings')
+      .setDescription(lines.join('\n'))
+      .setColor(0xFFD700)
+      .setTimestamp();
+
+    await interaction.followUp({ embeds: [embed] });
+  } catch (err) {
+    logger.error('Failed to post standings:', err);
   }
 }

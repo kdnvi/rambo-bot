@@ -18,6 +18,16 @@ export async function execute(interaction) {
     const config = await readTournamentConfig();
     const tournamentName = config?.name || 'Tournament';
     const players = (await readPlayers()).val();
+
+    if (!players) {
+      const embed = new EmbedBuilder()
+        .setTitle(`🏆  ${tournamentName} Leaderboard`)
+        .setDescription('No players registered yet. Use `/register` to join!')
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed] });
+      return;
+    }
+
     const users = interaction.client.cachedUsers;
     const rankedPlayers = [];
 
@@ -48,9 +58,11 @@ export async function execute(interaction) {
       embed.setThumbnail(rankedPlayers[0].avatar);
     }
 
-    interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load the leaderboard.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load the leaderboard.', ephemeral: true }).catch(() => {});
+    }
   }
 }

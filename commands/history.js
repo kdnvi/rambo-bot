@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig, readAllVotes } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -15,6 +15,11 @@ export async function execute(interaction) {
     const tournamentName = config?.name || 'Tournament';
     const optionalMatchId = interaction.options.get('match-id');
     let matches = (await readTournamentData('matches')).val();
+    if (!matches) {
+      await interaction.reply({ content: '❌ No match data available.', ephemeral: true });
+      return;
+    }
+
     if (optionalMatchId === null) {
       matches = matches.filter((match) => match.hasResult).slice(-3);
     } else {
@@ -26,11 +31,11 @@ export async function execute(interaction) {
         .setTitle('🔍  No Results Found')
         .setDescription('Either the match does not exist or has not produced a result yet.')
         .setColor(0xFEE75C);
-      interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], ephemeral: true });
       return;
     }
 
-    const votes = (await readTournamentData('votes')).val();
+    const votes = await readAllVotes();
     const users = interaction.client.cachedUsers;
     const embeds = [];
 
@@ -47,7 +52,7 @@ export async function execute(interaction) {
           { name: '📈 Odds', value: `Home \`${match.odds.home}\`  Draw \`${match.odds.draw}\`  Away \`${match.odds.away}\``, inline: false },
         );
 
-      if (matchId in votes && match.messageId in votes[matchId]) {
+      if (votes && matchId in votes && match.messageId && match.messageId in votes[matchId]) {
         const voteEntries = Object.entries(votes[matchId][match.messageId]);
         const voteLines = voteEntries.map(([k, v]) => {
           const name = users[k]?.nickname || 'Unknown';
@@ -74,10 +79,12 @@ export async function execute(interaction) {
       )
       .setTimestamp();
 
-    interaction.reply({ embeds: [header, ...embeds] });
+    await interaction.reply({ embeds: [header, ...embeds] });
   } catch (err) {
     logger.error(err);
-    interaction.reply({ content: '❌ Failed to load vote history.', ephemeral: true });
+    if (!interaction.replied) {
+      await interaction.reply({ content: '❌ Failed to load vote history.', ephemeral: true }).catch(() => {});
+    }
   }
 }
 

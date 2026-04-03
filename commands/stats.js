@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerBadges } from '../utils/firebase.js';
 import { formatBadgesDetailed } from '../utils/badges.js';
-import { getWinner, VND_FORMATTER } from '../utils/helper.js';
+import { getWinner, getMatchVote, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -46,11 +46,9 @@ export async function execute(interaction) {
 
     for (const match of completedMatches) {
       const key = `${match.id - 1}`;
-      if (!votes || !(key in votes) || !match.messageId || !(match.messageId in votes[key])) continue;
-      const matchVotes = votes[key][match.messageId];
-      if (!(userId in matchVotes)) continue;
+      const userVote = getMatchVote(votes, key, match.messageId, userId);
+      if (userVote === null) continue;
 
-      const userVote = matchVotes[userId].vote;
       const winner = getWinner(match);
       const isCorrect = userVote === winner;
 

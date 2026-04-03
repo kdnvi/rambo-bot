@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readPlayerWagers, removePlayerWager } from '../utils/firebase.js';
+import { readTournamentData, readPlayers, readUserWagers, removePlayerWager } from '../utils/firebase.js';
 import { pick } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -32,8 +32,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const wagers = await readPlayerWagers();
-    const myWagers = wagers[userId] || {};
+    const myWagers = await readUserWagers(userId);
     const now = Date.now();
 
     let activeMatchId = null;

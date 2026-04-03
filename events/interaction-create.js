@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchVote, readMatchVotes, readTournamentData, incrementVoteChange, readTournamentConfig } from '../utils/firebase.js';
+import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, readTournamentConfig } from '../utils/firebase.js';
 import { pick } from '../utils/helper.js';
 
 const DRUNK_LINES = [
@@ -33,6 +33,15 @@ export async function execute(interaction) {
         const embed = new EmbedBuilder()
           .setDescription('⏰ This match has already started — voting is closed.')
           .setColor(0xFEE75C);
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+
+      const players = (await readPlayers()).val();
+      if (!players || !players[interaction.user.id]) {
+        const embed = new EmbedBuilder()
+          .setDescription('❌ You need to `/register` first before voting.')
+          .setColor(0xED4245);
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
       }

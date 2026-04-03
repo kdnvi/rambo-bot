@@ -182,8 +182,6 @@ export async function awardBadge(userId, badgeId, meta = {}) {
 
 export async function incrementVoteChange(matchId, userId) {
   const ref = db.ref(`tournament/voteChanges/${matchId}/${userId}`);
-  const snap = await ref.once('value');
-  const count = (snap.val() || 0) + 1;
-  await ref.set(count);
-  return count;
+  const result = await ref.transaction((current) => (current || 0) + 1);
+  return result.snapshot.val();
 }

@@ -2,6 +2,7 @@ import logger from './logger.js';
 import { CronJob } from 'cron';
 
 export function getWinner(match) {
+  if (!match.result) return null;
   if (match.result.home > match.result.away) return match.home;
   if (match.result.home < match.result.away) return match.away;
   return 'draw';
@@ -15,6 +16,22 @@ export const VND_FORMATTER = new Intl.NumberFormat('vi-VN', {
   style: 'currency',
   currency: 'VND',
 });
+
+const VN_TZ = 'Asia/Ho_Chi_Minh';
+
+export function getMatchDay(dateStr) {
+  return new Date(dateStr).toLocaleDateString('sv-SE', { timeZone: VN_TZ });
+}
+
+export function getMatchVote(votes, matchIndex, messageId, userId) {
+  if (!votes || !(matchIndex in votes) || !messageId || !(messageId in votes[matchIndex])) return null;
+  return votes[matchIndex][messageId]?.[userId]?.vote ?? null;
+}
+
+export function getMatchVotes(votes, matchIndex, messageId) {
+  if (!votes || !(matchIndex in votes) || !messageId || !(messageId in votes[matchIndex])) return null;
+  return votes[matchIndex][messageId] || null;
+}
 
 export function findNextMatch(allMatches) {
   const now = Date.now();

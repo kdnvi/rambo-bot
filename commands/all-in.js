@@ -1,6 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerAllIns, readUserWagers, setPlayerAllIn } from '../utils/firebase.js';
-import { getMatchStake } from '../utils/football.js';
 import { pick, VND_FORMATTER, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -90,7 +89,6 @@ export async function execute(interaction) {
       return;
     }
 
-    const stake = getMatchStake(match.id);
     await setPlayerAllIn(userId, matchId, balance);
 
     const embed = new EmbedBuilder()
@@ -99,9 +97,8 @@ export async function execute(interaction) {
         `${pick(HYPE_LINES)}\n\n` +
         `**${interaction.user}** just put **${VND_FORMATTER.format(balance * 1000)}** on the line!\n\n` +
         `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
-        `💰 Base stake: ${stake} pts\n` +
         `🎰 All-in amount: **${VND_FORMATTER.format(balance * 1000)}**\n\n` +
-        '✅ Win → **double your balance**\n' +
+        '✅ Win → **big payout from the loser pool**\n' +
         '❌ Lose → **back to zero**\n\n' +
         '⚠️ *Use `/undo-all-in` before kickoff if you chicken out.*'
       )

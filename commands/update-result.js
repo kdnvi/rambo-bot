@@ -39,13 +39,24 @@ export const data = new SlashCommandBuilder()
     .setRequired(true))
   .addIntegerOption(option => option.setName('home-score')
     .setDescription('Home score')
+    .setMinValue(0)
+    .setMaxValue(99)
     .setRequired(true))
   .addIntegerOption(option => option.setName('away-score')
     .setDescription('Away score')
+    .setMinValue(0)
+    .setMaxValue(99)
     .setRequired(true));
+
+const ALLOWED_USERS = new Set((process.env.AUDITED_USERS || '').split(',').filter(Boolean));
 
 export async function execute(interaction) {
   try {
+    if (!ALLOWED_USERS.has(interaction.user.id)) {
+      await interaction.reply({ content: '❌ You don\'t have permission to update match results.', flags: MessageFlags.Ephemeral });
+      return;
+    }
+
     const matchId = parseInt(interaction.options.get('match-id').value) - 1;
     const homeScore = interaction.options.get('home-score').value;
     const awayScore = interaction.options.get('away-score').value;

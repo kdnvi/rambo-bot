@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readAllVotes, readPlayers, readAllAllIns } from '../utils/firebase.js';
-import { getWinner } from '../utils/helper.js';
+import { getWinner, getMatchVote } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -31,72 +31,51 @@ export async function execute(interaction) {
     }
 
     const playerIds = Object.keys(players);
-    const streaks = {};
+    const loseStreaks = {};
+    const winStreaks = {};
     const missedVotes = {};
     const totalWrong = {};
+    const totalCorrect = {};
 
     for (const id of playerIds) {
-      streaks[id] = { current: 0, max: 0 };
+      loseStreaks[id] = { current: 0, max: 0 };
+      winStreaks[id] = { current: 0, max: 0 };
       missedVotes[id] = 0;
       totalWrong[id] = 0;
+      totalCorrect[id] = 0;
     }
 
     for (const match of completed) {
       const key = `${match.id - 1}`;
       const winner = getWinner(match);
+      if (!winner) continue;
 
       for (const id of playerIds) {
-        let userVote = null;
-        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-          const mv = votes[key][match.messageId];
-          if (id in mv) userVote = mv[id].vote;
-        }
+        const userVote = getMatchVote(votes, key, match.messageId, id);
 
         if (userVote === null) {
           missedVotes[id]++;
-          streaks[id].current = 0;
+          loseStreaks[id].current = 0;
+          winStreaks[id].current = 0;
           continue;
         }
 
-        if (userVote !== winner) {
-          totalWrong[id]++;
-          streaks[id].current++;
-          if (streaks[id].current > streaks[id].max) {
-            streaks[id].max = streaks[id].current;
-          }
+        if (userVote === winner) {
+          totalCorrect[id]++;
+          winStreaks[id].current++;
+          if (winStreaks[id].current > winStreaks[id].max) winStreaks[id].max = winStreaks[id].current;
+          loseStreaks[id].current = 0;
         } else {
-          streaks[id].current = 0;
+          totalWrong[id]++;
+          loseStreaks[id].current++;
+          if (loseStreaks[id].current > loseStreaks[id].max) loseStreaks[id].max = loseStreaks[id].current;
+          winStreaks[id].current = 0;
         }
       }
     }
 
     const nick = (id) => users[id]?.nickname || 'Unknown';
     const names = (ids) => ids.map(nick).join(', ');
-
-    const totalCorrect = {};
-    const winStreaks = {};
-    for (const id of playerIds) {
-      totalCorrect[id] = completed.length - totalWrong[id] - missedVotes[id];
-      winStreaks[id] = { current: 0, max: 0 };
-    }
-
-    for (const match of completed) {
-      const key = `${match.id - 1}`;
-      const winner = getWinner(match);
-      for (const id of playerIds) {
-        let userVote = null;
-        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-          const mv = votes[key][match.messageId];
-          if (id in mv) userVote = mv[id].vote;
-        }
-        if (userVote === winner) {
-          winStreaks[id].current++;
-          if (winStreaks[id].current > winStreaks[id].max) winStreaks[id].max = winStreaks[id].current;
-        } else {
-          winStreaks[id].current = 0;
-        }
-      }
-    }
 
     const topBy = (obj, dir) => {
       const sorted = [...playerIds].sort((a, b) => dir === 'desc' ? obj[b] - obj[a] : obj[a] - obj[b]);
@@ -105,7 +84,7 @@ export async function execute(interaction) {
     };
 
     const bestStreak = topBy(Object.fromEntries(playerIds.map((id) => [id, winStreaks[id].max])), 'desc');
-    const worstStreak = topBy(Object.fromEntries(playerIds.map((id) => [id, streaks[id].max])), 'desc');
+    const worstStreak = topBy(Object.fromEntries(playerIds.map((id) => [id, loseStreaks[id].max])), 'desc');
 
     const mostCorrectStat = topBy(totalCorrect, 'desc');
     const mostWrongStat = topBy(totalWrong, 'desc');
@@ -126,12 +105,9 @@ export async function execute(interaction) {
         const match = completed.find((m) => m.id === parseInt(matchId));
         if (!match) continue;
         const winner = getWinner(match);
+        if (!winner) continue;
         const key = `${match.id - 1}`;
-        let userVote = null;
-        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-          const mv = votes[key][match.messageId];
-          if (id in mv) userVote = mv[id].vote;
-        }
+        const userVote = getMatchVote(votes, key, match.messageId, id);
         if (!userVote) continue;
         if (userVote === winner) {
           if (!biggestAllInWin || entry.amount > biggestAllInWin.amount) {

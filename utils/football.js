@@ -1,7 +1,7 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
 import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readAllAllIns, readCurses, readAllBadges } from './firebase.js';
-import { getWinner } from './helper.js';
+import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
 import { CronJob } from 'cron';
 
@@ -177,10 +177,10 @@ export function calculatingJob(client) {
 
 async function checkMatchdayMVP(client, allMatches, justCalculated) {
   try {
-    const matchDays = new Set(justCalculated.map((m) => m.date.slice(0, 10)));
+    const matchDays = new Set(justCalculated.map((m) => getMatchDay(m.date)));
 
     for (const day of matchDays) {
-      const dayMatches = allMatches.filter((m) => m.date.startsWith(day));
+      const dayMatches = allMatches.filter((m) => getMatchDay(m.date) === day);
       const allDone = dayMatches.every((m) => m.hasResult && m.isCalculated);
       if (!allDone || dayMatches.length < 2) continue;
 
@@ -198,15 +198,15 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
 
       for (const match of dayMatches) {
         const winner = getWinner(match);
+        if (!winner) continue;
         const key = `${match.id - 1}`;
         const stake = getMatchStake(match.id);
+        const matchVotes = getMatchVotes(votes, key, match.messageId) || {};
 
-        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-          const matchVotes = votes[key][match.messageId];
-          for (const [userId, v] of Object.entries(matchVotes)) {
-            if (!(userId in scores)) continue;
-            scores[userId] += v.vote === winner ? stake : -stake;
-          }
+        for (const userId of Object.keys(players)) {
+          const userVote = matchVotes[userId]?.vote ?? null;
+          if (userVote === null) continue;
+          scores[userId] += userVote === winner ? stake : -stake;
         }
       }
 
@@ -265,8 +265,8 @@ async function checkRivalry(allMatches, votes, players, users) {
 
     for (const match of completed) {
       const key = `${match.id - 1}`;
-      if (!votes || !(key in votes) || !match.messageId || !(match.messageId in votes[key])) continue;
-      const mv = votes[key][match.messageId];
+      const mv = getMatchVotes(votes, key, match.messageId);
+      if (!mv) continue;
 
       for (let i = 0; i < playerIds.length; i++) {
         for (let j = i + 1; j < playerIds.length; j++) {
@@ -351,9 +351,7 @@ export async function calculateMatches(matches, client) {
       }
 
       const key = `${match.id - 1}`;
-      const votes = (votingObj && key in votingObj && match.messageId in (votingObj[key] || {}))
-        ? votingObj[key][match.messageId]
-        : null;
+      const votes = getMatchVotes(votingObj, key, match.messageId);
 
       if (!votes) {
         logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
@@ -361,16 +359,15 @@ export async function calculateMatches(matches, client) {
 
       const { votedPlayers, randomPicks } = calculatePlayerPoints(players, votes, match, wagers, allIns);
       resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks);
+
+      await updatePlayers(players);
+      await updateMatch(match.id - 1, { isCalculated: true });
       calculatedIds.push(match.id - 1);
-      logger.info(`Calculated match ${match.id} successfully`);
+      logger.info(`Calculated and persisted match ${match.id} successfully`);
     }
 
     if (calculatedIds.length > 0) {
-      await updatePlayers(players);
-      for (const idx of calculatedIds) {
-        await updateMatch(idx, { isCalculated: true });
-      }
-      logger.info(`Marked ${calculatedIds.length} match(es) as calculated`);
+      logger.info(`Calculated ${calculatedIds.length} match(es) total`);
 
       const allMatches = (await readTournamentData('matches')).val() || [];
       const completedMatches = allMatches
@@ -473,6 +470,10 @@ function matchVoteMessageComponent(match, config) {
 
 function calculatePlayerPoints(players, votes, match, wagers, allIns) {
   const winner = getWinner(match);
+  if (!winner) {
+    logger.warn(`Match ${match.id} has no result, skipping point calculation`);
+    return { votedPlayers: [], randomPicks: {} };
+  }
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
   const votedPlayers = [];
@@ -494,13 +495,18 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
     randomPicks[k] = randomPick;
   }
 
+  // DD and all-in are mutex. All-in replaces the base stake entirely with the
+  // player's balance — they risk everything, not everything + base on top.
   const playerStakes = {};
   for (const k of Object.keys(picks)) {
-    let stake = baseStake;
-    if (wagers?.[k]?.[match.id]?.type === 'double-down') {
-      stake *= 2;
+    const allIn = allIns?.[k]?.[match.id];
+    if (allIn) {
+      playerStakes[k] = allIn.amount;
+    } else if (wagers?.[k]?.[match.id]?.type === 'double-down') {
+      playerStakes[k] = baseStake * 2;
+    } else {
+      playerStakes[k] = baseStake;
     }
-    playerStakes[k] = stake;
   }
 
   const totalLoserStake = Object.entries(picks)
@@ -511,6 +517,9 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
     .filter(([, pick]) => pick === winner)
     .reduce((sum, [k]) => sum + playerStakes[k], 0);
 
+  // Zero-sum redistribution: losers' stakes are split proportionally among winners.
+  // If everyone picks the winner, totalLoserStake is 0 so all deltas are 0 — no points
+  // move, which intentionally breaks zero-sum for that match (nobody is penalized).
   for (const [k, pick] of Object.entries(picks)) {
     const isWinner = pick === winner;
     let delta;
@@ -520,11 +529,6 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
         : 0;
     } else {
       delta = -playerStakes[k];
-    }
-
-    const allIn = allIns?.[k]?.[match.id];
-    if (allIn) {
-      delta += isWinner ? allIn.amount : -allIn.amount;
     }
 
     const newPoints = players[k].points + delta;
@@ -544,16 +548,14 @@ function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPi
   if (!matchCurses) return;
 
   const winner = getWinner(match);
+  if (!winner) return;
   const key = `${match.id - 1}`;
 
   for (const [curserId, { target }] of Object.entries(matchCurses)) {
     if (!(curserId in players) || !(target in players)) continue;
 
-    let targetVote = null;
-    if (votingObj && key in votingObj && match.messageId in (votingObj[key] || {})) {
-      const mv = votingObj[key][match.messageId];
-      if (target in mv) targetVote = mv[target].vote;
-    }
+    const matchVotes = getMatchVotes(votingObj, key, match.messageId);
+    let targetVote = matchVotes?.[target]?.vote ?? null;
     if (targetVote === null) {
       targetVote = randomPicks[target] || null;
     }

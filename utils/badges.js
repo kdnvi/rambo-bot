@@ -1,4 +1,4 @@
-import { getWinner } from './helper.js';
+import { getWinner, getMatchDay, getMatchVote, getMatchVotes } from './helper.js';
 import { awardBadge } from './firebase.js';
 import logger from './logger.js';
 
@@ -21,6 +21,8 @@ const BADGE_MAP = Object.fromEntries(BADGE_DEFS.map((b) => [b.id, b]));
  * Check and award new badges for all players after match calculation.
  * Returns a map of userId -> array of newly earned badge defs.
  */
+// Badges only count explicit votes — randomized picks are excluded since the player
+// didn't actually make a prediction. This is intentional: badges reward active participation.
 export async function checkAndAwardBadges({ players, completedMatches, votes, wagers, allIns, existingBadges }) {
   const newBadges = {};
 
@@ -34,7 +36,7 @@ export async function checkAndAwardBadges({ players, completedMatches, votes, wa
     for (const match of completedMatches) {
       const key = `${match.id - 1}`;
       const winner = getWinner(match);
-      let userVote = getUserVote(votes, key, match.messageId, userId);
+      const userVote = getMatchVote(votes, key, match.messageId, userId);
       if (userVote === null) continue;
 
       const isCorrect = userVote === winner;
@@ -44,7 +46,7 @@ export async function checkAndAwardBadges({ players, completedMatches, votes, wa
         results[results.length - 1].minorityWin = true;
       }
 
-      const day = match.date.slice(0, 10);
+      const day = getMatchDay(match.date);
       if (!matchDays[day]) matchDays[day] = [];
       matchDays[day].push(isCorrect);
     }
@@ -127,15 +129,9 @@ export function formatBadgesDetailed(storedBadges) {
     .join('\n');
 }
 
-function getUserVote(votes, key, messageId, userId) {
-  if (!votes || !(key in votes) || !messageId || !(messageId in votes[key])) return null;
-  const mv = votes[key][messageId];
-  return (userId in mv) ? mv[userId].vote : null;
-}
-
 function isMinorityPick(votes, key, messageId, userVote) {
-  if (!votes || !(key in votes) || !(messageId in votes[key])) return false;
-  const matchVotes = votes[key][messageId];
+  const matchVotes = getMatchVotes(votes, key, messageId);
+  if (!matchVotes) return false;
   const allVotes = Object.values(matchVotes).map((v) => v.vote);
   const count = allVotes.filter((v) => v === userVote).length;
   return count < allVotes.length / 2;

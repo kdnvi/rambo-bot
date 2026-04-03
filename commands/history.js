@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readAllVotes, readUserWagers, readPlayerAllIns, readCurses } from '../utils/firebase.js';
-import { getWinner, VND_FORMATTER } from '../utils/helper.js';
+import { getWinner, getMatchVote, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -48,14 +48,7 @@ export async function execute(interaction) {
     for (const match of completedMatches) {
       const key = `${match.id - 1}`;
       const winner = getWinner(match);
-      let userVote = null;
-
-      if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-        const matchVotes = votes[key][match.messageId];
-        if (userId in matchVotes) {
-          userVote = matchVotes[userId].vote;
-        }
-      }
+      const userVote = getMatchVote(votes, key, match.messageId, userId);
 
       const wager = userWagers[match.id];
       const allIn = userAllIns[match.id];

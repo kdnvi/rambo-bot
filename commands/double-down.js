@@ -1,7 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readUserWagers, readPlayerAllIns, setPlayerWager } from '../utils/firebase.js';
 import { getMatchStake } from '../utils/football.js';
-import { pick, findNextMatch } from '../utils/helper.js';
+import { pick, findNextMatch, getMatchDay } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const HYPE_LINES = [
@@ -49,9 +49,9 @@ export async function execute(interaction) {
 
     const matchId = match.id;
 
-    const matchDay = match.date.slice(0, 10);
+    const matchDay = getMatchDay(match.date);
     const sameDayMatchIds = allMatches
-      .filter((m) => m.date.startsWith(matchDay))
+      .filter((m) => getMatchDay(m.date) === matchDay)
       .map((m) => m.id);
 
     const myWagers = await readUserWagers(userId);

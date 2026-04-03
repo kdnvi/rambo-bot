@@ -1,6 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerWagers, readPlayerAllIns, setPlayerWager } from '../utils/firebase.js';
 import { getMatchStake } from '../utils/football.js';
+import { pick, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const HYPE_LINES = [
@@ -19,10 +20,6 @@ const HYPE_LINES = [
 export const data = new SlashCommandBuilder()
   .setName('double-down')
   .setDescription('Double your stake on a match (1 per matchday)');
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export async function execute(interaction) {
   try {
@@ -44,15 +41,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const now = Date.now();
-    let match = allMatches
-      .filter((m) => m.messageId && Date.parse(m.date) > now)
-      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
-    if (!match) {
-      match = allMatches
-        .filter((m) => Date.parse(m.date) > now)
-        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
-    }
+    const match = findNextMatch(allMatches);
     if (!match) {
       await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
       return;
@@ -108,7 +97,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to activate double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readAllVotes } from '../utils/firebase.js';
+import { getWinner } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -101,14 +102,8 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to load vote history.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
-}
-
-function getWinner(match) {
-  if (match.result.home > match.result.away) return match.home;
-  if (match.result.home < match.result.away) return match.away;
-  return 'draw';
 }

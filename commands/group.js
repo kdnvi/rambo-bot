@@ -73,10 +73,14 @@ export async function execute(interaction) {
       title.setDescription(`Showing Group ${requested.toUpperCase()}`);
     }
 
-    await interaction.reply({ embeds: [title, ...embeds].slice(0, 10) });
+    const allEmbeds = [title, ...embeds];
+    await interaction.reply({ embeds: allEmbeds.slice(0, 10) });
+    for (let i = 10; i < allEmbeds.length; i += 10) {
+      await interaction.followUp({ embeds: allEmbeds.slice(i, i + 10) });
+    }
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to load group standings.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

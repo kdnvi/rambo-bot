@@ -1,11 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerAllIns, removePlayerAllIn } from '../utils/firebase.js';
+import { pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
-
-const formatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
 
 const RELIEF_LINES = [
   'came to their senses. Barely.',
@@ -19,10 +15,6 @@ const RELIEF_LINES = [
 export const data = new SlashCommandBuilder()
   .setName('undo-all-in')
   .setDescription('Remove your all-in bet (if the match hasn\'t started yet)');
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export async function execute(interaction) {
   try {
@@ -71,7 +63,7 @@ export async function execute(interaction) {
       .setTitle('😮‍💨  ALL-IN CANCELLED')
       .setDescription(
         `**${interaction.user}** ${pick(RELIEF_LINES)}\n\n` +
-        `🎰 All-in of **${formatter.format(activeAmount * 1000)}** on Match #${activeMatchId} ` +
+        `🎰 All-in of **${VND_FORMATTER.format(activeAmount * 1000)}** on Match #${activeMatchId} ` +
         `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}) has been removed.\n` +
         'Your balance is safe... for now.'
       )
@@ -81,7 +73,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to remove all-in.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

@@ -77,7 +77,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to remove double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

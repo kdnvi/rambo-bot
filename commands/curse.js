@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readCurses, setCurse } from '../utils/firebase.js';
+import { pick, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const CURSE_LINES = [
@@ -19,10 +20,6 @@ export const data = new SlashCommandBuilder()
   .addUserOption(option => option.setName('player')
     .setDescription('Player to curse')
     .setRequired(true));
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export async function execute(interaction) {
   try {
@@ -54,17 +51,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const now = Date.now();
-    const votable = allMatches
-      .filter((m) => m.messageId && Date.parse(m.date) > now)
-      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
-
-    let nextMatch = votable[0];
-    if (!nextMatch) {
-      nextMatch = allMatches
-        .filter((m) => Date.parse(m.date) > now)
-        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
-    }
+    const nextMatch = findNextMatch(allMatches);
     if (!nextMatch) {
       await interaction.reply({ content: '❌ No upcoming matches to curse on.', flags: MessageFlags.Ephemeral });
       return;
@@ -106,7 +93,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to activate curse.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

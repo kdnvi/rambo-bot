@@ -1,3 +1,6 @@
+import { getMatchStake } from './football.js';
+import { getWinner } from './helper.js';
+
 const BADGE_DEFS = [
   { id: 'first_blood', icon: '🩸', name: 'First Blood', desc: 'Won your very first prediction' },
   { id: 'oracle', icon: '🔮', name: 'Oracle', desc: '5 correct predictions in a row' },
@@ -55,7 +58,11 @@ export function computeBadges({ userId, completedMatches, votes, playerData, wag
     if (!matchDays[day]) matchDays[day] = [];
     matchDays[day].push(isCorrect);
 
-    runningBalance += isCorrect ? 10 : -10;
+    let stake = getMatchStake(match.id);
+    if (wagers?.[match.id]?.type === 'double-down') stake *= 2;
+    const allInAmount = allIn?.[match.id]?.amount || 0;
+    const delta = isCorrect ? stake + allInAmount : -(stake + allInAmount);
+    runningBalance += delta;
     if (runningBalance < 0) wentNegative = true;
     if (wentNegative && runningBalance > 0) recoveredFromNegative = true;
   }
@@ -100,12 +107,6 @@ export function formatBadges(badges) {
 export function formatBadgesDetailed(badges) {
   if (badges.length === 0) return '*No badges yet*';
   return badges.map((b) => `${b.icon} **${b.name}** — ${b.desc}`).join('\n');
-}
-
-function getWinner(match) {
-  if (match.result.home > match.result.away) return match.home;
-  if (match.result.home < match.result.away) return match.away;
-  return 'draw';
 }
 
 function longestStreak(results, correctValue) {

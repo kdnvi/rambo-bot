@@ -1,12 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerAllIns, readPlayerWagers, setPlayerAllIn } from '../utils/firebase.js';
 import { getMatchStake } from '../utils/football.js';
+import { pick, VND_FORMATTER, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
-
-const formatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
 
 const HYPE_LINES = [
   'The absolute MADLAD just went all-in!',
@@ -33,10 +29,6 @@ export const data = new SlashCommandBuilder()
   .setName('all-in')
   .setDescription('Bet your ENTIRE balance on a match!');
 
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
 export async function execute(interaction) {
   try {
     const userId = interaction.user.id;
@@ -56,7 +48,7 @@ export async function execute(interaction) {
       const embed = new EmbedBuilder()
         .setTitle('💸  ALL IN DENIED')
         .setDescription(
-          `**${interaction.user}** ${pick(BROKE_LINES)}\n\nBalance: **${formatter.format(balance * 1000)}**`
+          `**${interaction.user}** ${pick(BROKE_LINES)}\n\nBalance: **${VND_FORMATTER.format(balance * 1000)}**`
         )
         .setColor(0xED4245)
         .setThumbnail(interaction.user.displayAvatarURL());
@@ -70,15 +62,7 @@ export async function execute(interaction) {
       return;
     }
 
-    const now = Date.now();
-    let match = allMatches
-      .filter((m) => m.messageId && Date.parse(m.date) > now)
-      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
-    if (!match) {
-      match = allMatches
-        .filter((m) => Date.parse(m.date) > now)
-        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
-    }
+    const match = findNextMatch(allMatches);
     if (!match) {
       await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
       return;
@@ -101,7 +85,7 @@ export async function execute(interaction) {
     if (existing[matchId]) {
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Already All-In')
-        .setDescription(`You already went all-in on this match with **${formatter.format(existing[matchId].amount * 1000)}**.`)
+        .setDescription(`You already went all-in on this match with **${VND_FORMATTER.format(existing[matchId].amount * 1000)}**.`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -114,13 +98,13 @@ export async function execute(interaction) {
       .setTitle('🔥  ALL IN! 🔥')
       .setDescription(
         `${pick(HYPE_LINES)}\n\n` +
-        `**${interaction.user}** just put **${formatter.format(balance * 1000)}** on the line!\n\n` +
+        `**${interaction.user}** just put **${VND_FORMATTER.format(balance * 1000)}** on the line!\n\n` +
         `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
         `💰 Base stake: ${stake} pts\n` +
-        `🎰 All-in amount: **${formatter.format(balance * 1000)}**\n\n` +
+        `🎰 All-in amount: **${VND_FORMATTER.format(balance * 1000)}**\n\n` +
         '✅ Win → **double your balance**\n' +
         '❌ Lose → **back to zero**\n\n' +
-        '⚠️ *This cannot be undone. May the odds be ever in your favor.*'
+        '⚠️ *Use `/undo-all-in` before kickoff if you chicken out.*'
       )
       .setColor(0xFF4500)
       .setThumbnail(interaction.user.displayAvatarURL())
@@ -129,7 +113,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to activate all-in.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

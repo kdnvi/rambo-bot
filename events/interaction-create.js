@@ -1,6 +1,7 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
 import { updateMatchVote, readMatchVotes, readTournamentData, incrementVoteChange, readTournamentConfig } from '../utils/firebase.js';
+import { pick } from '../utils/helper.js';
 
 const DRUNK_LINES = [
   'can\'t make up their mind... are they okay? 🍺',
@@ -17,10 +18,6 @@ const LAST_SEC_LINES = [
   'voted with seconds to spare. Living on the edge. 🫣',
   'just slid in under the wire. Clutch or reckless? 🎰',
 ];
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export const name = Events.InteractionCreate;
 export async function execute(interaction) {
@@ -55,15 +52,15 @@ export async function execute(interaction) {
       const dp = pct(distribution.draw);
       const ap = pct(distribution[match.away]);
 
+      const VOTE_SEPARATOR = '\n\n📊 ';
       const barText = `${match.home.toUpperCase()} ${hp}%  ·  Draw ${dp}%  ·  ${match.away.toUpperCase()} ${ap}%`;
 
       const existingEmbed = interaction.message.embeds[0];
       const updatedEmbed = EmbedBuilder.from(existingEmbed)
         .setFooter({ text: `${voteCount} vote(s) cast · Vote below before kickoff!` });
 
-      const descParts = existingEmbed.description.split('\n```');
-      const baseDesc = descParts[0];
-      updatedEmbed.setDescription(`${baseDesc}\n\n${barText}`);
+      const baseDesc = existingEmbed.description.split(VOTE_SEPARATOR)[0];
+      updatedEmbed.setDescription(`${baseDesc}${VOTE_SEPARATOR}${barText}`);
 
       await interaction.update({ embeds: [updatedEmbed] });
       const embed = new EmbedBuilder()
@@ -72,21 +69,24 @@ export async function execute(interaction) {
       await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
       const changeCount = await incrementVoteChange(matchId, interaction.user.id);
-      if (changeCount >= 3) {
+      const minsUntilKickoff = (Date.parse(match.date) - Date.now()) / 60000;
+      const needsChannel = changeCount >= 3 || (minsUntilKickoff <= 5 && minsUntilKickoff > 0);
+
+      let channel = null;
+      if (needsChannel) {
         const config = await readTournamentConfig();
         const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
-        const channel = await interaction.client.channels.fetch(channelId);
+        channel = await interaction.client.channels.fetch(channelId);
+      }
+
+      if (changeCount >= 3 && channel) {
         const drunkEmbed = new EmbedBuilder()
           .setDescription(`🍺 **${interaction.user}** ${pick(DRUNK_LINES)} *(${changeCount} vote changes on match #${matchId})*`)
           .setColor(0xE67E22);
         await channel.send({ embeds: [drunkEmbed] });
       }
 
-      const minsUntilKickoff = (Date.parse(match.date) - Date.now()) / 60000;
-      if (minsUntilKickoff <= 5 && minsUntilKickoff > 0) {
-        const config = await readTournamentConfig();
-        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
-        const channel = await interaction.client.channels.fetch(channelId);
+      if (minsUntilKickoff <= 5 && minsUntilKickoff > 0 && channel) {
         const lateEmbed = new EmbedBuilder()
           .setDescription(`⏰ **${interaction.user}** ${pick(LAST_SEC_LINES)} *(match #${matchId})*`)
           .setColor(0xFEE75C);

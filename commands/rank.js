@@ -1,14 +1,10 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readPlayers, readTournamentConfig, readTournamentData, readAllVotes, readPlayerWagers, readPlayerAllIns } from '../utils/firebase.js';
+import { readPlayers, readTournamentConfig, readTournamentData, readAllVotes, readPlayerWagers, readAllAllIns } from '../utils/firebase.js';
 import { computeBadges, formatBadges } from '../utils/badges.js';
+import { VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const MEDAL = ['🥇', '🥈', '🥉'];
-
-const formatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
 
 export const data = new SlashCommandBuilder()
   .setName('rank')
@@ -38,9 +34,10 @@ export async function execute(interaction) {
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
     const rankedPlayers = [];
+    const allAllIns = await readAllAllIns();
 
     for (const [key, value] of Object.entries(players)) {
-      const allIn = await readPlayerAllIns(key);
+      const allIn = allAllIns[key] || {};
       const badges = computeBadges({
         userId: key,
         completedMatches,
@@ -61,7 +58,7 @@ export async function execute(interaction) {
 
     const lines = rankedPlayers.map((player, i) => {
       const rank = MEDAL[i] || `\`${i + 1}.\``;
-      const balance = formatter.format(player.balance * 1000);
+      const balance = VND_FORMATTER.format(player.balance * 1000);
       const badges = player.badgeStr ? `  ${player.badgeStr}` : '';
       return `${rank} **${player.nickname}** — ${balance}  *(${player.matches} matches)*${badges}`;
     });
@@ -80,7 +77,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to load the leaderboard.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

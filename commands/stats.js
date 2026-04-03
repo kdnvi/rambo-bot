@@ -1,12 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerWagers, readPlayerAllIns } from '../utils/firebase.js';
 import { computeBadges, formatBadgesDetailed } from '../utils/badges.js';
+import { getWinner, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
-
-const formatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
 
 export const data = new SlashCommandBuilder()
   .setName('stats')
@@ -79,7 +75,7 @@ export async function execute(interaction) {
       .setColor(0x5865F2)
       .setThumbnail(targetUser.displayAvatarURL())
       .addFields(
-        { name: '💰 Balance', value: formatter.format(player.points * 1000), inline: true },
+        { name: '💰 Balance', value: VND_FORMATTER.format(player.points * 1000), inline: true },
         { name: '🎮 Matches', value: `${player.matches}`, inline: true },
         { name: '🎯 Win Rate', value: totalVotes > 0 ? `${winRate}% (${correctVotes}/${totalVotes})` : 'No votes yet', inline: true },
       )
@@ -113,14 +109,8 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to load stats.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
-}
-
-function getWinner(match) {
-  if (match.result.home > match.result.away) return match.home;
-  if (match.result.home < match.result.away) return match.away;
-  return 'draw';
 }

@@ -1,12 +1,8 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { updateMatchResult, readPlayers, readMatchVotes } from '../utils/firebase.js';
 import { calculateMatches } from '../utils/football.js';
+import { getWinner, pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
-
-const formatter = new Intl.NumberFormat('vi-VN', {
-  style: 'currency',
-  currency: 'VND',
-});
 
 const LEADER_LINES = [
   'is on fire right now!',
@@ -102,14 +98,10 @@ export async function execute(interaction) {
     await postMatchRoast(interaction, updatedMatch);
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to update the match result.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
-}
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
 }
 
 const ROAST_LINES = [
@@ -133,7 +125,7 @@ async function postMatchRoast(interaction, match) {
     const votes = (await readMatchVotes(match.id, match.messageId)).val();
     if (!votes) return;
 
-    const winner = getMatchWinner(match);
+    const winner = getWinner(match);
     const users = interaction.client.cachedUsers;
     const losers = [];
 
@@ -164,12 +156,6 @@ async function postMatchRoast(interaction, match) {
   }
 }
 
-function getMatchWinner(match) {
-  if (match.result.home > match.result.away) return match.home;
-  if (match.result.home < match.result.away) return match.away;
-  return 'draw';
-}
-
 async function postStandings(interaction) {
   try {
     const players = (await readPlayers()).val();
@@ -192,9 +178,9 @@ async function postStandings(interaction) {
     const bottom = ranked[ranked.length - 1];
 
     const lines = [
-      `👑 **${leader.nickname}** ${pick(LEADER_LINES)} (${formatter.format(leader.points * 1000)})`,
+      `👑 **${leader.nickname}** ${pick(LEADER_LINES)} (${VND_FORMATTER.format(leader.points * 1000)})`,
       '',
-      `💀 **${bottom.nickname}** ${pick(BOTTOM_LINES)} (${formatter.format(bottom.points * 1000)})`,
+      `💀 **${bottom.nickname}** ${pick(BOTTOM_LINES)} (${VND_FORMATTER.format(bottom.points * 1000)})`,
     ];
 
     const embed = new EmbedBuilder()

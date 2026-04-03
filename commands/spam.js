@@ -20,7 +20,7 @@ export async function execute(interaction) {
 
     await interaction.reply({ embeds: [embed] });
   } catch {
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Something went wrong.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

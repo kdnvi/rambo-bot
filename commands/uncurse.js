@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readCurses, removeCurse } from '../utils/firebase.js';
+import { pick } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const RELIEF_LINES = [
@@ -14,10 +15,6 @@ const RELIEF_LINES = [
 export const data = new SlashCommandBuilder()
   .setName('uncurse')
   .setDescription('Remove your active curse (if the match hasn\'t started yet)');
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export async function execute(interaction) {
   try {
@@ -78,7 +75,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
+    if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Failed to remove curse.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }

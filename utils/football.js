@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIns, readCurses } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readAllAllIns, readCurses } from './firebase.js';
 import { CronJob } from 'cron';
 
 const STAGE_STAKES = [
@@ -235,11 +235,6 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
 
       await channel.send({ embeds: [embed] });
 
-      const bountyEmbed = await resolveBounty(players, scores, users);
-      if (bountyEmbed) {
-        await channel.send({ embeds: [bountyEmbed] });
-      }
-
       const rivalryEmbed = await checkRivalry(allMatches, votes, players, users);
       if (rivalryEmbed) {
         await channel.send({ embeds: [rivalryEmbed] });
@@ -322,93 +317,60 @@ async function checkRivalry(allMatches, votes, players, users) {
   }
 }
 
-const BOUNTY_PTS = 5;
-
-async function resolveBounty(players, dayScores, users) {
-  try {
-    const ranked = Object.entries(players)
-      .sort(([, a], [, b]) => b.points - a.points);
-    if (ranked.length < 2) return null;
-
-    const [leaderId] = ranked[0];
-    const leaderDayScore = dayScores[leaderId] || 0;
-
-    const hunters = Object.entries(dayScores)
-      .filter(([id, pts]) => id !== leaderId && pts > leaderDayScore && pts > 0)
-      .sort(([, a], [, b]) => b - a);
-
-    if (hunters.length === 0) return null;
-
-    const [hunterId] = hunters[0];
-    players[hunterId].points += BOUNTY_PTS;
-    players[leaderId].points -= BOUNTY_PTS;
-
-    const hunterName = users[hunterId]?.nickname || 'Unknown';
-    const leaderName = users[leaderId]?.nickname || 'Unknown';
-
-    await updatePlayers({
-      [hunterId]: players[hunterId],
-      [leaderId]: players[leaderId],
-    });
-
-    return new EmbedBuilder()
-      .setTitle('🎯  Bounty Claimed!')
-      .setDescription(
-        `**${hunterName}** outscored the leader **${leaderName}** today and stole **${BOUNTY_PTS} pts**!\n\n` +
-        `The #1 spot comes with a target on your back. 👀`
-      )
-      .setColor(0xE91E63)
-      .setTimestamp();
-  } catch (err) {
-    logger.error('Failed to resolve bounty:', err);
-    return null;
-  }
-}
+const calculationLock = new Set();
 
 export async function calculateMatches(matches) {
-  const votingObj = await readAllVotes();
-  const players = (await readPlayers()).val();
-  if (!players) {
-    logger.warn('No players registered, skipping calculation');
+  const toProcess = matches.filter((m) => !calculationLock.has(m.id));
+  if (toProcess.length === 0) {
+    logger.info('All matches already being calculated, skipping');
     return;
   }
+  for (const m of toProcess) calculationLock.add(m.id);
 
-  const wagers = await readPlayerWagers();
-  const allIns = {};
-  for (const userId of Object.keys(players)) {
-    allIns[userId] = await readPlayerAllIns(userId);
-  }
-  const curses = await readCurses();
-
-  const calculatedIds = [];
-
-  for (const match of matches) {
-    if (!match.messageId) {
-      logger.warn(`Skipped match ${match.id} due to empty message ID, consider to update manually.`);
-      continue;
+  try {
+    const votingObj = await readAllVotes();
+    const players = (await readPlayers()).val();
+    if (!players) {
+      logger.warn('No players registered, skipping calculation');
+      return;
     }
 
-    const key = `${match.id - 1}`;
-    const votes = (votingObj && key in votingObj && match.messageId in (votingObj[key] || {}))
-      ? votingObj[key][match.messageId]
-      : null;
+    const wagers = await readPlayerWagers();
+    const allIns = await readAllAllIns();
+    const curses = await readCurses();
 
-    if (!votes) {
-      logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
+    const calculatedIds = [];
+
+    for (const match of toProcess) {
+      if (!match.messageId) {
+        logger.warn(`Skipped match ${match.id} due to empty message ID, consider to update manually.`);
+        continue;
+      }
+
+      const key = `${match.id - 1}`;
+      const votes = (votingObj && key in votingObj && match.messageId in (votingObj[key] || {}))
+        ? votingObj[key][match.messageId]
+        : null;
+
+      if (!votes) {
+        logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
+      }
+
+      const { votedPlayers, randomPicks } = calculatePlayerPoints(players, votes, match, wagers, allIns);
+      resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks);
+      calculatedIds.push(match.id - 1);
+      logger.info(`Calculated match ${match.id} successfully`);
     }
 
-    const votedPlayers = calculatePlayerPoints(players, votes, match, wagers, allIns);
-    resolveCurses(players, curses, match, votingObj, votedPlayers);
-    calculatedIds.push(match.id - 1);
-    logger.info(`Calculated match ${match.id} successfully`);
-  }
-
-  if (calculatedIds.length > 0) {
-    await updatePlayers(players);
-    for (const idx of calculatedIds) {
-      await updateMatch(idx, { isCalculated: true });
+    if (calculatedIds.length > 0) {
+      await updatePlayers(players);
+      for (const idx of calculatedIds) {
+        await updateMatch(idx, { isCalculated: true });
+      }
+      logger.info(`Marked ${calculatedIds.length} match(es) as calculated`);
     }
-    logger.info(`Marked ${calculatedIds.length} match(es) as calculated`);
+  } finally {
+    for (const m of toProcess) calculationLock.delete(m.id);
   }
 }
 
@@ -472,6 +434,7 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
   const votedPlayers = [];
+  const randomPicks = {};
 
   const picks = {};
   if (votes) {
@@ -484,7 +447,9 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
 
   for (const k of Object.keys(players)) {
     if (votedPlayers.includes(k)) continue;
-    picks[k] = outcomes[Math.floor(Math.random() * outcomes.length)];
+    const randomPick = outcomes[Math.floor(Math.random() * outcomes.length)];
+    picks[k] = randomPick;
+    randomPicks[k] = randomPick;
   }
 
   const playerStakes = {};
@@ -527,10 +492,10 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
     };
   }
 
-  return votedPlayers;
+  return { votedPlayers, randomPicks };
 }
 
-function resolveCurses(players, curses, match, votingObj, votedPlayers) {
+function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks) {
   const matchCurses = curses[match.id];
   if (!matchCurses) return;
 
@@ -544,6 +509,9 @@ function resolveCurses(players, curses, match, votingObj, votedPlayers) {
     if (votingObj && key in votingObj && match.messageId in (votingObj[key] || {})) {
       const mv = votingObj[key][match.messageId];
       if (target in mv) targetVote = mv[target].vote;
+    }
+    if (targetVote === null) {
+      targetVote = randomPicks[target] || null;
     }
     if (targetVote === null) continue;
 

@@ -1,5 +1,6 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readAllVotes, readPlayers, readPlayerAllIns } from '../utils/firebase.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { readTournamentData, readTournamentConfig, readAllVotes, readPlayers, readAllAllIns } from '../utils/firebase.js';
+import { getWinner } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -16,7 +17,7 @@ export async function execute(interaction) {
     const users = interaction.client.cachedUsers;
 
     if (!players) {
-      await interaction.reply({ content: '❌ No players registered.', flags: 64 });
+      await interaction.reply({ content: '❌ No players registered.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -25,7 +26,7 @@ export async function execute(interaction) {
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
     if (completed.length === 0) {
-      await interaction.reply({ content: '❌ No completed matches yet.', flags: 64 });
+      await interaction.reply({ content: '❌ No completed matches yet.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -70,22 +71,57 @@ export async function execute(interaction) {
     }
 
     const nick = (id) => users[id]?.nickname || 'Unknown';
+    const names = (ids) => ids.map(nick).join(', ');
 
-    const worstStreak = playerIds
-      .sort((a, b) => streaks[b].max - streaks[a].max)[0];
-
-    const mostWrong = playerIds
-      .sort((a, b) => totalWrong[b] - totalWrong[a])[0];
-
-    const laziest = playerIds
-      .sort((a, b) => missedVotes[b] - missedVotes[a])[0];
-
-    const poorest = playerIds
-      .sort((a, b) => players[a].points - players[b].points)[0];
-
-    let biggestAllInFail = null;
+    const totalCorrect = {};
+    const winStreaks = {};
     for (const id of playerIds) {
-      const allIns = await readPlayerAllIns(id);
+      totalCorrect[id] = completed.length - totalWrong[id] - missedVotes[id];
+      winStreaks[id] = { current: 0, max: 0 };
+    }
+
+    for (const match of completed) {
+      const key = `${match.id - 1}`;
+      const winner = getWinner(match);
+      for (const id of playerIds) {
+        let userVote = null;
+        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
+          const mv = votes[key][match.messageId];
+          if (id in mv) userVote = mv[id].vote;
+        }
+        if (userVote === winner) {
+          winStreaks[id].current++;
+          if (winStreaks[id].current > winStreaks[id].max) winStreaks[id].max = winStreaks[id].current;
+        } else {
+          winStreaks[id].current = 0;
+        }
+      }
+    }
+
+    const topBy = (obj, dir) => {
+      const sorted = [...playerIds].sort((a, b) => dir === 'desc' ? obj[b] - obj[a] : obj[a] - obj[b]);
+      const topVal = obj[sorted[0]];
+      return { ids: sorted.filter((id) => obj[id] === topVal), val: topVal };
+    };
+
+    const bestStreak = topBy(Object.fromEntries(playerIds.map((id) => [id, winStreaks[id].max])), 'desc');
+    const worstStreak = topBy(Object.fromEntries(playerIds.map((id) => [id, streaks[id].max])), 'desc');
+
+    const mostCorrectStat = topBy(totalCorrect, 'desc');
+    const mostWrongStat = topBy(totalWrong, 'desc');
+
+    const mostDiligent = topBy(missedVotes, 'asc');
+    const laziest = topBy(missedVotes, 'desc');
+
+    const pointsMap = Object.fromEntries(playerIds.map((id) => [id, players[id].points]));
+    const richest = topBy(pointsMap, 'desc');
+    const poorest = topBy(pointsMap, 'asc');
+
+    let biggestAllInWin = null;
+    let biggestAllInFail = null;
+    const allAllIns = await readAllAllIns();
+    for (const id of playerIds) {
+      const allIns = allAllIns[id] || {};
       for (const [matchId, data] of Object.entries(allIns)) {
         const match = completed.find((m) => m.id === parseInt(matchId));
         if (!match) continue;
@@ -96,49 +132,63 @@ export async function execute(interaction) {
           const mv = votes[key][match.messageId];
           if (id in mv) userVote = mv[id].vote;
         }
-        if (userVote && userVote !== winner) {
+        if (!userVote) continue;
+        if (userVote === winner) {
+          if (!biggestAllInWin || data.amount > biggestAllInWin.amount) {
+            biggestAllInWin = { ids: [id], amount: data.amount, matchId: match.id };
+          } else if (data.amount === biggestAllInWin.amount) {
+            biggestAllInWin.ids.push(id);
+          }
+        } else {
           if (!biggestAllInFail || data.amount > biggestAllInFail.amount) {
-            biggestAllInFail = { id, amount: data.amount, matchId: match.id };
+            biggestAllInFail = { ids: [id], amount: data.amount, matchId: match.id };
+          } else if (data.amount === biggestAllInFail.amount) {
+            biggestAllInFail.ids.push(id);
           }
         }
       }
     }
 
     const lines = [
-      `🔻 **Longest Losing Streak:** ${nick(worstStreak)} — **${streaks[worstStreak].max}** wrong in a row. Impressively bad.`,
+      `**🔥 Winning Streak vs 🔻 Losing Streak**`,
+      `👑 ${names(bestStreak.ids)} — **${bestStreak.val}** wins in a row`,
+      `💀 ${names(worstStreak.ids)} — **${worstStreak.val}** wrong in a row`,
       '',
-      `🤡 **Most Wrong Predictions:** ${nick(mostWrong)} — **${totalWrong[mostWrong]}** out of ${completed.length} matches. Consistency is key.`,
+      `**🎯 Most Correct vs 🤡 Most Wrong**`,
+      `👑 ${names(mostCorrectStat.ids)} — **${mostCorrectStat.val}**/${completed.length} correct`,
+      `💀 ${names(mostWrongStat.ids)} — **${mostWrongStat.val}**/${completed.length} wrong`,
       '',
-      `😴 **Laziest Player:** ${nick(laziest)} — missed **${missedVotes[laziest]}** vote(s). Let the dice do the work.`,
+      `**⚡ Most Diligent vs 😴 Laziest**`,
+      `👑 ${names(mostDiligent.ids)} — missed **${mostDiligent.val}** vote(s)`,
+      `💀 ${names(laziest.ids)} — missed **${laziest.val}** vote(s)`,
       '',
-      `📉 **Poorest Player:** ${nick(poorest)} — sitting at **${players[poorest].points}** points. Thoughts and prayers.`,
+      `**💰 Richest vs 📉 Poorest**`,
+      `👑 ${names(richest.ids)} — **${richest.val}** pts`,
+      `💀 ${names(poorest.ids)} — **${poorest.val}** pts`,
     ];
 
-    if (biggestAllInFail) {
-      lines.push(
-        '',
-        `💥 **Biggest All-In Fail:** ${nick(biggestAllInFail.id)} — lost **${biggestAllInFail.amount}** points on match #${biggestAllInFail.matchId}. Pain.`
-      );
+    if (biggestAllInWin || biggestAllInFail) {
+      lines.push('', `**🎰 All-In Hall of Fame vs 💥 All-In Hall of Shame**`);
+      if (biggestAllInWin) {
+        lines.push(`👑 ${names(biggestAllInWin.ids)} — won **${biggestAllInWin.amount}** pts on match #${biggestAllInWin.matchId}`);
+      }
+      if (biggestAllInFail) {
+        lines.push(`💀 ${names(biggestAllInFail.ids)} — lost **${biggestAllInFail.amount}** pts on match #${biggestAllInFail.matchId}`);
+      }
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`🏚️  ${tournamentName} — Wall of Shame`)
+      .setTitle(`⚔️  ${tournamentName} — Head to Head`)
       .setDescription(lines.join('\n'))
       .setColor(0xED4245)
-      .setFooter({ text: 'Embrace the shame. Wear it like armor.' })
+      .setFooter({ text: 'Every crown has its clown.' })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
-    if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Failed to load the wall of shame.', flags: 64 }).catch(() => {});
+    if (!interaction.replied && !interaction.deferred) {
+      await interaction.reply({ content: '❌ Failed to load the wall of shame.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
-}
-
-function getWinner(match) {
-  if (match.result.home > match.result.away) return match.home;
-  if (match.result.home < match.result.away) return match.away;
-  return 'draw';
 }

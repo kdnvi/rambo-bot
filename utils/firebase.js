@@ -18,13 +18,9 @@ export async function readTournamentData(path) {
 }
 
 export async function updateMatch(matchIndex, content) {
-  try {
-    const ref = db.ref(`tournament/matches/${matchIndex}`);
-    await ref.update(content);
-    logger.info(`Updated match index [${matchIndex}]: ${Object.keys(content).join(', ')}`);
-  } catch (err) {
-    logger.error(err);
-  }
+  const ref = db.ref(`tournament/matches/${matchIndex}`);
+  await ref.update(content);
+  logger.info(`Updated match index [${matchIndex}]: ${Object.keys(content).join(', ')}`);
 }
 
 export async function updateMatchResult(matchIndex, homeScore, awayScore) {
@@ -59,7 +55,7 @@ export async function updateMatchResult(matchIndex, homeScore, awayScore) {
 
 export async function readPlayers() {
   const ref = db.ref('tournament/players');
-  return ref.orderByChild('points').once('value');
+  return ref.once('value');
 }
 
 export async function registerPlayer(userId) {
@@ -83,13 +79,9 @@ export async function registerPlayer(userId) {
 }
 
 export async function updatePlayers(content) {
-  try {
-    const ref = db.ref('tournament/players');
-    await ref.update(content);
-    logger.info(`Updated ${Object.keys(content).length} player(s)`);
-  } catch (err) {
-    logger.error(err);
-  }
+  const ref = db.ref('tournament/players');
+  await ref.update(content);
+  logger.info(`Updated ${Object.keys(content).length} player(s)`);
 }
 
 export async function readAllVotes() {
@@ -98,13 +90,9 @@ export async function readAllVotes() {
 }
 
 export async function updateMatchVote(matchId, userId, vote, messageId) {
-  try {
-    const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
-    await ref.update({ vote: vote });
-    logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
-  } catch (err) {
-    logger.error(err);
-  }
+  const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
+  await ref.update({ vote: vote });
+  logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
 }
 
 export async function readMatchVotes(matchId, messageId) {
@@ -125,6 +113,11 @@ export async function setPlayerWager(userId, matchId, type) {
 
 export async function readPlayerAllIns(userId) {
   const ref = db.ref(`tournament/allins/${userId}`);
+  return (await ref.once('value')).val() || {};
+}
+
+export async function readAllAllIns() {
+  const ref = db.ref('tournament/allins');
   return (await ref.once('value')).val() || {};
 }
 

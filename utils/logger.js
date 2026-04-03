@@ -4,7 +4,7 @@ import TransportStream from 'winston-transport';
 const baseFormat = _format.combine(
   _format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   _format.errors({ stack: true }),
-  _format.printf(l => `${l.timestamp} ${l.level}: ${l.message}` + (l.splat !== undefined ? `${l.splat}` : ' ')),
+  _format.printf(l => `${l.timestamp} ${l.level}: ${l.message}` + (l.splat !== undefined ? `${l.splat}` : '')),
 );
 
 class DiscordTransport extends TransportStream {

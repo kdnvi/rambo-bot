@@ -59,7 +59,7 @@ export async function execute(interaction) {
       const updatedEmbed = EmbedBuilder.from(existingEmbed)
         .setFooter({ text: `${voteCount} vote(s) cast · Vote below before kickoff!` });
 
-      const baseDesc = existingEmbed.description.split(VOTE_SEPARATOR)[0];
+      const baseDesc = (existingEmbed.description || '').split(VOTE_SEPARATOR)[0];
       updatedEmbed.setDescription(`${baseDesc}${VOTE_SEPARATOR}${barText}`);
 
       await interaction.update({ embeds: [updatedEmbed] });

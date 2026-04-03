@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readPlayerWagers, readPlayerAllIns, setPlayerWager } from '../utils/firebase.js';
+import { readTournamentData, readPlayers, readUserWagers, readPlayerAllIns, setPlayerWager } from '../utils/firebase.js';
 import { getMatchStake } from '../utils/football.js';
 import { pick, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
@@ -54,8 +54,7 @@ export async function execute(interaction) {
       .filter((m) => m.date.startsWith(matchDay))
       .map((m) => m.id);
 
-    const wagers = await readPlayerWagers();
-    const myWagers = wagers[userId] || {};
+    const myWagers = await readUserWagers(userId);
 
     const existingAllIns = await readPlayerAllIns(userId);
     if (existingAllIns[matchId]) {

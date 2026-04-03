@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readPlayers, readTournamentConfig, readTournamentData, readAllVotes, readPlayerWagers, readAllAllIns } from '../utils/firebase.js';
-import { computeBadges, formatBadges } from '../utils/badges.js';
+import { readPlayers, readTournamentConfig, readAllBadges } from '../utils/firebase.js';
+import { formatBadges } from '../utils/badges.js';
 import { VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -26,32 +26,16 @@ export async function execute(interaction) {
     }
 
     const users = interaction.client.cachedUsers;
-    const allMatches = (await readTournamentData('matches')).val() || [];
-    const votes = await readAllVotes();
-    const wagers = await readPlayerWagers();
-    const completedMatches = allMatches
-      .filter((m) => m.hasResult && m.isCalculated)
-      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+    const allBadges = await readAllBadges();
 
     const rankedPlayers = [];
-    const allAllIns = await readAllAllIns();
-
     for (const [key, value] of Object.entries(players)) {
-      const allIn = allAllIns[key] || {};
-      const badges = computeBadges({
-        userId: key,
-        completedMatches,
-        votes,
-        playerData: value,
-        wagers: wagers[key] || {},
-        allIn,
-      });
       rankedPlayers.push({
         nickname: users[key]?.nickname || 'Unknown',
         balance: value.points,
         matches: value.matches || 0,
         avatar: users[key]?.avatarURL,
-        badgeStr: formatBadges(badges),
+        badgeStr: formatBadges(allBadges[key]),
       });
     }
     rankedPlayers.sort((a, b) => b.balance - a.balance);

@@ -105,6 +105,11 @@ export async function readPlayerWagers() {
   return (await ref.once('value')).val() || {};
 }
 
+export async function readUserWagers(userId) {
+  const ref = db.ref(`tournament/wagers/${userId}`);
+  return (await ref.once('value')).val() || {};
+}
+
 export async function setPlayerWager(userId, matchId, type) {
   const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
   await ref.set({ type });
@@ -156,9 +161,23 @@ export async function removePlayerAllIn(userId, matchId) {
   logger.info(`Removed all-in for user [${userId}] on match [${matchId}]`);
 }
 
-export async function readVoteChanges(matchId) {
-  const ref = db.ref(`tournament/voteChanges/${matchId}`);
+export async function readPlayerBadges(userId) {
+  const ref = db.ref(`tournament/badges/${userId}`);
   return (await ref.once('value')).val() || {};
+}
+
+export async function readAllBadges() {
+  const ref = db.ref('tournament/badges');
+  return (await ref.once('value')).val() || {};
+}
+
+export async function awardBadge(userId, badgeId, meta = {}) {
+  const ref = db.ref(`tournament/badges/${userId}/${badgeId}`);
+  const existing = (await ref.once('value')).val();
+  if (existing) return false;
+  await ref.set({ earnedAt: Date.now(), ...meta });
+  logger.info(`Badge awarded: [${badgeId}] to user [${userId}]`);
+  return true;
 }
 
 export async function incrementVoteChange(matchId, userId) {

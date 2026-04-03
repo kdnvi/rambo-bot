@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readPlayerAllIns, readPlayerWagers, setPlayerAllIn } from '../utils/firebase.js';
+import { readTournamentData, readPlayers, readPlayerAllIns, readUserWagers, setPlayerAllIn } from '../utils/firebase.js';
 import { getMatchStake } from '../utils/football.js';
 import { pick, VND_FORMATTER, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
@@ -70,8 +70,7 @@ export async function execute(interaction) {
 
     const matchId = match.id;
 
-    const wagers = await readPlayerWagers();
-    const myWagers = wagers[userId] || {};
+    const myWagers = await readUserWagers(userId);
     if (myWagers[matchId]?.type === 'double-down') {
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Already Double-Downed')

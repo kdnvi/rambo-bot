@@ -50,7 +50,7 @@ export function buildBracket(matches, standings) {
   return r32.map((m) => {
     const resolveSlot = (code) => {
       if (code === '3rd') {
-        const t = qualified[thirdIdx++];
+        const t = thirdIdx < qualified.length ? qualified[thirdIdx++] : null;
         return { label: t ? `${t.group}3` : '3rd', team: t?.name || null };
       }
       return { label: code, team: resolveTeam(code, standings) };

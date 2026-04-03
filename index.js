@@ -20,11 +20,15 @@ const commandFiles = readdirSync(commandsPath).filter(file => file.endsWith('.js
 
 for (const file of commandFiles) {
   const filePath = join(commandsPath, file);
-  const command = await import(filePath);
-  if ('data' in command && 'execute' in command) {
-    client.commands.set(command.data.name, command);
-  } else {
-    logger.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+  try {
+    const command = await import(filePath);
+    if ('data' in command && 'execute' in command) {
+      client.commands.set(command.data.name, command);
+    } else {
+      logger.warn(`[WARNING] The command at ${filePath} is missing a required "data" or "execute" property.`);
+    }
+  } catch (err) {
+    logger.error(`Failed to load command at ${filePath}: ${err.message}`);
   }
 }
 

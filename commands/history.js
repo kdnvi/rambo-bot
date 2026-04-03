@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readAllVotes } from '../utils/firebase.js';
-import { getWinner } from '../utils/helper.js';
+import { readTournamentData, readTournamentConfig, readAllVotes, readUserWagers, readPlayerAllIns, readCurses } from '../utils/firebase.js';
+import { getWinner, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -29,15 +29,22 @@ export async function execute(interaction) {
       return;
     }
 
-    const votes = await readAllVotes();
+    const [votes, userWagers, userAllIns, allCurses] = await Promise.all([
+      readAllVotes(),
+      readUserWagers(userId),
+      readPlayerAllIns(userId),
+      readCurses(),
+    ]);
     const users = interaction.client.cachedUsers;
     const nickname = users[userId]?.nickname || targetUser.displayName;
 
     const completedMatches = allMatches
-      .filter((m) => m.hasResult)
+      .filter((m) => m.hasResult && m.isCalculated)
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
     const userHistory = [];
+    const cursedTargets = {};
+
     for (const match of completedMatches) {
       const key = `${match.id - 1}`;
       const winner = getWinner(match);
@@ -50,6 +57,14 @@ export async function execute(interaction) {
         }
       }
 
+      const wager = userWagers[match.id];
+      const allIn = userAllIns[match.id];
+      const curse = allCurses[match.id]?.[userId];
+
+      if (curse) {
+        cursedTargets[curse.target] = (cursedTargets[curse.target] || 0) + 1;
+      }
+
       userHistory.push({
         matchId: match.id,
         home: match.home,
@@ -58,6 +73,9 @@ export async function execute(interaction) {
         winner,
         vote: userVote,
         correct: userVote ? userVote === winner : null,
+        isDoubleDown: wager?.type === 'double-down',
+        allInAmount: allIn?.amount || null,
+        curseTarget: curse?.target || null,
       });
     }
 
@@ -74,11 +92,24 @@ export async function execute(interaction) {
 
     const lines = recent.map((r) => {
       const score = `${r.result.home}-${r.result.away}`;
+      let line;
       if (r.vote === null) {
-        return `🎲 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *randomized*`;
+        line = `🎲 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *randomized*`;
+      } else {
+        const icon = r.correct ? '👑' : '🤡';
+        line = `${icon} **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
       }
-      const icon = r.correct ? '👑' : '🤡';
-      return `${icon} **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
+
+      const tags = [];
+      if (r.isDoubleDown) tags.push('⏫ double-down');
+      if (r.allInAmount) tags.push(`🎰 all-in (${VND_FORMATTER.format(r.allInAmount * 1000)})`);
+      if (r.curseTarget) {
+        const targetName = users[r.curseTarget]?.nickname || 'Unknown';
+        tags.push(`🪄 cursed **${targetName}**`);
+      }
+      if (tags.length > 0) line += `\n  └ ${tags.join(' · ')}`;
+
+      return line;
     });
 
     const totalVoted = userHistory.filter((r) => r.vote !== null).length;
@@ -86,13 +117,34 @@ export async function execute(interaction) {
     const totalRandomized = userHistory.filter((r) => r.vote === null).length;
     const winRate = totalVoted > 0 ? `${Math.round((totalCorrect / totalVoted) * 100)}%` : '—';
 
+    let summary = `🎯 **${winRate}** win rate (${totalCorrect}/${totalVoted})`;
+    if (totalRandomized > 0) summary += ` · 🎲 ${totalRandomized} randomized`;
+
+    const totalDD = userHistory.filter((r) => r.isDoubleDown).length;
+    const totalAllIn = userHistory.filter((r) => r.allInAmount).length;
+    const totalCurses = userHistory.filter((r) => r.curseTarget).length;
+    if (totalDD > 0 || totalAllIn > 0 || totalCurses > 0) {
+      const parts = [];
+      if (totalDD > 0) parts.push(`⏫ ${totalDD} double-down`);
+      if (totalAllIn > 0) parts.push(`🎰 ${totalAllIn} all-in`);
+      if (totalCurses > 0) parts.push(`🪄 ${totalCurses} curse`);
+      summary += `\n${parts.join(' · ')}`;
+    }
+
+    if (Object.keys(cursedTargets).length > 0) {
+      const curseList = Object.entries(cursedTargets)
+        .sort((a, b) => b[1] - a[1])
+        .map(([id, count]) => `${users[id]?.nickname || 'Unknown'} (×${count})`)
+        .join(', ');
+      summary += `\n🪄 Cursed: ${curseList}`;
+    }
+
     const embed = new EmbedBuilder()
       .setTitle(`📜  ${nickname}'s Vote History`)
       .setDescription(
         `**${tournamentName}**\n\n` +
         lines.join('\n') +
-        `\n\n🎯 **${winRate}** win rate (${totalCorrect}/${totalVoted})` +
-        (totalRandomized > 0 ? ` · 🎲 ${totalRandomized} randomized` : '')
+        `\n\n${summary}`
       )
       .setColor(0x5865F2)
       .setThumbnail(targetUser.displayAvatarURL())

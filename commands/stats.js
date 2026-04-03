@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerWagers, readPlayerAllIns } from '../utils/firebase.js';
-import { computeBadges, formatBadgesDetailed } from '../utils/badges.js';
+import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerBadges } from '../utils/firebase.js';
+import { formatBadgesDetailed } from '../utils/badges.js';
 import { getWinner, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -90,19 +90,10 @@ export async function execute(interaction) {
       embed.addFields({ name: '🕐 Recent Votes', value: lines.join('\n'), inline: false });
     }
 
-    const wagers = await readPlayerWagers();
-    const allIn = await readPlayerAllIns(userId);
-    const badges = computeBadges({
-      userId,
-      completedMatches,
-      votes,
-      playerData: player,
-      wagers: wagers[userId] || {},
-      allIn,
-    });
+    const storedBadges = await readPlayerBadges(userId);
     embed.addFields({
       name: '🏅 Badges',
-      value: formatBadgesDetailed(badges),
+      value: formatBadgesDetailed(storedBadges),
       inline: false,
     });
 

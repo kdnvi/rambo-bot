@@ -91,7 +91,7 @@ export async function execute(interaction) {
       hasResult: true,
       result: { home: homeScore, away: awayScore },
     };
-    await calculateMatches([updatedMatch]);
+    await calculateMatches([updatedMatch], interaction.client);
     logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
 
     await postStandings(interaction);

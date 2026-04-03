@@ -38,12 +38,12 @@ export async function execute(interaction) {
     let activeMatchId = null;
     let activeMatch = null;
     let activeAmount = 0;
-    for (const [matchId, data] of Object.entries(allIns)) {
+    for (const [matchId, entry] of Object.entries(allIns)) {
       const match = allMatches.find((m) => m.id === Number(matchId));
       if (match && Date.parse(match.date) > now) {
         activeMatchId = Number(matchId);
         activeMatch = match;
-        activeAmount = data.amount;
+        activeAmount = entry.amount;
         break;
       }
     }

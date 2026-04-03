@@ -1,6 +1,8 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readAllAllIns, readCurses } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readAllAllIns, readCurses, readAllBadges } from './firebase.js';
+import { getWinner } from './helper.js';
+import { checkAndAwardBadges } from './badges.js';
 import { CronJob } from 'cron';
 
 const STAGE_STAKES = [
@@ -129,8 +131,9 @@ export function calculatingJob(client) {
 
         const uncalculated = allMatches.filter((m) => m.hasResult && !m.isCalculated);
         if (uncalculated.length > 0) {
-          await calculateMatches(uncalculated);
-          await checkMatchdayMVP(client, allMatches, uncalculated);
+          await calculateMatches(uncalculated, client);
+          const freshMatches = (await readTournamentData('matches')).val();
+          await checkMatchdayMVP(client, freshMatches || allMatches, uncalculated);
         }
 
         const pending = allMatches.filter((match) => {
@@ -194,7 +197,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       }
 
       for (const match of dayMatches) {
-        const winner = matchWinner(match);
+        const winner = getWinner(match);
         const key = `${match.id - 1}`;
         const stake = getMatchStake(match.id);
 
@@ -319,7 +322,7 @@ async function checkRivalry(allMatches, votes, players, users) {
 
 const calculationLock = new Set();
 
-export async function calculateMatches(matches) {
+export async function calculateMatches(matches, client) {
   const toProcess = matches.filter((m) => !calculationLock.has(m.id));
   if (toProcess.length === 0) {
     logger.info('All matches already being calculated, skipping');
@@ -368,9 +371,57 @@ export async function calculateMatches(matches) {
         await updateMatch(idx, { isCalculated: true });
       }
       logger.info(`Marked ${calculatedIds.length} match(es) as calculated`);
+
+      const allMatches = (await readTournamentData('matches')).val() || [];
+      const completedMatches = allMatches
+        .filter((m) => m.hasResult && (m.isCalculated || calculatedIds.includes(m.id - 1)))
+        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
+
+      const existingBadges = await readAllBadges();
+      const newBadges = await checkAndAwardBadges({
+        players,
+        completedMatches,
+        votes: votingObj,
+        wagers,
+        allIns,
+        existingBadges,
+      });
+
+      if (client && Object.keys(newBadges).length > 0) {
+        await announceBadges(client, newBadges);
+      }
     }
   } finally {
     for (const m of toProcess) calculationLock.delete(m.id);
+  }
+}
+
+async function announceBadges(client, newBadges) {
+  try {
+    const config = await readTournamentConfig();
+    const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+    const channel = await client.channels.fetch(channelId);
+    const users = client.cachedUsers;
+
+    const lines = [];
+    for (const [userId, badges] of Object.entries(newBadges)) {
+      const name = users[userId]?.nickname || 'Unknown';
+      for (const badge of badges) {
+        lines.push(`${badge.icon} **${name}** earned **${badge.name}**! — *${badge.desc}*`);
+      }
+    }
+
+    if (lines.length === 0) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle('🏅  New Achievements Unlocked!')
+      .setDescription(lines.join('\n'))
+      .setColor(0xFFD700)
+      .setTimestamp();
+
+    await channel.send({ embeds: [embed] });
+  } catch (err) {
+    logger.error('Failed to announce badges:', err);
   }
 }
 
@@ -419,18 +470,9 @@ function matchVoteMessageComponent(match, config) {
   };
 }
 
-function matchWinner(match) {
-  if (match.result.home > match.result.away) {
-    return match.home;
-  } else if (match.result.home < match.result.away) {
-    return match.away;
-  } else {
-    return 'draw';
-  }
-}
 
 function calculatePlayerPoints(players, votes, match, wagers, allIns) {
-  const winner = matchWinner(match);
+  const winner = getWinner(match);
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
   const votedPlayers = [];
@@ -485,10 +527,12 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
       delta += isWinner ? allIn.amount : -allIn.amount;
     }
 
+    const newPoints = players[k].points + delta;
     players[k] = {
       ...players[k],
       matches: players[k].matches + 1,
-      points: players[k].points + delta,
+      points: newPoints,
+      ...(newPoints < 0 && { hadNegativeBalance: true }),
     };
   }
 
@@ -499,7 +543,7 @@ function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPi
   const matchCurses = curses[match.id];
   if (!matchCurses) return;
 
-  const winner = matchWinner(match);
+  const winner = getWinner(match);
   const key = `${match.id - 1}`;
 
   for (const [curserId, { target }] of Object.entries(matchCurses)) {

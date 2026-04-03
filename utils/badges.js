@@ -1,7 +1,8 @@
-import { getMatchStake } from './football.js';
 import { getWinner } from './helper.js';
+import { awardBadge } from './firebase.js';
+import logger from './logger.js';
 
-const BADGE_DEFS = [
+export const BADGE_DEFS = [
   { id: 'first_blood', icon: '🩸', name: 'First Blood', desc: 'Won your very first prediction' },
   { id: 'oracle', icon: '🔮', name: 'Oracle', desc: '5 correct predictions in a row' },
   { id: 'on_fire', icon: '🔥', name: 'On Fire', desc: '3 correct predictions in a row' },
@@ -14,99 +15,130 @@ const BADGE_DEFS = [
   { id: 'streak_breaker', icon: '💔', name: 'Streak Breaker', desc: 'Lost after a 3+ win streak' },
 ];
 
+const BADGE_MAP = Object.fromEntries(BADGE_DEFS.map((b) => [b.id, b]));
+
 /**
- * @param {Object} params
- * @param {string} params.userId
- * @param {Array} params.completedMatches - matches with hasResult && isCalculated, sorted by date
- * @param {Object} params.votes - full votes object from Firebase
- * @param {Object} params.playerData - { points, matches }
- * @param {Object} params.wagers - user's wagers object
- * @param {Object|null} params.allIn - user's all-in data
- * @returns {Array<{ icon: string, name: string }>}
+ * Check and award new badges for all players after match calculation.
+ * Returns a map of userId -> array of newly earned badge defs.
  */
-export function computeBadges({ userId, completedMatches, votes, playerData, wagers, allIn }) {
-  const earned = [];
-  const results = [];
-  let runningBalance = 0;
-  let wentNegative = false;
-  let recoveredFromNegative = false;
-  const matchDays = {};
+export async function checkAndAwardBadges({ players, completedMatches, votes, wagers, allIns, existingBadges }) {
+  const newBadges = {};
 
-  for (const match of completedMatches) {
-    const key = `${match.id - 1}`;
-    const winner = getWinner(match);
-    let userVote = null;
+  for (const userId of Object.keys(players)) {
+    const playerBadges = existingBadges[userId] || {};
+    const has = (id) => id in playerBadges;
 
-    if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
-      const matchVotes = votes[key][match.messageId];
-      if (userId in matchVotes) {
-        userVote = matchVotes[userId].vote;
+    const results = [];
+    const matchDays = {};
+
+    for (const match of completedMatches) {
+      const key = `${match.id - 1}`;
+      const winner = getWinner(match);
+      let userVote = getUserVote(votes, key, match.messageId, userId);
+      if (userVote === null) continue;
+
+      const isCorrect = userVote === winner;
+      results.push({ matchId: match.id, isCorrect, date: match.date });
+
+      if (isCorrect && isMinorityPick(votes, key, match.messageId, userVote)) {
+        results[results.length - 1].minorityWin = true;
+      }
+
+      const day = match.date.slice(0, 10);
+      if (!matchDays[day]) matchDays[day] = [];
+      matchDays[day].push(isCorrect);
+    }
+
+    const earned = [];
+
+    if (!has('first_blood') && results.some((r) => r.isCorrect)) {
+      earned.push('first_blood');
+    }
+
+    const maxWinStreak = longestStreak(results, true);
+    if (!has('oracle') && maxWinStreak >= 5) earned.push('oracle');
+    if (!has('on_fire') && maxWinStreak >= 3) earned.push('on_fire');
+
+    if (!has('streak_breaker') && hasStreakThenLoss(results, 3)) {
+      earned.push('streak_breaker');
+    }
+
+    const minorityWins = results.filter((r) => r.minorityWin).length;
+    if (!has('underdog') && minorityWins >= 3) earned.push('underdog');
+
+    if (!has('bankrupt') && players[userId].points < 0) {
+      earned.push('bankrupt');
+    }
+
+    if (!has('comeback') && players[userId].hadNegativeBalance && players[userId].points > 0) {
+      earned.push('comeback');
+    }
+
+    if (!has('perfect_day')) {
+      for (const dayResults of Object.values(matchDays)) {
+        if (dayResults.length >= 2 && dayResults.every(Boolean)) {
+          earned.push('perfect_day');
+          break;
+        }
       }
     }
 
-    if (userVote === null) continue;
-
-    const isCorrect = userVote === winner;
-    results.push({ matchId: match.id, isCorrect, date: match.date });
-
-    const isMinority = checkMinority(votes, key, match.messageId, userVote);
-    if (isCorrect && isMinority) {
-      results[results.length - 1].minorityWin = true;
+    const userAllIns = allIns?.[userId] || {};
+    if (!has('yolo') && Object.keys(userAllIns).length > 0) {
+      earned.push('yolo');
     }
 
-    const day = match.date.slice(0, 10);
-    if (!matchDays[day]) matchDays[day] = [];
-    matchDays[day].push(isCorrect);
+    const userWagers = wagers?.[userId] || {};
+    const ddCount = Object.values(userWagers).filter((w) => w.type === 'double-down').length;
+    if (!has('double_trouble') && ddCount >= 5) {
+      earned.push('double_trouble');
+    }
 
-    let stake = getMatchStake(match.id);
-    if (wagers?.[match.id]?.type === 'double-down') stake *= 2;
-    const allInAmount = allIn?.[match.id]?.amount || 0;
-    const delta = isCorrect ? stake + allInAmount : -(stake + allInAmount);
-    runningBalance += delta;
-    if (runningBalance < 0) wentNegative = true;
-    if (wentNegative && runningBalance > 0) recoveredFromNegative = true;
-  }
-
-  if (results.length > 0 && results.some((r) => r.isCorrect)) {
-    earned.push('first_blood');
-  }
-
-  const maxStreak = longestStreak(results, true);
-  if (maxStreak >= 5) earned.push('oracle');
-  else if (maxStreak >= 3) earned.push('on_fire');
-
-  const hadStreakOf3 = hasStreakThenLoss(results, 3);
-  if (hadStreakOf3) earned.push('streak_breaker');
-
-  const minorityWins = results.filter((r) => r.minorityWin).length;
-  if (minorityWins >= 3) earned.push('underdog');
-
-  if (wentNegative || playerData.points < 0) earned.push('bankrupt');
-  if (recoveredFromNegative) earned.push('comeback');
-
-  for (const [, dayResults] of Object.entries(matchDays)) {
-    if (dayResults.length >= 2 && dayResults.every(Boolean)) {
-      earned.push('perfect_day');
-      break;
+    if (earned.length > 0) {
+      newBadges[userId] = [];
+      for (const badgeId of earned) {
+        const matchId = completedMatches[completedMatches.length - 1]?.id;
+        const awarded = await awardBadge(userId, badgeId, { matchId });
+        if (awarded) {
+          newBadges[userId].push(BADGE_MAP[badgeId]);
+          logger.info(`New badge [${badgeId}] for user [${userId}]`);
+        }
+      }
+      if (newBadges[userId].length === 0) delete newBadges[userId];
     }
   }
 
-  if (allIn && Object.keys(allIn).length > 0) earned.push('yolo');
-
-  const ddCount = wagers ? Object.values(wagers).filter((w) => w.type === 'double-down').length : 0;
-  if (ddCount >= 5) earned.push('double_trouble');
-
-  return BADGE_DEFS.filter((b) => earned.includes(b.id));
+  return newBadges;
 }
 
-export function formatBadges(badges) {
-  if (badges.length === 0) return '';
-  return badges.map((b) => b.icon).join(' ');
+export function formatBadges(storedBadges) {
+  if (!storedBadges || Object.keys(storedBadges).length === 0) return '';
+  return Object.keys(storedBadges)
+    .filter((id) => id in BADGE_MAP)
+    .map((id) => BADGE_MAP[id].icon)
+    .join(' ');
 }
 
-export function formatBadgesDetailed(badges) {
-  if (badges.length === 0) return '*No badges yet*';
-  return badges.map((b) => `${b.icon} **${b.name}** — ${b.desc}`).join('\n');
+export function formatBadgesDetailed(storedBadges) {
+  if (!storedBadges || Object.keys(storedBadges).length === 0) return '*No badges yet*';
+  return Object.keys(storedBadges)
+    .filter((id) => id in BADGE_MAP)
+    .map((id) => `${BADGE_MAP[id].icon} **${BADGE_MAP[id].name}** — ${BADGE_MAP[id].desc}`)
+    .join('\n');
+}
+
+function getUserVote(votes, key, messageId, userId) {
+  if (!votes || !(key in votes) || !messageId || !(messageId in votes[key])) return null;
+  const mv = votes[key][messageId];
+  return (userId in mv) ? mv[userId].vote : null;
+}
+
+function isMinorityPick(votes, key, messageId, userVote) {
+  if (!votes || !(key in votes) || !(messageId in votes[key])) return false;
+  const matchVotes = votes[key][messageId];
+  const allVotes = Object.values(matchVotes).map((v) => v.vote);
+  const count = allVotes.filter((v) => v === userVote).length;
+  return count < allVotes.length / 2;
 }
 
 function longestStreak(results, correctValue) {
@@ -134,12 +166,4 @@ function hasStreakThenLoss(results, minStreak) {
     }
   }
   return false;
-}
-
-function checkMinority(votes, key, messageId, userVote) {
-  if (!votes || !(key in votes) || !(messageId in votes[key])) return false;
-  const matchVotes = votes[key][messageId];
-  const allVotes = Object.values(matchVotes).map((v) => v.vote);
-  const userVoteCount = allVotes.filter((v) => v === userVote).length;
-  return userVoteCount < allVotes.length / 2;
 }

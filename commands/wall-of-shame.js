@@ -122,7 +122,7 @@ export async function execute(interaction) {
     const allAllIns = await readAllAllIns();
     for (const id of playerIds) {
       const allIns = allAllIns[id] || {};
-      for (const [matchId, data] of Object.entries(allIns)) {
+      for (const [matchId, entry] of Object.entries(allIns)) {
         const match = completed.find((m) => m.id === parseInt(matchId));
         if (!match) continue;
         const winner = getWinner(match);
@@ -134,15 +134,15 @@ export async function execute(interaction) {
         }
         if (!userVote) continue;
         if (userVote === winner) {
-          if (!biggestAllInWin || data.amount > biggestAllInWin.amount) {
-            biggestAllInWin = { ids: [id], amount: data.amount, matchId: match.id };
-          } else if (data.amount === biggestAllInWin.amount) {
+          if (!biggestAllInWin || entry.amount > biggestAllInWin.amount) {
+            biggestAllInWin = { ids: [id], amount: entry.amount, matchId: match.id };
+          } else if (entry.amount === biggestAllInWin.amount) {
             biggestAllInWin.ids.push(id);
           }
         } else {
-          if (!biggestAllInFail || data.amount > biggestAllInFail.amount) {
-            biggestAllInFail = { ids: [id], amount: data.amount, matchId: match.id };
-          } else if (data.amount === biggestAllInFail.amount) {
+          if (!biggestAllInFail || entry.amount > biggestAllInFail.amount) {
+            biggestAllInFail = { ids: [id], amount: entry.amount, matchId: match.id };
+          } else if (entry.amount === biggestAllInFail.amount) {
             biggestAllInFail.ids.push(id);
           }
         }
@@ -177,9 +177,14 @@ export async function execute(interaction) {
       }
     }
 
+    let description = lines.join('\n');
+    if (description.length > 4096) {
+      description = description.slice(0, 4093) + '...';
+    }
+
     const embed = new EmbedBuilder()
       .setTitle(`⚔️  ${tournamentName} — Head to Head`)
-      .setDescription(lines.join('\n'))
+      .setDescription(description)
       .setColor(0xED4245)
       .setFooter({ text: 'Every crown has its clown.' })
       .setTimestamp();

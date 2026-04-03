@@ -61,6 +61,7 @@ export async function fetchDiscordUsers(client) {
     }
     return members;
   } catch (err) {
+    logger.error(`Failed to fetch Discord users — all player names will show as "Unknown". Check GUILD_ID and bot permissions.`);
     logger.error(err);
   }
 

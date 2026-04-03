@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readPlayerWagers, removePlayerWager } from '../utils/firebase.js';
+import { pick } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const CHICKEN_LINES = [
@@ -14,10 +15,6 @@ const CHICKEN_LINES = [
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
   .setDescription('Remove your double-down (if the match hasn\'t started yet)');
-
-function pick(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
 
 export async function execute(interaction) {
   try {

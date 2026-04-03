@@ -78,6 +78,28 @@ export async function execute(interaction) {
       return;
     }
 
+    const groupStageMatches = allMatches.filter((m) => m.id < R32_MATCH_IDS[0]);
+    const pendingGroupMatches = groupStageMatches.filter((m) => !m.hasResult);
+
+    if (pendingGroupMatches.length > 0) {
+      const sample = pendingGroupMatches.slice(0, 3);
+      const matchList = sample
+        .map((m) => `\`#${m.id}\` ${m.home.toUpperCase()} vs ${m.away.toUpperCase()}`)
+        .join('\n');
+      const moreText = pendingGroupMatches.length > 3
+        ? `\n…and **${pendingGroupMatches.length - 3}** more`
+        : '';
+      const embed = new EmbedBuilder()
+        .setTitle('⏳  Group Stage Not Complete')
+        .setDescription(
+          `**${pendingGroupMatches.length}** group stage match(es) still have no result.\n\n` +
+          matchList + moreText
+        )
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
     const standings = getGroupStandings(groups);
     const pairs = buildBracket(allMatches, standings);
     const thirdPlace = getThirdPlaceRanking(standings);

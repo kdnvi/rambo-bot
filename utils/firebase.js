@@ -111,3 +111,25 @@ export async function readMatchVotes(matchId, messageId) {
   const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
   return ref.once('value');
 }
+
+export async function readPlayerWagers() {
+  const ref = db.ref('tournament/wagers');
+  return (await ref.once('value')).val() || {};
+}
+
+export async function setPlayerWager(userId, matchId, type) {
+  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
+  await ref.set({ type });
+  logger.info(`Set ${type} wager for user [${userId}] on match [${matchId}]`);
+}
+
+export async function readPlayerAllIn(userId) {
+  const ref = db.ref(`tournament/allins/${userId}`);
+  return (await ref.once('value')).val();
+}
+
+export async function setPlayerAllIn(userId, matchId, amount) {
+  const ref = db.ref(`tournament/allins/${userId}`);
+  await ref.set({ matchId, amount });
+  logger.info(`Set all-in for user [${userId}] on match [${matchId}] with amount [${amount}]`);
+}

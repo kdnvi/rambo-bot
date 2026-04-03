@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes, readPlayerWagers, readPlayerAllIn } from '../utils/firebase.js';
+import { computeBadges, formatBadgesDetailed } from '../utils/badges.js';
 import logger from '../utils/logger.js';
 
 const formatter = new Intl.NumberFormat('vi-VN', {
@@ -92,6 +93,22 @@ export async function execute(interaction) {
       });
       embed.addFields({ name: '🕐 Recent Votes', value: lines.join('\n'), inline: false });
     }
+
+    const wagers = await readPlayerWagers();
+    const allIn = await readPlayerAllIn(userId);
+    const badges = computeBadges({
+      userId,
+      completedMatches,
+      votes,
+      playerData: player,
+      wagers: wagers[userId] || {},
+      allIn,
+    });
+    embed.addFields({
+      name: '🏅 Badges',
+      value: formatBadgesDetailed(badges),
+      inline: false,
+    });
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {

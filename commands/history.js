@@ -49,7 +49,6 @@ export async function execute(interaction) {
         .setColor(0x5865F2)
         .addFields(
           { name: '📊 Result', value: resultLine, inline: false },
-          { name: '📈 Odds', value: `Home \`${match.odds.home}\`  Draw \`${match.odds.draw}\`  Away \`${match.odds.away}\``, inline: false },
         );
 
       if (votes && matchId in votes && match.messageId && match.messageId in votes[matchId]) {

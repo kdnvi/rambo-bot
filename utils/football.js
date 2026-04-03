@@ -1,7 +1,21 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIn } from './firebase.js';
 import { CronJob } from 'cron';
+
+const STAGE_STAKES = [
+  { minId: 1, maxId: 72, stake: 10 },
+  { minId: 73, maxId: 88, stake: 10 },
+  { minId: 89, maxId: 96, stake: 15 },
+  { minId: 97, maxId: 100, stake: 20 },
+  { minId: 101, maxId: 102, stake: 30 },
+  { minId: 103, maxId: 104, stake: 50 },
+];
+
+export function getMatchStake(matchId) {
+  const entry = STAGE_STAKES.find((s) => matchId >= s.minId && matchId <= s.maxId);
+  return entry?.stake || 10;
+}
 
 const MATCH_POST_BEFORE_MS = (parseInt(process.env.MATCH_POST_BEFORE_MINS) || 720) * 60 * 1000;
 const VOTE_REMINDER_BEFORE_MS = (parseInt(process.env.VOTE_REMINDER_BEFORE_MINS) || 30) * 60 * 1000;
@@ -116,6 +130,7 @@ export function calculatingJob(client) {
         const uncalculated = allMatches.filter((m) => m.hasResult && !m.isCalculated);
         if (uncalculated.length > 0) {
           await calculateMatches(uncalculated);
+          await checkMatchdayMVP(client, allMatches, uncalculated);
         }
 
         const pending = allMatches.filter((match) => {
@@ -157,12 +172,91 @@ export function calculatingJob(client) {
   });
 }
 
+async function checkMatchdayMVP(client, allMatches, justCalculated) {
+  try {
+    const matchDays = new Set(justCalculated.map((m) => m.date.slice(0, 10)));
+
+    for (const day of matchDays) {
+      const dayMatches = allMatches.filter((m) => m.date.startsWith(day));
+      const allDone = dayMatches.every((m) => m.hasResult && m.isCalculated);
+      if (!allDone || dayMatches.length < 2) continue;
+
+      const alreadyAnnounced = dayMatches.some((m) => m.mvpAnnounced);
+      if (alreadyAnnounced) continue;
+
+      const votes = await readAllVotes();
+      const players = (await readPlayers()).val();
+      if (!players) continue;
+
+      const scores = {};
+      for (const userId of Object.keys(players)) {
+        scores[userId] = 0;
+      }
+
+      for (const match of dayMatches) {
+        const winner = matchWinner(match);
+        const key = `${match.id - 1}`;
+        const stake = getMatchStake(match.id);
+
+        if (votes && key in votes && match.messageId && match.messageId in votes[key]) {
+          const matchVotes = votes[key][match.messageId];
+          for (const [userId, v] of Object.entries(matchVotes)) {
+            if (!(userId in scores)) continue;
+            scores[userId] += v.vote === winner ? stake : -stake;
+          }
+        }
+      }
+
+      const ranked = Object.entries(scores)
+        .map(([id, pts]) => ({ id, pts }))
+        .sort((a, b) => b.pts - a.pts);
+
+      if (ranked.length === 0 || ranked[0].pts <= 0) continue;
+
+      const mvp = ranked[0];
+      const config = await readTournamentConfig();
+      const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+      const channel = await client.channels.fetch(channelId);
+      const users = client.cachedUsers;
+      const nickname = users[mvp.id]?.nickname || 'Unknown';
+
+      const embed = new EmbedBuilder()
+        .setTitle('⭐  Matchday MVP')
+        .setDescription(
+          `**${nickname}** dominated today's ${dayMatches.length} match(es) ` +
+          `with a net gain of **+${mvp.pts}** points!`
+        )
+        .setColor(0xFFD700)
+        .setTimestamp();
+
+      if (users[mvp.id]?.avatarURL) {
+        embed.setThumbnail(users[mvp.id].avatarURL);
+      }
+
+      await channel.send({ embeds: [embed] });
+
+      for (const match of dayMatches) {
+        await updateMatch(match.id - 1, { mvpAnnounced: true });
+      }
+      logger.info(`Announced matchday MVP for ${day}: ${nickname}`);
+    }
+  } catch (err) {
+    logger.error('Failed to check matchday MVP:', err);
+  }
+}
+
 export async function calculateMatches(matches) {
   const votingObj = await readAllVotes();
   const players = (await readPlayers()).val();
   if (!players) {
     logger.warn('No players registered, skipping calculation');
     return;
+  }
+
+  const wagers = await readPlayerWagers();
+  const allIns = {};
+  for (const userId of Object.keys(players)) {
+    allIns[userId] = await readPlayerAllIn(userId);
   }
 
   const calculatedIds = [];
@@ -174,21 +268,17 @@ export async function calculateMatches(matches) {
     }
 
     const key = `${match.id - 1}`;
-    if (votingObj && key in votingObj) {
-      if (match.messageId in votingObj[key]) {
-        const votes = votingObj[key][match.messageId];
-        const votedPlayers = calculatePlayerPoints(players, votes, match);
-        calculateRemainingPlayerPoints(players, match, votedPlayers);
-        calculatedIds.push(match.id - 1);
-        logger.info(`Calculated match ${match.id} successfully`);
-      } else {
-        logger.warn(`Match ${match.id} message ID is not correct, consider to update manually!`);
-      }
-    } else {
-      logger.warn(`Match ${match.id} has not been voted yet! All votes will be randomed!`);
-      calculateRemainingPlayerPoints(players, match, []);
-      calculatedIds.push(match.id - 1);
+    const votes = (votingObj && key in votingObj && match.messageId in (votingObj[key] || {}))
+      ? votingObj[key][match.messageId]
+      : null;
+
+    if (!votes) {
+      logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
     }
+
+    calculatePlayerPoints(players, votes, match, wagers, allIns);
+    calculatedIds.push(match.id - 1);
+    logger.info(`Calculated match ${match.id} successfully`);
   }
 
   if (calculatedIds.length > 0) {
@@ -221,19 +311,18 @@ function matchVoteMessageComponent(match, config) {
   const timeStr = kickoff.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
   const timestamp = Math.floor(kickoff.getTime() / 1000);
 
+  const stake = getMatchStake(match.id);
+  const stakeNote = stake > 10 ? `\n💰 **Stake:** ${stake} points (knockout multiplier!)` : '';
+
   const embed = new EmbedBuilder()
     .setTitle(`⚽  ${match.home.toUpperCase()}  vs  ${match.away.toUpperCase()}`)
     .setDescription(
       `**${tournamentName}** — Match #${match.id}\n\n` +
       `🕐 **Kickoff:** ${timeStr} *(VN)* — <t:${timestamp}:R>\n` +
-      `🏟️ **Venue:** ${match.location}`
+      `🏟️ **Venue:** ${match.location}` +
+      stakeNote
     )
     .setColor(0x5865F2)
-    .addFields(
-      { name: '🏠 Home', value: `\`${match.odds.home}\``, inline: true },
-      { name: '🤝 Draw', value: `\`${match.odds.draw}\``, inline: true },
-      { name: '✈️ Away', value: `\`${match.odds.away}\``, inline: true },
-    )
     .setFooter({ text: 'Vote below before kickoff!' })
     .setTimestamp(kickoff);
 
@@ -256,46 +345,65 @@ function matchWinner(match) {
   }
 }
 
-function winnerOdds(match, winner) {
-  if (winner === match.home) {
-    return match.odds.home;
-  } else if (winner === match.away) {
-    return match.odds.away;
-  }
-  return match.odds.draw;
-}
-
-function calculatePlayerPoints(players, votes, match) {
+function calculatePlayerPoints(players, votes, match, wagers, allIns) {
   const winner = matchWinner(match);
-  const odds = winnerOdds(match, winner);
+  const outcomes = [match.home, 'draw', match.away];
+  const baseStake = getMatchStake(match.id);
   const votedPlayers = [];
 
-  for (const [k, v] of Object.entries(votes)) {
-    if (!(k in players)) continue;
-    votedPlayers.push(k);
+  const picks = {};
+  if (votes) {
+    for (const [k, v] of Object.entries(votes)) {
+      if (!(k in players)) continue;
+      votedPlayers.push(k);
+      picks[k] = v.vote;
+    }
+  }
+
+  for (const k of Object.keys(players)) {
+    if (votedPlayers.includes(k)) continue;
+    picks[k] = outcomes[Math.floor(Math.random() * outcomes.length)];
+  }
+
+  const playerStakes = {};
+  for (const k of Object.keys(picks)) {
+    let stake = baseStake;
+    if (wagers?.[k]?.[match.id]?.type === 'double-down') {
+      stake *= 2;
+    }
+    playerStakes[k] = stake;
+  }
+
+  const totalLoserStake = Object.entries(picks)
+    .filter(([, pick]) => pick !== winner)
+    .reduce((sum, [k]) => sum + playerStakes[k], 0);
+
+  const totalWinnerStake = Object.entries(picks)
+    .filter(([, pick]) => pick === winner)
+    .reduce((sum, [k]) => sum + playerStakes[k], 0);
+
+  for (const [k, pick] of Object.entries(picks)) {
+    const isWinner = pick === winner;
+    let delta;
+    if (isWinner) {
+      delta = totalWinnerStake > 0
+        ? (playerStakes[k] / totalWinnerStake) * totalLoserStake
+        : 0;
+    } else {
+      delta = -playerStakes[k];
+    }
+
+    const allIn = allIns?.[k];
+    if (allIn && allIn.matchId === match.id) {
+      delta += isWinner ? allIn.amount : -allIn.amount;
+    }
+
     players[k] = {
       ...players[k],
       matches: players[k].matches + 1,
-      points: v.vote === winner ? players[k].points + odds * 10 : players[k].points - 10,
+      points: players[k].points + delta,
     };
   }
 
   return votedPlayers;
-}
-
-function calculateRemainingPlayerPoints(players, match, votedPlayers) {
-  const result = [match.home, 'draw', match.away];
-
-  const winner = matchWinner(match);
-  const odds = winnerOdds(match, winner);
-
-  for (const [k, v] of Object.entries(players)) {
-    if (votedPlayers.includes(k)) continue;
-    const rand = result[Math.floor(Math.random() * result.length)];
-    players[k] = {
-      ...v,
-      matches: v.matches + 1,
-      points: rand === winner ? v.points + odds * 10 : v.points - 10,
-    };
-  }
 }

@@ -1,5 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
+import { getMatchStake } from '../utils/football.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -47,6 +48,7 @@ export async function execute(interaction) {
       status = `🟢 Upcoming — <t:${ts}:R>`;
     }
 
+    const stake = getMatchStake(match.id);
     const embed = new EmbedBuilder()
       .setTitle(`⚽  Match #${match.id}: ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}`)
       .setDescription(`**${tournamentName}**\n\n${status}`)
@@ -54,17 +56,9 @@ export async function execute(interaction) {
       .addFields(
         { name: '🕐 Kickoff', value: `<t:${ts}:f>`, inline: true },
         { name: '🏟️ Venue', value: match.location, inline: true },
+        { name: '💰 Stake', value: `${stake} pts`, inline: true },
       )
       .setTimestamp();
-
-    const hasOdds = match.odds && (match.odds.home > 0 || match.odds.draw > 0 || match.odds.away > 0);
-    if (hasOdds) {
-      embed.addFields(
-        { name: '🏠 Home', value: `\`${match.odds.home}\``, inline: true },
-        { name: '🤝 Draw', value: `\`${match.odds.draw}\``, inline: true },
-        { name: '✈️ Away', value: `\`${match.odds.away}\``, inline: true },
-      );
-    }
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {

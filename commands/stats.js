@@ -88,7 +88,7 @@ export async function execute(interaction) {
     const recent = recentResults.slice(-5).reverse();
     if (recent.length > 0) {
       const lines = recent.map((r) => {
-        const icon = r.correct ? '✅' : '❌';
+        const icon = r.correct ? '👑' : '🤡';
         return `${icon} #${r.matchId} ${r.home.toUpperCase()} vs ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
       });
       embed.addFields({ name: '🕐 Recent Votes', value: lines.join('\n'), inline: false });

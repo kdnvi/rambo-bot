@@ -3,6 +3,7 @@ import { fileURLToPath } from 'url';
 import { join, dirname } from 'node:path';
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
 import logger from './utils/logger.js';
+import { notifyDev } from './utils/notify.js';
 
 const client = new Client({
   intents: [
@@ -22,7 +23,6 @@ const commandFiles = readdirSync(commandsPath).filter(file => file.endsWith('.js
 for (const file of commandFiles) {
   const filePath = join(commandsPath, file);
   const command = await import(filePath);
-  // Set a new item in the Collection with the key as the command name and the value as the exported module
   if ('data' in command && 'execute' in command) {
     client.commands.set(command.data.name, command);
   } else {
@@ -30,7 +30,6 @@ for (const file of commandFiles) {
   }
 }
 
-// Reading event files
 const eventsPath = join(dirname(fileURLToPath(import.meta.url)), 'events');
 const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
@@ -44,5 +43,14 @@ for (const file of eventFiles) {
   }
 }
 
-// Login to Discord
+async function shutdown(signal) {
+  logger.info(`Received ${signal}, shutting down...`);
+  await notifyDev(client, 'stop');
+  client.destroy();
+  process.exit(0);
+}
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+
 client.login(process.env.TOKEN);

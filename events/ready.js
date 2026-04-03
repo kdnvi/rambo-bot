@@ -1,12 +1,15 @@
 import { Events } from 'discord.js';
-import logger from '../utils/logger.js';
+import logger, { discordTransport } from '../utils/logger.js';
 import { fetchDiscordUsers, syncDiscordUsersJob } from '../utils/helper.js';
 import { matchPostJob, voteReminderJob, calculatingJob } from '../utils/football.js';
+import { notifyDev } from '../utils/notify.js';
 
 export const name = Events.ClientReady;
 export const once = true;
 export async function execute(client) {
   logger.info(`Ready! Logged in as ${client.user.tag}`);
+
+  discordTransport.setClient(client);
 
   logger.info('Pre-fetch audited users');
   client.cachedUsers = await fetchDiscordUsers(client);
@@ -22,4 +25,6 @@ export async function execute(client) {
 
   logger.info('Starting sync Discord users job');
   syncDiscordUsersJob(client);
+
+  await notifyDev(client, 'start');
 }

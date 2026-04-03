@@ -5,8 +5,7 @@ import { CronJob } from 'cron';
 
 const MATCH_POST_BEFORE_MS = (parseInt(process.env.MATCH_POST_BEFORE_MINS) || 720) * 60 * 1000;
 const VOTE_REMINDER_BEFORE_MS = (parseInt(process.env.VOTE_REMINDER_BEFORE_MINS) || 30) * 60 * 1000;
-const RESULT_REMINDER_AFTER_MS = (parseInt(process.env.RESULT_REMINDER_AFTER_MINS) || 180) * 60 * 1000;
-const RESULT_REMINDER_INTERVAL_MS = (parseInt(process.env.RESULT_REMINDER_INTERVAL_MINS) || 30) * 60 * 1000;
+const RESULT_REMINDER_AFTER_MS = 3 * 60 * 60 * 1000;
 
 export function matchPostJob(client) {
   return CronJob.from({
@@ -120,12 +119,9 @@ export function calculatingJob(client) {
         }
 
         const pending = allMatches.filter((match) => {
-          if (match.hasResult) return false;
+          if (match.hasResult || match.resultReminded) return false;
           const kickoff = Date.parse(match.date);
-          const elapsed = now - kickoff;
-          if (elapsed < RESULT_REMINDER_AFTER_MS) return false;
-          const lastReminded = match.resultRemindedAt ? Date.parse(match.resultRemindedAt) : 0;
-          return now - lastReminded >= RESULT_REMINDER_INTERVAL_MS;
+          return now - kickoff >= RESULT_REMINDER_AFTER_MS;
         });
 
         if (pending.length === 0) return;
@@ -149,7 +145,7 @@ export function calculatingJob(client) {
             .setColor(0xED4245);
 
           await channel.send({ embeds: [embed] });
-          await updateMatch(match.id - 1, { resultRemindedAt: new Date().toISOString() });
+          await updateMatch(match.id - 1, { resultReminded: true });
           logger.info(`Sent result reminder for match ${match.id}`);
         }
       } catch (err) {

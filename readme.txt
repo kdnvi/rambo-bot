@@ -13,8 +13,6 @@ AUDITED_USERS=<list_of_users_separated_by_comma>
 FIREBASE_DB_URL=<your_firebase_realtime_database_url>
 MATCH_POST_BEFORE_MINS=720         (optional, default 720 — post match vote N mins before kickoff)
 VOTE_REMINDER_BEFORE_MINS=30       (optional, default 30 — remind unvoted players N mins before kickoff)
-RESULT_REMINDER_AFTER_MINS=180     (optional, default 180 — start nagging for result N mins after kickoff)
-RESULT_REMINDER_INTERVAL_MINS=30   (optional, default 30 — repeat result reminder every N mins)
 
 Local development
 -----
@@ -68,9 +66,7 @@ Prerequisites: the VM and Firebase must be in the same GCP project.
      audited-users=<COMMA_SEPARATED_USER_IDS>,\
      firebase-db-url=<FIREBASE_DB_URL>,\
      match-post-before-mins=720,\
-     vote-reminder-before-mins=30,\
-     result-reminder-after-mins=180,\
-     result-reminder-interval-mins=30
+     vote-reminder-before-mins=30
 
 5. SSH into the VM and run the setup script:
    curl -fsSL https://raw.githubusercontent.com/kdnvi/rambo-bot/main/deploy/setup.sh | sudo bash

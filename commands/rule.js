@@ -18,7 +18,7 @@ export async function execute(interaction) {
       .setTimestamp();
 
     if (rulesText) {
-      embed.setDescription(rulesText);
+      embed.setDescription(rulesText.replace(/\\n/g, '\n'));
     } else {
       embed
         .setDescription('No rules have been configured for this tournament yet.')

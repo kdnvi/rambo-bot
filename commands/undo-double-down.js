@@ -4,12 +4,12 @@ import { pick } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const CHICKEN_LINES = [
-  'got cold feet. Understandable.',
-  'decided playing it safe is a lifestyle.',
-  'backed down. The pressure was too much.',
-  'unchose violence. Boring, but wise.',
-  'pulled the ripcord. Parachute deployed.',
-  'realized bravery isn\'t for everyone.',
+  'run rồi, rút lui rồi. Thông cảm.',
+  'sống an toàn cũng là một nghệ thuật.',
+  'chùn bước — áp lực quá mạnh.',
+  'hổng chơi nữa. Nhạt nhưng khôn.',
+  'giật dây dù kịp lúc. Hạ cánh an toàn.',
+  'nhận ra mình không đủ gan.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -22,13 +22,13 @@ export async function execute(interaction) {
 
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
-      await interaction.reply({ content: '❌ You need to `/register` first.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Bạn cần `/register` trước.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -50,8 +50,8 @@ export async function execute(interaction) {
 
     if (!activeMatchId) {
       const embed = new EmbedBuilder()
-        .setTitle('🤷  No Active Double-Down')
-        .setDescription('You don\'t have any active double-downs to remove.')
+        .setTitle('🤷  Không có Double-Down')
+        .setDescription('Đang không có double-down nào để huỷ cả.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -60,12 +60,12 @@ export async function execute(interaction) {
     await removePlayerWager(userId, activeMatchId);
 
     const embed = new EmbedBuilder()
-      .setTitle('🐔  DOUBLE-DOWN CANCELLED')
+      .setTitle('🐔  HUỶ DOUBLE-DOWN')
       .setDescription(
         `**${interaction.user}** ${pick(CHICKEN_LINES)}\n\n` +
-        `⏫ Double-down on Match #${activeMatchId} ` +
-        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}) has been removed.\n` +
-        'Back to normal stakes.'
+        `⏫ Huỷ double-down Trận #${activeMatchId} ` +
+        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
+        'Quay về mức cược bình thường.'
       )
       .setColor(0xFEE75C)
       .setTimestamp();
@@ -74,7 +74,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to remove double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Huỷ double-down thất bại.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

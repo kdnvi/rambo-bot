@@ -5,30 +5,30 @@ import { getWinner, pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const LEADER_LINES = [
-  'is on fire right now!',
-  'is flexing on everyone!',
-  'can\'t stop winning!',
-  'is built different!',
-  'is the GOAT (for now)!',
-  'eats predictions for breakfast!',
-  'has a crystal ball or something...',
-  'is making this look too easy!',
-  'woke up and chose domination!',
-  'is living rent-free in everyone\'s head!',
+  'đang on fire không ai cản nổi!',
+  'đè đầu cỡi cổ cả hội!',
+  'thắng muốn phát chán luôn!',
+  'chắc sinh ra để đoán bóng!',
+  'là GOAT (tạm thời thôi nha)!',
+  'ăn điểm ngon lành như ăn cháo!',
+  'chắc có bạn bè trong FIFA hay sao...',
+  'đoán đại mà cũng đúng, ghê chưa!',
+  'sáng ra đã chọn con đường thống trị!',
+  'sống trong đầu mọi người không trả tiền thuê!',
 ];
 
 const BOTTOM_LINES = [
-  'is down bad... real bad.',
-  'might want to try coin flipping instead.',
-  'should consider a career change from betting.',
-  'is making everyone else feel better about themselves.',
-  'is generously donating points to the pool.',
-  'is proof that random picks might be better.',
-  'thought this was a charity event.',
-  'is speedrunning bankruptcy.',
-  'has entered the shadow realm of the leaderboard.',
-  'is singlehandedly keeping the bottom warm.',
-  'looked at the odds and chose violence (against their own wallet).',
+  'đang tệ... tệ thiệt sự luôn á.',
+  'hay tung đồng xu đi, chắc còn trúng hơn.',
+  'chuyển nghề đi bạn, cái này không hợp.',
+  'đang phục vụ cộng đồng — ai nhìn xuống cũng thấy vui.',
+  'cho điểm thiên hạ như đại gia cho tiền tip.',
+  'chọn bừa chắc còn trúng hơn chọn nghiêm túc.',
+  'tưởng vào đây làm từ thiện.',
+  'speedrun cháy tài khoản, sắp phá kỷ lục.',
+  'lạc vào vùng tối bảng xếp hạng mất rồi.',
+  'một mình giữ ấm đáy bảng, ai nhìn cũng thương.',
+  'xem kèo xong bảo "kệ, đi theo trái tim" rồi cháy túi.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -53,7 +53,7 @@ const ALLOWED_USERS = new Set((process.env.AUDITED_USERS || '').split(',').filte
 export async function execute(interaction) {
   try {
     if (!ALLOWED_USERS.has(interaction.user.id)) {
-      await interaction.reply({ content: '❌ You don\'t have permission to update match results.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Bạn không có quyền cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -68,13 +68,13 @@ export async function execute(interaction) {
 
       if (result.error === 'not_found') {
         embed
-          .setTitle('❌  Match Not Found')
-          .setDescription(`No match found with ID \`${matchId + 1}\`.`)
+          .setTitle('❌  Không tìm thấy trận')
+          .setDescription(`Không tìm thấy trận đấu với ID \`${matchId + 1}\`.`)
           .setColor(0xED4245);
       } else if (result.error === 'already_exists') {
         const m = result.match;
         embed
-          .setTitle('⚠️  Result Already Exists')
+          .setTitle('⚠️  Kết quả đã tồn tại')
           .setDescription(`**${m.home.toUpperCase()}** ${m.result.home} - ${m.result.away} **${m.away.toUpperCase()}**`)
           .setColor(0xFEE75C);
       }
@@ -85,14 +85,14 @@ export async function execute(interaction) {
 
     const m = result.match;
     const embed = new EmbedBuilder()
-      .setTitle('✅  Match Result Updated')
+      .setTitle('✅  Đã cập nhật kết quả')
       .setDescription(`**${m.home.toUpperCase()}** ${homeScore} - ${awayScore} **${m.away.toUpperCase()}**`)
       .setColor(0x57F287)
       .addFields(
-        { name: '🏟️ Location', value: m.location, inline: true },
+        { name: '🏟️ Sân vận động', value: m.location, inline: true },
         { name: '🆔 Match ID', value: `${matchId + 1}`, inline: true },
       )
-      .setFooter({ text: `Updated by ${interaction.user.displayName}` })
+      .setFooter({ text: `Cập nhật bởi ${interaction.user.displayName}` })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
@@ -110,24 +110,24 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to update the match result.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }
 
 const ROAST_LINES = [
-  'really thought that was happening huh 💀',
-  'should stick to predicting the weather',
-  '\'s prediction aged like milk in the sun 🥛',
-  'needs to have their crystal ball checked',
-  'bet with their heart, not their brain',
-  'might want to ask a coin next time',
-  '\'s prediction was a war crime',
-  'confidently wrong, as always',
-  'chose violence... against their own points',
-  'looked at the stats and said "nah, vibes"',
-  'predicted like they were blindfolded 🙈',
-  '\'s gut feeling needs surgery',
+  'thiệt hả... tin thiệt luôn hả 💀',
+  'nên chuyển qua đoán thời tiết cho rồi',
+  'chọn thiu rồi, như sữa phơi nắng ba ngày 🥛',
+  'quả cầu pha lê chắc bị nứt rồi',
+  'chọn bằng trái tim, quên mang não theo',
+  'lần sau nhờ thằng bạn chọn dùm đi',
+  'cú đoán đó là tội ác chiến tranh luôn',
+  'sai một cách rất tự tin, y như mọi khi',
+  'tự tay phá nát điểm của mình',
+  'xem stats xong bảo "kệ, tin linh cảm" rồi toang',
+  'chọn kiểu bịt mắt rồi chỉ đại 🙈',
+  'linh cảm cần phải đi cấp cứu gấp',
 ];
 
 async function postMatchRoast(interaction, match) {
@@ -152,11 +152,11 @@ async function postMatchRoast(interaction, match) {
     const lines = roasted.map((name) => `🤡 **${name}** ${pick(ROAST_LINES)}`);
 
     if (losers.length > 3) {
-      lines.push(`...and **${losers.length - 3}** other clown(s)`);
+      lines.push(`...cùng **${losers.length - 3}** thánh sai khác`);
     }
 
     const embed = new EmbedBuilder()
-      .setTitle('🔥  Post-Match Roast')
+      .setTitle('🔥  Xào nát sau trận')
       .setDescription(lines.join('\n'))
       .setColor(0xE67E22)
       .setTimestamp();
@@ -195,7 +195,7 @@ async function postStandings(interaction) {
     ];
 
     const embed = new EmbedBuilder()
-      .setTitle('📊  Updated Standings')
+      .setTitle('📊  BXH sau trận')
       .setDescription(lines.join('\n'))
       .setColor(0xFFD700)
       .setTimestamp();

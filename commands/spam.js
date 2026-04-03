@@ -12,16 +12,16 @@ export async function execute(interaction) {
     const user = interaction.options.get('user').user;
 
     const embed = new EmbedBuilder()
-      .setTitle('📢  ATTENTION REQUIRED')
+      .setTitle('📢  CHÚ Ý')
       .setDescription(`${user} `.repeat(20))
       .setColor(0xED4245)
       .setThumbnail(user.displayAvatarURL())
-      .setFooter({ text: `Summoned by ${interaction.user.displayName}` });
+      .setFooter({ text: `${interaction.user.displayName} triệu hồi` });
 
     await interaction.reply({ embeds: [embed] });
   } catch {
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Something went wrong.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Đã xảy ra lỗi.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

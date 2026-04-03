@@ -4,12 +4,12 @@ import { pick } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const RELIEF_LINES = [
-  'has shown mercy... for now.',
-  'decided to spare their victim. How noble.',
-  'lifted the hex. The dark energy fades.',
-  'called off the witch doctor.',
-  'broke the voodoo doll in half. It\'s over.',
-  'removed the evil eye. Sleep easy tonight.',
+  'tha mạng cho nó... tạm thời thôi nha.',
+  'cao thượng tha cho nạn nhân. Lần này vậy.',
+  'gỡ bùa rồi. Năng lượng đen bay hết.',
+  'gọi thầy bùa về nhà, hết việc rồi.',
+  'bẻ đôi hình nhân. Xong, hết chuyện.',
+  'nhắm mắt lại. Đêm nay ngủ ngon đi nha.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -22,13 +22,13 @@ export async function execute(interaction) {
 
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
-      await interaction.reply({ content: '❌ You need to `/register` first.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Bạn cần `/register` trước.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -50,8 +50,8 @@ export async function execute(interaction) {
 
     if (!activeCurseMatchId) {
       const embed = new EmbedBuilder()
-        .setTitle('🤷  No Active Curse')
-        .setDescription('You don\'t have any active curses to remove.')
+        .setTitle('🤷  Không có lời nguyền')
+        .setDescription('Đang không có nguyền ai cả, gỡ cái gì?')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -63,11 +63,11 @@ export async function execute(interaction) {
     const targetName = users[activeCurse.target]?.nickname || activeCurse.target;
 
     const embed = new EmbedBuilder()
-      .setTitle('🕊️  CURSE LIFTED')
+      .setTitle('🕊️  GỠ LỜI NGUYỀN')
       .setDescription(
         `**${interaction.user}** ${pick(RELIEF_LINES)}\n\n` +
-        `🧿 Curse on **${targetName}** for Match #${activeCurseMatchId} ` +
-        `(${activeCurse.match.home.toUpperCase()} vs ${activeCurse.match.away.toUpperCase()}) has been removed.`
+        `🧿 Lời nguyền lên **${targetName}** ở Trận #${activeCurseMatchId} ` +
+        `(${activeCurse.match.home.toUpperCase()} vs ${activeCurse.match.away.toUpperCase()}) đã được gỡ bỏ.`
       )
       .setColor(0x57F287)
       .setTimestamp();
@@ -76,7 +76,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to remove curse.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Gỡ lời nguyền thất bại.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

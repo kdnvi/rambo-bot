@@ -3,16 +3,16 @@ import { awardBadge } from './firebase.js';
 import logger from './logger.js';
 
 export const BADGE_DEFS = [
-  { id: 'first_blood', icon: '🩸', name: 'First Blood', desc: 'Won your very first prediction' },
-  { id: 'oracle', icon: '🔮', name: 'Oracle', desc: '5 correct predictions in a row' },
-  { id: 'on_fire', icon: '🔥', name: 'On Fire', desc: '3 correct predictions in a row' },
-  { id: 'underdog', icon: '🐺', name: 'Underdog Hunter', desc: 'Correctly predicted 3 minority picks' },
-  { id: 'bankrupt', icon: '💀', name: 'Bankrupt', desc: 'Went below zero balance' },
-  { id: 'comeback', icon: '🦅', name: 'Comeback King', desc: 'Recovered to positive after going negative' },
-  { id: 'perfect_day', icon: '💎', name: 'Perfect Day', desc: 'Got every prediction right on a matchday' },
-  { id: 'yolo', icon: '🎰', name: 'YOLO', desc: 'Used all-in' },
-  { id: 'double_trouble', icon: '⏫', name: 'Double Trouble', desc: 'Used double-down 5 times' },
-  { id: 'streak_breaker', icon: '💔', name: 'Streak Breaker', desc: 'Lost after a 3+ win streak' },
+  { id: 'first_blood', icon: '🩸', name: 'Máu Đầu', desc: 'Đúng ngay lần đầu tiên' },
+  { id: 'oracle', icon: '🔮', name: 'Thầy Bói', desc: 'Đúng 5 trận liền' },
+  { id: 'on_fire', icon: '🔥', name: 'Cháy', desc: 'Đúng 3 trận liền' },
+  { id: 'underdog', icon: '🐺', name: 'Sói Đơn Độc', desc: 'Đúng 3 lần khi ít người chọn' },
+  { id: 'bankrupt', icon: '💀', name: 'Vỡ Nợ', desc: 'Âm điểm' },
+  { id: 'comeback', icon: '🦅', name: 'Hồi Sinh', desc: 'Từ âm điểm leo lên dương' },
+  { id: 'perfect_day', icon: '💎', name: 'Ngày Hoàn Hảo', desc: 'Đúng hết mọi trận trong ngày' },
+  { id: 'yolo', icon: '🎰', name: 'YOLO', desc: 'Dám all-in' },
+  { id: 'double_trouble', icon: '⏫', name: 'Double Trouble', desc: 'Xài double-down 5 lần' },
+  { id: 'streak_breaker', icon: '💔', name: 'Gãy Chuỗi', desc: 'Sai sau khi đúng 3+ trận liền' },
 ];
 
 const BADGE_MAP = Object.fromEntries(BADGE_DEFS.map((b) => [b.id, b]));
@@ -122,7 +122,7 @@ export function formatBadges(storedBadges) {
 }
 
 export function formatBadgesDetailed(storedBadges) {
-  if (!storedBadges || Object.keys(storedBadges).length === 0) return '*No badges yet*';
+  if (!storedBadges || Object.keys(storedBadges).length === 0) return '*Chưa có gì cả*';
   return Object.keys(storedBadges)
     .filter((id) => id in BADGE_MAP)
     .map((id) => `${BADGE_MAP[id].icon} **${BADGE_MAP[id].name}** — ${BADGE_MAP[id].desc}`)

@@ -13,7 +13,7 @@ export async function execute(interaction) {
     const rulesText = config?.rulesText;
 
     const embed = new EmbedBuilder()
-      .setTitle(`📋  ${tournamentName} — Rules`)
+      .setTitle(`📋  ${tournamentName} — Luật chơi`)
       .setColor(0x5865F2)
       .setTimestamp();
 
@@ -21,7 +21,7 @@ export async function execute(interaction) {
       embed.setDescription(rulesText.replace(/\\n/g, '\n'));
     } else {
       embed
-        .setDescription('No rules have been configured for this tournament yet.')
+        .setDescription('Chưa có luật chơi cho giải này.')
         .setColor(0xFEE75C);
     }
 
@@ -29,7 +29,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load tournament rules.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải luật chơi.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

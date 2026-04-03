@@ -19,7 +19,7 @@ export async function execute(interaction) {
     const allMatches = (await readTournamentData('matches')).val();
 
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -31,8 +31,8 @@ export async function execute(interaction) {
 
     if (upcoming.length === 0) {
       const embed = new EmbedBuilder()
-        .setTitle('📅  No Upcoming Matches')
-        .setDescription('All matches have been played or no schedule is available.')
+        .setTitle('📅  Không có trận sắp tới')
+        .setDescription('Hết trận rồi, hoặc chưa có lịch mới.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -46,17 +46,17 @@ export async function execute(interaction) {
     });
 
     const embed = new EmbedBuilder()
-      .setTitle(`📅  ${tournamentName} — Upcoming Matches`)
+      .setTitle(`📅  ${tournamentName} — Lịch thi đấu sắp tới`)
       .setDescription(lines.join('\n\n'))
       .setColor(0x5865F2)
-      .setFooter({ text: `Showing next ${upcoming.length} match(es)` })
+      .setFooter({ text: `${upcoming.length} trận tiếp theo` })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load the schedule.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải lịch thi đấu.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

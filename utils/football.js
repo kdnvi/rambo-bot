@@ -100,10 +100,10 @@ export function voteReminderJob(client) {
           const ts = Math.floor(Date.parse(match.date) / 1000);
 
           const embed = new EmbedBuilder()
-            .setTitle(`⏰  Vote Reminder — Match #${match.id}`)
+            .setTitle(`⏰  Nhắc vote — Trận #${match.id}`)
             .setDescription(
               `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
-              `Kickoff <t:${ts}:R> — vote now or your pick will be **randomized**!`
+              `Còn <t:${ts}:R> là đá — vote đi không thì bị **random**!`
             )
             .setColor(0xFEE75C);
 
@@ -154,11 +154,11 @@ export function calculatingJob(client) {
           const mins = elapsed % 60;
 
           const embed = new EmbedBuilder()
-            .setTitle(`🔔  Result Pending — Match #${match.id}`)
+            .setTitle(`🔔  Chờ kết quả — Trận #${match.id}`)
             .setDescription(
               `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
-              `Kicked off **${hours}h ${mins}m ago** — please update the result.\n\n` +
-              `Use \`/update-result match-id:${match.id} home-score:? away-score:?\``
+              `Đá được **${hours}h ${mins}m** rồi — cập nhật kết quả đi!\n\n` +
+              `Gõ \`/update-result match-id:${match.id} home-score:? away-score:?\``
             )
             .setColor(0xED4245);
 
@@ -224,10 +224,10 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       const nickname = users[mvp.id]?.nickname || 'Unknown';
 
       const embed = new EmbedBuilder()
-        .setTitle('⭐  Matchday MVP')
+        .setTitle('⭐  MVP hôm nay')
         .setDescription(
-          `**${nickname}** dominated today's ${dayMatches.length} match(es) ` +
-          `with a net gain of **+${mvp.pts}** points!`
+          `**${nickname}** cân hết ${dayMatches.length} trận hôm nay ` +
+          `với **+${mvp.pts}** điểm!`
         )
         .setColor(0xFFD700)
         .setTimestamp();
@@ -299,17 +299,17 @@ async function checkRivalry(allMatches, votes, players, users) {
     const nameB = users[topPair.ids[1]]?.nickname || 'Unknown';
 
     const RIVAL_LINES = [
-      `Can't agree on anything. Official enemies.`,
-      `If one says left, the other says right.`,
-      `The rivalry is REAL. 🍿`,
-      `Somebody get these two a boxing ring.`,
-      `They'd disagree on what day it is.`,
+      `Cái gì cũng chọn ngược nhau. Sinh ra để ghét nhau.`,
+      `Một thằng nói trái, thằng kia nói phải. Kinh điển.`,
+      `Kình địch là THẬT luôn. 🍿`,
+      `Ai kiếm cái võ đài cho hai đứa này đi.`,
+      `Hỏi hôm nay thứ mấy chắc cũng cãi nhau.`,
     ];
 
     return new EmbedBuilder()
-      .setTitle('⚔️  Rivalry Alert')
+      .setTitle('⚔️  Kình địch phát hiện')
       .setDescription(
-        `**${nameA}** and **${nameB}** have disagreed on **${topPair.count}** out of **${topPair.total}** matches (**${pct}%**)!\n\n` +
+        `**${nameA}** và **${nameB}** bất đồng **${topPair.count}** trong **${topPair.total}** trận (**${pct}%**)!\n\n` +
         RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)]
       )
       .setColor(0x9B59B6)
@@ -404,14 +404,14 @@ async function announceBadges(client, newBadges) {
     for (const [userId, badges] of Object.entries(newBadges)) {
       const name = users[userId]?.nickname || 'Unknown';
       for (const badge of badges) {
-        lines.push(`${badge.icon} **${name}** earned **${badge.name}**! — *${badge.desc}*`);
+        lines.push(`${badge.icon} **${name}** mở khoá **${badge.name}**! — *${badge.desc}*`);
       }
     }
 
     if (lines.length === 0) return;
 
     const embed = new EmbedBuilder()
-      .setTitle('🏅  New Achievements Unlocked!')
+      .setTitle('🏅  Achievement mới!')
       .setDescription(lines.join('\n'))
       .setColor(0xFFD700)
       .setTimestamp();
@@ -444,7 +444,7 @@ function matchVoteMessageComponent(match, config) {
   const timestamp = Math.floor(kickoff.getTime() / 1000);
 
   const stake = getMatchStake(match.id);
-  const stakeNote = stake > 10 ? `\n💰 **Stake:** ${stake} points (knockout multiplier!)` : '';
+  const stakeNote = stake > 10 ? `\n💰 **Cược:** ${stake} điểm (vòng knockout nên mức cược cao!)` : '';
 
   const embed = new EmbedBuilder()
     .setTitle(`⚽  ${match.home.toUpperCase()}  vs  ${match.away.toUpperCase()}`)
@@ -455,7 +455,7 @@ function matchVoteMessageComponent(match, config) {
       stakeNote
     )
     .setColor(0x5865F2)
-    .setFooter({ text: 'Vote below before kickoff!' })
+    .setFooter({ text: 'Bấm bên dưới để vote trước giờ đá!' })
     .setTimestamp(kickoff);
 
   const row = new ActionRowBuilder()

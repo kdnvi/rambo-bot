@@ -71,8 +71,8 @@ export async function execute(interaction) {
 
     if (!groups || !allMatches) {
       const embed = new EmbedBuilder()
-        .setTitle('🏆  No Data Available')
-        .setDescription('Group or match data has not been configured yet.')
+        .setTitle('🏆  Không có dữ liệu')
+        .setDescription('Chưa có dữ liệu bảng hoặc trận đấu.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -87,12 +87,12 @@ export async function execute(interaction) {
         .map((m) => `\`#${m.id}\` ${m.home.toUpperCase()} vs ${m.away.toUpperCase()}`)
         .join('\n');
       const moreText = pendingGroupMatches.length > 3
-        ? `\n…and **${pendingGroupMatches.length - 3}** more`
+        ? `\n…và **${pendingGroupMatches.length - 3}** trận nữa`
         : '';
       const embed = new EmbedBuilder()
-        .setTitle('⏳  Group Stage Not Complete')
+        .setTitle('⏳  Vòng bảng chưa xong')
         .setDescription(
-          `**${pendingGroupMatches.length}** group stage match(es) still have no result.\n\n` +
+          `Còn **${pendingGroupMatches.length}** trận vòng bảng chưa có kết quả.\n\n` +
           matchList + moreText
         )
         .setColor(0xFEE75C);
@@ -137,7 +137,7 @@ export async function execute(interaction) {
 
       embeds.push(
         new EmbedBuilder()
-          .setTitle('📋  Best Third-Place Teams')
+          .setTitle('📋  Đội xếp thứ 3 tốt nhất')
           .setDescription(
             thirdLines.join('\n') +
             (eliminatedLines.length > 0 ? '\n\n' + eliminatedLines.join('\n') : '')
@@ -147,8 +147,8 @@ export async function execute(interaction) {
     }
 
     const title = new EmbedBuilder()
-      .setTitle(`🏆  ${tournamentName} — Round of 32`)
-      .setDescription(`**${pairs.length} matches** based on current group standings`)
+      .setTitle(`🏆  ${tournamentName} — Vòng 32`)
+      .setDescription(`**${pairs.length} cặp đấu** theo BXH hiện tại`)
       .setColor(0xFFD700)
       .setTimestamp();
 
@@ -160,7 +160,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to calculate playoff bracket.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tính nhánh playoff.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

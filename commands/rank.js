@@ -18,8 +18,8 @@ export async function execute(interaction) {
 
     if (!players) {
       const embed = new EmbedBuilder()
-        .setTitle(`🏆  ${tournamentName} Leaderboard`)
-        .setDescription('No players registered yet. Use `/register` to join!')
+        .setTitle(`🏆  ${tournamentName} Bảng xếp hạng`)
+        .setDescription('Chưa ai đăng ký cả. `/register` đi rồi chiến!')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed] });
       return;
@@ -44,14 +44,14 @@ export async function execute(interaction) {
       const rank = MEDAL[i] || `\`${i + 1}.\``;
       const balance = VND_FORMATTER.format(player.balance * 1000);
       const badges = player.badgeStr ? `  ${player.badgeStr}` : '';
-      return `${rank} **${player.nickname}** — ${balance}  *(${player.matches} matches)*${badges}`;
+      return `${rank} **${player.nickname}** — ${balance}  *(${player.matches} trận)*${badges}`;
     });
 
     const embed = new EmbedBuilder()
-      .setTitle(`🏆  ${tournamentName} Leaderboard`)
+      .setTitle(`🏆  ${tournamentName} Bảng xếp hạng`)
       .setDescription(lines.join('\n'))
       .setColor(0xFFD700)
-      .setFooter({ text: `${rankedPlayers.length} players registered` })
+      .setFooter({ text: `${rankedPlayers.length} chiến binh` })
       .setTimestamp();
 
     if (rankedPlayers.length > 0 && rankedPlayers[0].avatar) {
@@ -62,7 +62,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load the leaderboard.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải bảng xếp hạng.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

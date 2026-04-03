@@ -17,7 +17,7 @@ export async function execute(interaction) {
     const users = interaction.client.cachedUsers;
 
     if (!players) {
-      await interaction.reply({ content: '❌ No players registered.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Chưa có người chơi.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -26,7 +26,7 @@ export async function execute(interaction) {
       .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
     if (completed.length === 0) {
-      await interaction.reply({ content: '❌ No completed matches yet.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Chưa có trận nào hoàn thành.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -126,30 +126,30 @@ export async function execute(interaction) {
     }
 
     const lines = [
-      `**🔥 Winning Streak vs 🔻 Losing Streak**`,
-      `👑 ${names(bestStreak.ids)} — **${bestStreak.val}** wins in a row`,
-      `💀 ${names(worstStreak.ids)} — **${worstStreak.val}** wrong in a row`,
+      `**🔥 Chuỗi thắng vs 🔻 Chuỗi thua**`,
+      `👑 ${names(bestStreak.ids)} — **${bestStreak.val}** trận đúng liền`,
+      `💀 ${names(worstStreak.ids)} — **${worstStreak.val}** trận sai liền`,
       '',
-      `**🎯 Most Correct vs 🤡 Most Wrong**`,
-      `👑 ${names(mostCorrectStat.ids)} — **${mostCorrectStat.val}**/${completed.length} correct`,
-      `💀 ${names(mostWrongStat.ids)} — **${mostWrongStat.val}**/${completed.length} wrong`,
+      `**🎯 Thánh đoán vs 🤡 Thánh sai**`,
+      `👑 ${names(mostCorrectStat.ids)} — **${mostCorrectStat.val}**/${completed.length} đúng`,
+      `💀 ${names(mostWrongStat.ids)} — **${mostWrongStat.val}**/${completed.length} sai`,
       '',
-      `**⚡ Most Diligent vs 😴 Laziest**`,
-      `👑 ${names(mostDiligent.ids)} — missed **${mostDiligent.val}** vote(s)`,
-      `💀 ${names(laziest.ids)} — missed **${laziest.val}** vote(s)`,
+      `**⚡ Siêng nhất vs 😴 Lười nhất**`,
+      `👑 ${names(mostDiligent.ids)} — bỏ **${mostDiligent.val}** vote`,
+      `💀 ${names(laziest.ids)} — bỏ **${laziest.val}** vote`,
       '',
-      `**💰 Richest vs 📉 Poorest**`,
+      `**💰 Đại gia vs 📉 Viện trợ**`,
       `👑 ${names(richest.ids)} — **${richest.val}** pts`,
       `💀 ${names(poorest.ids)} — **${poorest.val}** pts`,
     ];
 
     if (biggestAllInWin || biggestAllInFail) {
-      lines.push('', `**🎰 All-In Hall of Fame vs 💥 All-In Hall of Shame**`);
+      lines.push('', `**🎰 All-In Huyền Thoại vs 💥 All-In Nát**`);
       if (biggestAllInWin) {
-        lines.push(`👑 ${names(biggestAllInWin.ids)} — won **${biggestAllInWin.amount}** pts on match #${biggestAllInWin.matchId}`);
+        lines.push(`👑 ${names(biggestAllInWin.ids)} — thắng **${biggestAllInWin.amount}** điểm trận #${biggestAllInWin.matchId}`);
       }
       if (biggestAllInFail) {
-        lines.push(`💀 ${names(biggestAllInFail.ids)} — lost **${biggestAllInFail.amount}** pts on match #${biggestAllInFail.matchId}`);
+        lines.push(`💀 ${names(biggestAllInFail.ids)} — thua **${biggestAllInFail.amount}** điểm trận #${biggestAllInFail.matchId}`);
       }
     }
 
@@ -159,17 +159,17 @@ export async function execute(interaction) {
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`⚔️  ${tournamentName} — Head to Head`)
+      .setTitle(`⚔️  ${tournamentName} — Đối đầu`)
       .setDescription(description)
       .setColor(0xED4245)
-      .setFooter({ text: 'Every crown has its clown.' })
+      .setFooter({ text: 'Có vua thì phải có hề.' })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load the wall of shame.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải bảng ô nhục.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

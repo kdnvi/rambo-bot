@@ -25,7 +25,7 @@ export async function execute(interaction) {
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -76,8 +76,8 @@ export async function execute(interaction) {
 
     if (recent.length === 0) {
       const embed = new EmbedBuilder()
-        .setTitle('🔍  No History')
-        .setDescription(`No completed matches found for **${nickname}**.`)
+        .setTitle('🔍  Không có lịch sử')
+        .setDescription(`Chưa có trận nào xong cho **${nickname}** cả.`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -87,10 +87,10 @@ export async function execute(interaction) {
       const score = `${r.result.home}-${r.result.away}`;
       let line;
       if (r.vote === null) {
-        line = `🎲 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *randomized*`;
+        line = `🎲 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *ngẫu nhiên*`;
       } else {
         const icon = r.correct ? '👑' : '🤡';
-        line = `${icon} **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
+        line = `${icon} **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — vote **${r.vote.toUpperCase()}**`;
       }
 
       const tags = [];
@@ -98,7 +98,7 @@ export async function execute(interaction) {
       if (r.allInAmount) tags.push(`🎰 all-in (${VND_FORMATTER.format(r.allInAmount * 1000)})`);
       if (r.curseTarget) {
         const targetName = users[r.curseTarget]?.nickname || 'Unknown';
-        tags.push(`🪄 cursed **${targetName}**`);
+        tags.push(`🪄 nguyền **${targetName}**`);
       }
       if (tags.length > 0) line += `\n  └ ${tags.join(' · ')}`;
 
@@ -110,8 +110,8 @@ export async function execute(interaction) {
     const totalRandomized = userHistory.filter((r) => r.vote === null).length;
     const winRate = totalVoted > 0 ? `${Math.round((totalCorrect / totalVoted) * 100)}%` : '—';
 
-    let summary = `🎯 **${winRate}** win rate (${totalCorrect}/${totalVoted})`;
-    if (totalRandomized > 0) summary += ` · 🎲 ${totalRandomized} randomized`;
+    let summary = `🎯 Tỉ lệ đúng **${winRate}** (${totalCorrect}/${totalVoted})`;
+    if (totalRandomized > 0) summary += ` · 🎲 ${totalRandomized} random`;
 
     const totalDD = userHistory.filter((r) => r.isDoubleDown).length;
     const totalAllIn = userHistory.filter((r) => r.allInAmount).length;
@@ -129,11 +129,11 @@ export async function execute(interaction) {
         .sort((a, b) => b[1] - a[1])
         .map(([id, count]) => `${users[id]?.nickname || 'Unknown'} (×${count})`)
         .join(', ');
-      summary += `\n🪄 Cursed: ${curseList}`;
+      summary += `\n🪄 Nguyền: ${curseList}`;
     }
 
     const embed = new EmbedBuilder()
-      .setTitle(`📜  ${nickname}'s Vote History`)
+      .setTitle(`📜  Lịch sử vote ${nickname}`)
       .setDescription(
         `**${tournamentName}**\n\n` +
         lines.join('\n') +
@@ -141,14 +141,14 @@ export async function execute(interaction) {
       )
       .setColor(0x5865F2)
       .setThumbnail(targetUser.displayAvatarURL())
-      .setFooter({ text: `Showing last ${recent.length} of ${userHistory.length} match(es)` })
+      .setFooter({ text: `Hiển thị ${recent.length}/${userHistory.length} trận gần nhất` })
       .setTimestamp();
 
     await interaction.reply({ embeds: [embed] });
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load vote history.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải lịch sử vote.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

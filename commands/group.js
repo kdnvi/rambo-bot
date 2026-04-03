@@ -17,8 +17,8 @@ export async function execute(interaction) {
 
     if (!groups) {
       const embed = new EmbedBuilder()
-        .setTitle('📊  No Groups Available')
-        .setDescription('Group data has not been configured yet.')
+        .setTitle('📊  Chưa có bảng')
+        .setDescription('Chưa có dữ liệu bảng.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -29,8 +29,8 @@ export async function execute(interaction) {
     if (requested && !groups[requested]) {
       const validGroups = Object.keys(groups).sort().map((g) => `\`${g.toUpperCase()}\``).join(', ');
       const embed = new EmbedBuilder()
-        .setTitle('❌  Group Not Found')
-        .setDescription(`No group \`${requested.toUpperCase()}\`. Valid groups: ${validGroups}`)
+        .setTitle('❌  Không tìm thấy bảng')
+        .setDescription(`Không có bảng \`${requested.toUpperCase()}\`. Chỉ có: ${validGroups}`)
         .setColor(0xED4245);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -65,12 +65,12 @@ export async function execute(interaction) {
     }
 
     const title = new EmbedBuilder()
-      .setTitle(`📊  ${tournamentName} — Group Standings`)
+      .setTitle(`📊  ${tournamentName} — Bảng đấu`)
       .setColor(0x5865F2)
       .setTimestamp();
 
     if (requested) {
-      title.setDescription(`Showing Group ${requested.toUpperCase()}`);
+      title.setDescription(`Hiển thị Bảng ${requested.toUpperCase()}`);
     }
 
     const allEmbeds = [title, ...embeds];
@@ -81,7 +81,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load group standings.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải bảng xếp hạng.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

@@ -21,11 +21,11 @@ export async function execute(interaction) {
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
       const embed = new EmbedBuilder()
-        .setTitle('❌  Not Registered')
+        .setTitle('❌  Chưa đăng ký')
         .setDescription(
           targetUser.id === interaction.user.id
-            ? 'You are not registered. Use `/register` to join!'
-            : `${targetUser} is not registered in this tournament.`
+            ? 'Chưa đăng ký kìa. `/register` đi rồi chơi!'
+            : `${targetUser} chưa đăng ký.`
         )
         .setColor(0xED4245);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
@@ -68,14 +68,14 @@ export async function execute(interaction) {
     const nickname = interaction.client.cachedUsers[userId]?.nickname || targetUser.displayName;
 
     const embed = new EmbedBuilder()
-      .setTitle(`📊  ${nickname}'s Stats`)
+      .setTitle(`📊  Thống kê ${nickname}`)
       .setDescription(`**${tournamentName}**`)
       .setColor(0x5865F2)
       .setThumbnail(targetUser.displayAvatarURL())
       .addFields(
-        { name: '💰 Balance', value: VND_FORMATTER.format(player.points * 1000), inline: true },
-        { name: '🎮 Matches', value: `${player.matches}`, inline: true },
-        { name: '🎯 Win Rate', value: totalVotes > 0 ? `${winRate}% (${correctVotes}/${totalVotes})` : 'No votes yet', inline: true },
+        { name: '💰 Tài khoản', value: VND_FORMATTER.format(player.points * 1000), inline: true },
+        { name: '🎮 Đã chơi', value: `${player.matches} trận`, inline: true },
+        { name: '🎯 Tỉ lệ đúng', value: totalVotes > 0 ? `${winRate}% (${correctVotes}/${totalVotes})` : 'Chưa vote', inline: true },
       )
       .setTimestamp();
 
@@ -83,14 +83,14 @@ export async function execute(interaction) {
     if (recent.length > 0) {
       const lines = recent.map((r) => {
         const icon = r.correct ? '👑' : '🤡';
-        return `${icon} #${r.matchId} ${r.home.toUpperCase()} vs ${r.away.toUpperCase()} — voted **${r.vote.toUpperCase()}**`;
+        return `${icon} #${r.matchId} ${r.home.toUpperCase()} vs ${r.away.toUpperCase()} — vote **${r.vote.toUpperCase()}**`;
       });
-      embed.addFields({ name: '🕐 Recent Votes', value: lines.join('\n'), inline: false });
+      embed.addFields({ name: '🕐 Mấy trận gần đây', value: lines.join('\n'), inline: false });
     }
 
     const storedBadges = await readPlayerBadges(userId);
     embed.addFields({
-      name: '🏅 Badges',
+      name: '🏅 Huy hiệu',
       value: formatBadgesDetailed(storedBadges),
       inline: false,
     });
@@ -99,7 +99,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load stats.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải thống kê.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

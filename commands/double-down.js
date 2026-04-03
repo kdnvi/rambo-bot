@@ -5,16 +5,16 @@ import { pick, findNextMatch, getMatchDay } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const HYPE_LINES = [
-  'is feeling dangerous today!',
-  'said "normal stakes are for the weak".',
-  'just turned up the heat!',
-  'is putting their money where their mouth is.',
-  'chose to live life on the edge.',
-  'thinks they can see the future.',
-  'is either very smart or very brave.',
-  'just raised the stakes. Literally.',
-  'has entered beast mode.',
-  'is not here to play it safe.',
+  'hôm nay máu lắm!',
+  'chê cược thường nhạt, phải gấp đôi mới đã!',
+  'vặn volume lên max luôn!',
+  'đặt cả thể diện vào trận này rồi đó.',
+  'sống liều chết liều hôm nay!',
+  'tự tin kiểu nhà tiên tri, không biết đúng hay sai.',
+  'thiên tài hay điên? Sắp biết thôi.',
+  'tăng cược — theo đúng nghĩa đen luôn á.',
+  'bật chế độ quái thú rồi nha!',
+  'vào đây không phải để chơi cho vui đâu.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -28,8 +28,8 @@ export async function execute(interaction) {
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
       const embed = new EmbedBuilder()
-        .setTitle('❌  Not Registered')
-        .setDescription('You need to `/register` first.')
+        .setTitle('❌  Chưa đăng ký')
+        .setDescription('Bạn cần `/register` trước.')
         .setColor(0xED4245);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -37,13 +37,13 @@ export async function execute(interaction) {
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const match = findNextMatch(allMatches);
     if (!match) {
-      await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -59,8 +59,8 @@ export async function execute(interaction) {
     const existingAllIns = await readPlayerAllIns(userId);
     if (existingAllIns[matchId]) {
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already All-In')
-        .setDescription('You already went all-in on this match. You can\'t double-down on top of that, you maniac.')
+        .setTitle('⚠️  Đã All-In rồi')
+        .setDescription('All-in rồi còn double-down cái gì nữa mậy. Tham vừa thôi.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -70,8 +70,8 @@ export async function execute(interaction) {
     if (alreadyThisDay) {
       const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already Used')
-        .setDescription(`You already used double-down on match \`#${usedId}\` today. One per matchday!`)
+        .setTitle('⚠️  Đã dùng rồi')
+        .setDescription(`Xài double-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -84,10 +84,10 @@ export async function execute(interaction) {
       .setTitle('⏫  DOUBLE DOWN!')
       .setDescription(
         `**${interaction.user}** ${pick(HYPE_LINES)}\n\n` +
-        `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
-        `💰 Stake: ${stake} → **${stake * 2} pts**\n\n` +
-        '✅ Win → **2x the winnings**\n' +
-        '❌ Lose → **2x the pain**'
+        `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
+        `💰 Mức cược: ${stake} → **${stake * 2} pts**\n\n` +
+        '✅ Đúng → **ăn gấp đôi**\n' +
+        '❌ Sai → **mất gấp đôi**'
       )
       .setColor(0x57F287)
       .setThumbnail(interaction.user.displayAvatarURL())
@@ -97,7 +97,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to activate double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể kích hoạt double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

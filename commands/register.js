@@ -19,12 +19,12 @@ export async function execute(interaction) {
 
     if (result.success) {
       embed
-        .setTitle('✅  Registration Complete')
-        .setDescription('You have joined the tournament! Use `/rank` to see the leaderboard.')
+        .setTitle('✅  Đăng ký thành công')
+        .setDescription('Vào cuộc rồi! Gõ `/rank` xem BXH nha.')
         .setColor(0x57F287);
     } else {
       embed
-        .setTitle('ℹ️  Already Registered')
+        .setTitle('ℹ️  Đã đăng ký')
         .setDescription(result.message)
         .setColor(0xFEE75C);
     }
@@ -33,7 +33,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Registration failed. Please try again later.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Đăng ký lỗi rồi. Thử lại nha.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

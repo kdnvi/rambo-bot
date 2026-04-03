@@ -4,12 +4,12 @@ import { pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const RELIEF_LINES = [
-  'came to their senses. Barely.',
-  'woke up in a cold sweat and hit undo.',
-  'realized "YOLO" is not a financial strategy.',
-  'pulled back from the abyss. Smart move.',
-  'decided they like having points after all.',
-  'looked at their balance and panicked.',
+  'tỉnh lại rồi. Suýt chút nữa thôi.',
+  'giật mình dậy đẫm mồ hôi rồi bấm huỷ.',
+  'nhận ra "YOLO" không phải kế hoạch tài chính.',
+  'lùi lại khỏi bờ vực. Khôn đấy.',
+  'nghĩ lại thấy vẫn thích có điểm hơn.',
+  'nhìn số dư xong hoảng, huỷ liền.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -22,13 +22,13 @@ export async function execute(interaction) {
 
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
-      await interaction.reply({ content: '❌ You need to `/register` first.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Bạn cần `/register` trước.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -50,8 +50,8 @@ export async function execute(interaction) {
 
     if (!activeMatchId) {
       const embed = new EmbedBuilder()
-        .setTitle('🤷  No Active All-In')
-        .setDescription('You don\'t have any active all-in bets to remove.')
+        .setTitle('🤷  Không có All-In')
+        .setDescription('Đang không có all-in nào để huỷ cả.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -60,12 +60,12 @@ export async function execute(interaction) {
     await removePlayerAllIn(userId, activeMatchId);
 
     const embed = new EmbedBuilder()
-      .setTitle('😮‍💨  ALL-IN CANCELLED')
+      .setTitle('😮‍💨  HUỶ ALL-IN')
       .setDescription(
         `**${interaction.user}** ${pick(RELIEF_LINES)}\n\n` +
-        `🎰 All-in of **${VND_FORMATTER.format(activeAmount * 1000)}** on Match #${activeMatchId} ` +
-        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}) has been removed.\n` +
-        'Your balance is safe... for now.'
+        `🎰 Huỷ all-in **${VND_FORMATTER.format(activeAmount * 1000)}** ở Trận #${activeMatchId} ` +
+        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
+        'Tiền vẫn còn... tạm thời.'
       )
       .setColor(0xFEE75C)
       .setTimestamp();
@@ -74,7 +74,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to remove all-in.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Huỷ all-in thất bại.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

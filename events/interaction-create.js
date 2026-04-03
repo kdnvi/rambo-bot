@@ -4,19 +4,19 @@ import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incre
 import { pick } from '../utils/helper.js';
 
 const DRUNK_LINES = [
-  'can\'t make up their mind... are they okay? 🍺',
-  'is switching votes like changing channels 📺',
-  'has commitment issues with this match 💔',
-  'is sweating bullets over this pick 😰',
-  'just changed their vote AGAIN. Indecisive legend.',
-  'is having a full existential crisis over this match 🌀',
+  'chọn kiểu gì cũng không yên tâm... say hay sao? 🍺',
+  'lật vote nhanh hơn lật bánh tráng 📺',
+  'yêu đương còn không phân vân bằng trận này 💔',
+  'mồ hôi tay ướt hết cả điện thoại 😰',
+  'lại đổi vote NỮA. Vô đối chọn nhầm.',
+  'trận này làm khủng hoảng cả tuổi thanh xuân 🌀',
 ];
 
 const LAST_SEC_LINES = [
-  'just snuck in a last-second vote! Sweaty palms energy. 💦',
-  'cutting it REAL close! Did they just wake up? ⏰',
-  'voted with seconds to spare. Living on the edge. 🫣',
-  'just slid in under the wire. Clutch or reckless? 🎰',
+  'chui vào vote phút 89! Tay run chân run. 💦',
+  'suýt trễ! Ngủ nướng tới giờ này hả mậy? ⏰',
+  'vote khi đồng hồ đếm ngược. Gan cùng mình. 🫣',
+  'lách vào khe cửa hẹp. Pro hay hên? 🎰',
 ];
 
 export const name = Events.InteractionCreate;
@@ -31,7 +31,7 @@ export async function execute(interaction) {
 
       if (!match || Date.parse(match.date) < Date.now()) {
         const embed = new EmbedBuilder()
-          .setDescription('⏰ This match has already started — voting is closed.')
+          .setDescription('⏰ Bóng lăn rồi — hết giờ vote!')
           .setColor(0xFEE75C);
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
@@ -40,7 +40,7 @@ export async function execute(interaction) {
       const players = (await readPlayers()).val();
       if (!players || !players[interaction.user.id]) {
         const embed = new EmbedBuilder()
-          .setDescription('❌ You need to `/register` first before voting.')
+          .setDescription('❌ `/register` đi rồi mới vote được nha.')
           .setColor(0xED4245);
         await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
@@ -62,18 +62,18 @@ export async function execute(interaction) {
       const ap = pct(distribution[match.away]);
 
       const VOTE_SEPARATOR = '\n\n📊 ';
-      const barText = `${match.home.toUpperCase()} ${hp}%  ·  Draw ${dp}%  ·  ${match.away.toUpperCase()} ${ap}%`;
+      const barText = `${match.home.toUpperCase()} ${hp}%  ·  Hoà ${dp}%  ·  ${match.away.toUpperCase()} ${ap}%`;
 
       const existingEmbed = interaction.message.embeds[0];
       const updatedEmbed = EmbedBuilder.from(existingEmbed)
-        .setFooter({ text: `${voteCount} vote(s) cast · Vote below before kickoff!` });
+        .setFooter({ text: `${voteCount} vote · Bấm bên dưới trước giờ đá!` });
 
       const baseDesc = (existingEmbed.description || '').split(VOTE_SEPARATOR)[0];
       updatedEmbed.setDescription(`${baseDesc}${VOTE_SEPARATOR}${barText}`);
 
       await interaction.update({ embeds: [updatedEmbed] });
       const embed = new EmbedBuilder()
-        .setDescription(`✅ Your vote: **${teamId.toUpperCase()}**`)
+        .setDescription(`✅ Vote của bạn: **${teamId.toUpperCase()}**`)
         .setColor(0x57F287);
       await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
 
@@ -90,21 +90,21 @@ export async function execute(interaction) {
 
       if (changeCount >= 3 && channel) {
         const drunkEmbed = new EmbedBuilder()
-          .setDescription(`🍺 **${interaction.user}** ${pick(DRUNK_LINES)} *(${changeCount} vote changes on match #${matchId})*`)
+          .setDescription(`🍺 **${interaction.user}** ${pick(DRUNK_LINES)} *(${changeCount} lần đổi vote trận #${matchId})*`)
           .setColor(0xE67E22);
         await channel.send({ embeds: [drunkEmbed] });
       }
 
       if (minsUntilKickoff <= 5 && minsUntilKickoff > 0 && channel) {
         const lateEmbed = new EmbedBuilder()
-          .setDescription(`⏰ **${interaction.user}** ${pick(LAST_SEC_LINES)} *(match #${matchId})*`)
+          .setDescription(`⏰ **${interaction.user}** ${pick(LAST_SEC_LINES)} *(trận #${matchId})*`)
           .setColor(0xFEE75C);
         await channel.send({ embeds: [lateEmbed] });
       }
     } catch (err) {
       logger.error(err);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Something went wrong with your vote.', flags: MessageFlags.Ephemeral }).catch(() => {});
+        await interaction.reply({ content: '❌ Có lỗi xảy ra với vote của bạn.', flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
 
@@ -125,7 +125,7 @@ export async function execute(interaction) {
       logger.error(`Error executing ${interaction.commandName}`);
       logger.error(error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Something went wrong.', flags: MessageFlags.Ephemeral }).catch(() => {});
+        await interaction.reply({ content: '❌ Có lỗi xảy ra.', flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
 

@@ -63,7 +63,7 @@ export async function registerPlayer(userId) {
     const ref = db.ref(`tournament/players/${userId}`);
     const snapshot = await ref.once('value');
     if (snapshot.val() !== null) {
-      return { success: false, message: 'You are already registered for this tournament.' };
+      return { success: false, message: 'Đăng ký rồi mà, vô lại làm gì nữa.' };
     } else {
       await ref.set({
         points: 0,

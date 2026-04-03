@@ -19,7 +19,7 @@ export async function execute(interaction) {
     const allMatches = (await readTournamentData('matches')).val();
 
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -35,8 +35,8 @@ export async function execute(interaction) {
 
     if (!match) {
       const embed = new EmbedBuilder()
-        .setTitle('❌  Match Not Found')
-        .setDescription(matchIdOption ? `No match with ID \`${matchIdOption}\`.` : 'No finished matches yet.')
+        .setTitle('❌  Không tìm thấy trận')
+        .setDescription(matchIdOption ? `Không có trận nào ID \`${matchIdOption}\` cả.` : 'Chưa có trận nào xong.')
         .setColor(0xED4245);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -49,11 +49,11 @@ export async function execute(interaction) {
 
     let status;
     if (match.hasResult) {
-      status = `✅ Finished — **${match.home.toUpperCase()}** ${match.result.home} - ${match.result.away} **${match.away.toUpperCase()}**`;
+      status = `✅ Kết thúc — **${match.home.toUpperCase()}** ${match.result.home} - ${match.result.away} **${match.away.toUpperCase()}**`;
     } else if (hasStarted) {
-      status = '🔴 In progress / awaiting result';
+      status = '🔴 Đang đá / chờ kết quả';
     } else {
-      status = `🟢 Upcoming — <t:${ts}:R>`;
+      status = `🟢 Sắp đá — <t:${ts}:R>`;
     }
 
     const stake = getMatchStake(match.id);
@@ -62,9 +62,9 @@ export async function execute(interaction) {
       .setDescription(`**${tournamentName}**\n\n${status}`)
       .setColor(match.hasResult ? 0x57F287 : hasStarted ? 0xED4245 : 0x5865F2)
       .addFields(
-        { name: '🕐 Kickoff', value: `<t:${ts}:f>`, inline: true },
-        { name: '🏟️ Venue', value: match.location, inline: true },
-        { name: '💰 Stake', value: `${stake} pts`, inline: true },
+        { name: '🕐 Giờ đá', value: `<t:${ts}:f>`, inline: true },
+        { name: '🏟️ Sân', value: match.location, inline: true },
+        { name: '💰 Cược', value: `${stake} pts`, inline: true },
       )
       .setTimestamp();
 
@@ -84,9 +84,9 @@ export async function execute(interaction) {
         const voteLines = Object.entries(grouped)
           .map(([pick, names]) => `**${pick}**\n${names.join('\n')}`)
           .join('\n\n');
-        embed.addFields({ name: '🗳️ Votes', value: voteLines, inline: false });
+        embed.addFields({ name: '🗳️ Vote', value: voteLines, inline: false });
       } else {
-        embed.addFields({ name: '🗳️ Votes', value: '*No votes recorded*', inline: false });
+        embed.addFields({ name: '🗳️ Vote', value: '*Không có vote*', inline: false });
       }
     }
 
@@ -94,7 +94,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to load match details.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể tải chi tiết trận đấu.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

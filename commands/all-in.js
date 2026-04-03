@@ -4,24 +4,24 @@ import { pick, VND_FORMATTER, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const HYPE_LINES = [
-  'The absolute MADLAD just went all-in!',
-  'Someone call an ambulance... but not for them!',
-  'This is either genius or insanity. No in-between.',
-  'They woke up and chose VIOLENCE (financial).',
-  'Legend or clown? We\'ll find out soon.',
-  'The balls on this one... astronomical.',
-  'Mom would NOT approve of this bet.',
-  'This is what zero fear looks like.',
-  'History will remember this moment.',
-  'Their palms are sweaty, knees weak, arms heavy...',
+  'ĐIÊN RỒI! All-in luôn!',
+  'Gọi cấp cứu đi — nhưng không phải cho ổng!',
+  'Thiên tài hay khùng? Không có đường giữa.',
+  'Sáng dậy chọn BẠO LỰC (tài chính).',
+  'Huyền thoại hay hề? Chút nữa biết.',
+  'Gan chi mà gan dữ vậy trời...',
+  'Má mà biết chắc từ mặt luôn.',
+  'Người không biết sợ là gì trông như thế này đây.',
+  'Khoảnh khắc này sẽ đi vào lịch sử.',
+  'Tay mồ hôi, đầu gối run, mì mẹ nấu...',
 ];
 
 const BROKE_LINES = [
-  'tried to go all-in with empty pockets 💀',
-  'wants to bet it all... but "it all" is nothing 🕳️',
-  'is out here acting rich with a broke balance 🤡',
-  'went to the casino with no money and got escorted out 🚪',
-  'has the confidence but not the funds 📉',
+  'đòi all-in mà túi rỗng 💀',
+  'muốn cược hết... mà "hết" bằng 0 🕳️',
+  'ra vẻ đại gia mà tài khoản trống trơn 🤡',
+  'vô casino không xu dính túi, bảo vệ mời ra 🚪',
+  'tự tin thì dư mà tiền thì không có 📉',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -35,8 +35,8 @@ export async function execute(interaction) {
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
       const embed = new EmbedBuilder()
-        .setTitle('❌  Not Registered')
-        .setDescription('You need to `/register` first.')
+        .setTitle('❌  Chưa đăng ký')
+        .setDescription('Bạn cần `/register` trước.')
         .setColor(0xED4245);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -45,9 +45,9 @@ export async function execute(interaction) {
     const balance = players[userId].points;
     if (balance <= 0) {
       const embed = new EmbedBuilder()
-        .setTitle('💸  ALL IN DENIED')
+        .setTitle('💸  ALL IN BỊ TỪ CHỐI')
         .setDescription(
-          `**${interaction.user}** ${pick(BROKE_LINES)}\n\nBalance: **${VND_FORMATTER.format(balance * 1000)}**`
+          `**${interaction.user}** ${pick(BROKE_LINES)}\n\nSố dư: **${VND_FORMATTER.format(balance * 1000)}**`
         )
         .setColor(0xED4245)
         .setThumbnail(interaction.user.displayAvatarURL());
@@ -57,13 +57,13 @@ export async function execute(interaction) {
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const match = findNextMatch(allMatches);
     if (!match) {
-      await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -72,8 +72,8 @@ export async function execute(interaction) {
     const myWagers = await readUserWagers(userId);
     if (myWagers[matchId]?.type === 'double-down') {
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already Double-Downed')
-        .setDescription('You already double-downed on this match. Use `/undo-double-down` first if you want to go all-in instead.')
+        .setTitle('⚠️  Đã Double-Down rồi')
+        .setDescription('Double-down rồi mà còn đòi all-in. Huỷ double-down bằng `/undo-double-down` trước đi.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -82,8 +82,8 @@ export async function execute(interaction) {
     const existing = await readPlayerAllIns(userId);
     if (existing[matchId]) {
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already All-In')
-        .setDescription(`You already went all-in on this match with **${VND_FORMATTER.format(existing[matchId].amount * 1000)}**.`)
+        .setTitle('⚠️  Đã All-In rồi')
+        .setDescription(`Bạn đã all-in trận này với **${VND_FORMATTER.format(existing[matchId].amount * 1000)}** rồi.`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -95,12 +95,12 @@ export async function execute(interaction) {
       .setTitle('🔥  ALL IN! 🔥')
       .setDescription(
         `${pick(HYPE_LINES)}\n\n` +
-        `**${interaction.user}** just put **${VND_FORMATTER.format(balance * 1000)}** on the line!\n\n` +
-        `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
-        `🎰 All-in amount: **${VND_FORMATTER.format(balance * 1000)}**\n\n` +
-        '✅ Win → **big payout from the loser pool**\n' +
-        '❌ Lose → **back to zero**\n\n' +
-        '⚠️ *Use `/undo-all-in` before kickoff if you chicken out.*'
+        `**${interaction.user}** dồn hết **${VND_FORMATTER.format(balance * 1000)}** lên bàn!\n\n` +
+        `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
+        `🎰 All-in: **${VND_FORMATTER.format(balance * 1000)}**\n\n` +
+        '✅ Đúng → **ăn đậm từ pool kẻ thua**\n' +
+        '❌ Sai → **sạch bách**\n\n' +
+        '⚠️ *Sợ thì `/undo-all-in` trước khi bóng lăn.*'
       )
       .setColor(0xFF4500)
       .setThumbnail(interaction.user.displayAvatarURL())
@@ -110,7 +110,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to activate all-in.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể kích hoạt all-in.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

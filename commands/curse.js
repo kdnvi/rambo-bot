@@ -4,14 +4,14 @@ import { pick, findNextMatch } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const CURSE_LINES = [
-  'just put a hex on',
-  'is channeling dark energy toward',
-  'whispered an ancient curse at',
-  'drew a voodoo doll of',
-  'just sent bad juju to',
-  'activated the evil eye on',
-  'summoned a black cat for',
-  'hired a witch doctor against',
+  'vừa yểm bùa',
+  'đang gọi hồn nhắm thẳng vào',
+  'thì thầm lời nguyền ngàn năm lên',
+  'nặn hình nhân bùa chú giống hệt',
+  'gửi vận xui tới tận cửa nhà',
+  'mở con mắt thứ ba nhắm vào',
+  'thả mèo đen đi theo',
+  'mướn thầy bùa chuyên trị',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -28,8 +28,8 @@ export async function execute(interaction) {
 
     if (target.id === curserId) {
       const embed = new EmbedBuilder()
-        .setTitle('🪞  Self-Curse?')
-        .setDescription('You can\'t curse yourself. That\'s just depression.')
+        .setTitle('🪞  Tự nguyền mình?')
+        .setDescription('Tự nguyền bản thân? Đó gọi là trầm cảm, không phải bùa chú.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -37,23 +37,23 @@ export async function execute(interaction) {
 
     const players = (await readPlayers()).val();
     if (!players || !players[curserId]) {
-      await interaction.reply({ content: '❌ You need to `/register` first.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Bạn cần `/register` trước.', flags: MessageFlags.Ephemeral });
       return;
     }
     if (!players[target.id]) {
-      await interaction.reply({ content: '❌ That player is not registered.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Người chơi đó chưa đăng ký.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const allMatches = (await readTournamentData('matches')).val();
     if (!allMatches) {
-      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
       return;
     }
 
     const nextMatch = findNextMatch(allMatches);
     if (!nextMatch) {
-      await interaction.reply({ content: '❌ No upcoming matches to curse on.', flags: MessageFlags.Ephemeral });
+      await interaction.reply({ content: '❌ Không có trận đấu sắp tới để nguyền.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -65,8 +65,8 @@ export async function execute(interaction) {
       const existing = curses[matchId][curserId];
       const existingName = interaction.client.cachedUsers?.[existing.target]?.nickname || existing.target;
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Already Cursed')
-        .setDescription(`You already cursed **${existingName}** on Match #${matchId}. Wait for it to resolve, then curse again.`)
+        .setTitle('⚠️  Đã nguyền rồi')
+        .setDescription(`Nguyền **${existingName}** ở Trận #${matchId} rồi. Đợi kết quả xong hãy nguyền tiếp.`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
@@ -78,13 +78,13 @@ export async function execute(interaction) {
     const targetName = users[target.id]?.nickname || target.displayName;
 
     const embed = new EmbedBuilder()
-      .setTitle('🧿  CURSE ACTIVATED')
+      .setTitle('🧿  LỜI NGUYỀN KÍCH HOẠT')
       .setDescription(
         `**${interaction.user}** ${pick(CURSE_LINES)} **${targetName}**!\n\n` +
-        `⚽ **Match #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n\n` +
-        `If **${targetName}** gets it wrong → you steal **5 pts** from them.\n` +
-        `If **${targetName}** gets it right → YOU lose **5 pts** to them.\n\n` +
-        '*Choose your enemies wisely...*'
+        `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n\n` +
+        `**${targetName}** đoán sai → bạn ăn **5 điểm** của nó.\n` +
+        `**${targetName}** đoán đúng → bạn mất **5 điểm** cho nó.\n\n` +
+        '*Chọn người cho kỹ nha...*'
       )
       .setColor(0x9B59B6)
       .setThumbnail(target.displayAvatarURL())
@@ -94,7 +94,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Failed to activate curse.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Kích hoạt lời nguyền thất bại.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

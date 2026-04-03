@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -29,7 +29,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Failed to load tournament rules.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ Failed to load tournament rules.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

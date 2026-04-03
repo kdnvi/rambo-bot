@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readPlayers, readAllVotes } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -31,7 +31,7 @@ export async function execute(interaction) {
             : `${targetUser} is not registered in this tournament.`
         )
         .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -97,7 +97,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Failed to load stats.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ Failed to load stats.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

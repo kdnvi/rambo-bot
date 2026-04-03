@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -20,7 +20,7 @@ export async function execute(interaction) {
         .setTitle('📊  No Groups Available')
         .setDescription('Group data has not been configured yet.')
         .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -32,7 +32,7 @@ export async function execute(interaction) {
         .setTitle('❌  Group Not Found')
         .setDescription(`No group \`${requested.toUpperCase()}\`. Valid groups: ${validGroups}`)
         .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -77,7 +77,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Failed to load group standings.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ Failed to load group standings.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

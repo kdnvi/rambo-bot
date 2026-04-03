@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readTournamentConfig, readAllVotes } from '../utils/firebase.js';
 import logger from '../utils/logger.js';
 
@@ -16,7 +16,7 @@ export async function execute(interaction) {
     const optionalMatchId = interaction.options.get('match-id');
     let matches = (await readTournamentData('matches')).val();
     if (!matches) {
-      await interaction.reply({ content: '❌ No match data available.', ephemeral: true });
+      await interaction.reply({ content: '❌ No match data available.', flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -31,7 +31,7 @@ export async function execute(interaction) {
         .setTitle('🔍  No Results Found')
         .setDescription('Either the match does not exist or has not produced a result yet.')
         .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], ephemeral: true });
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
@@ -83,7 +83,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Failed to load vote history.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ Failed to load vote history.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

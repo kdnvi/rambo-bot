@@ -1,5 +1,5 @@
 import logger from '../utils/logger.js';
-import { Events, EmbedBuilder } from 'discord.js';
+import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
 import { updateMatchVote, readMatchVotes, readTournamentData } from '../utils/firebase.js';
 
 export const name = Events.InteractionCreate;
@@ -16,7 +16,7 @@ export async function execute(interaction) {
         const embed = new EmbedBuilder()
           .setDescription('⏰ This match has already started — voting is closed.')
           .setColor(0xFEE75C);
-        await interaction.reply({ embeds: [embed], ephemeral: true });
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
         return;
       }
 
@@ -30,11 +30,11 @@ export async function execute(interaction) {
       const embed = new EmbedBuilder()
         .setDescription(`✅ Your vote: **${teamId.toUpperCase()}**`)
         .setColor(0x57F287);
-      await interaction.followUp({ embeds: [embed], ephemeral: true });
+      await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
     } catch (err) {
       logger.error(err);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Something went wrong with your vote.', ephemeral: true }).catch(() => {});
+        await interaction.reply({ content: '❌ Something went wrong with your vote.', flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
 
@@ -55,7 +55,7 @@ export async function execute(interaction) {
       logger.error(`Error executing ${interaction.commandName}`);
       logger.error(error);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
+        await interaction.reply({ content: '❌ Something went wrong.', flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
 

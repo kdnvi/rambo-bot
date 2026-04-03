@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('spam')
@@ -21,7 +21,7 @@ export async function execute(interaction) {
     await interaction.reply({ embeds: [embed] });
   } catch {
     if (!interaction.replied) {
-      await interaction.reply({ content: '❌ Something went wrong.', ephemeral: true }).catch(() => {});
+      await interaction.reply({ content: '❌ Something went wrong.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

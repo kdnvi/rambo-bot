@@ -24,9 +24,38 @@ export async function execute(interaction) {
       const votes = (await readMatchVotes(matchId, interaction.message.id)).val();
       const voteCount = votes ? Object.keys(votes).length : 0;
 
-      await interaction.update({
-        content: `🗳️ **${voteCount}** vote(s) cast`,
-      });
+      const distribution = { [match.home]: 0, draw: 0, [match.away]: 0 };
+      if (votes) {
+        for (const v of Object.values(votes)) {
+          if (v.vote in distribution) distribution[v.vote]++;
+        }
+      }
+      const pct = (n) => voteCount > 0 ? Math.round((n / voteCount) * 100) : 0;
+      const hp = pct(distribution[match.home]);
+      const dp = pct(distribution.draw);
+      const ap = pct(distribution[match.away]);
+
+      const BAR_LEN = 16;
+      const makeBar = (p) => {
+        const filled = Math.round((p / 100) * BAR_LEN);
+        return '█'.repeat(filled) + '░'.repeat(BAR_LEN - filled);
+      };
+      const pad = 12;
+      const barText = [
+        `${match.home.toUpperCase().padEnd(pad)} ${makeBar(hp)}  ${String(hp).padStart(3)}%`,
+        `${'Draw'.padEnd(pad)} ${makeBar(dp)}  ${String(dp).padStart(3)}%`,
+        `${match.away.toUpperCase().padEnd(pad)} ${makeBar(ap)}  ${String(ap).padStart(3)}%`,
+      ].join('\n');
+
+      const existingEmbed = interaction.message.embeds[0];
+      const updatedEmbed = EmbedBuilder.from(existingEmbed)
+        .setFooter({ text: `${voteCount} vote(s) cast · Vote below before kickoff!` });
+
+      const descParts = existingEmbed.description.split('\n```');
+      const baseDesc = descParts[0];
+      updatedEmbed.setDescription(`${baseDesc}\n\`\`\`\n${barText}\n\`\`\``);
+
+      await interaction.update({ embeds: [updatedEmbed] });
       const embed = new EmbedBuilder()
         .setDescription(`✅ Your vote: **${teamId.toUpperCase()}**`)
         .setColor(0x57F287);

@@ -27,7 +27,6 @@ export function computeBadges({ userId, completedMatches, votes, playerData, wag
   let runningBalance = 0;
   let wentNegative = false;
   let recoveredFromNegative = false;
-
   const matchDays = {};
 
   for (const match of completedMatches) {

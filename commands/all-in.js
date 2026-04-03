@@ -31,11 +31,7 @@ const BROKE_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('all-in')
-  .setDescription('Bet your ENTIRE balance on a match!')
-  .addIntegerOption(option => option.setName('match-id')
-    .setDescription('Match ID to go all-in on')
-    .setMinValue(1)
-    .setRequired(true));
+  .setDescription('Bet your ENTIRE balance on a match!');
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -44,7 +40,6 @@ function pick(arr) {
 export async function execute(interaction) {
   try {
     const userId = interaction.user.id;
-    const matchId = interaction.options.get('match-id').value;
 
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
@@ -75,24 +70,21 @@ export async function execute(interaction) {
       return;
     }
 
-    const match = allMatches.find((m) => m.id === matchId);
+    const now = Date.now();
+    let match = allMatches
+      .filter((m) => m.messageId && Date.parse(m.date) > now)
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
     if (!match) {
-      const embed = new EmbedBuilder()
-        .setTitle('❌  Match Not Found')
-        .setDescription(`No match with ID \`${matchId}\`.`)
-        .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      match = allMatches
+        .filter((m) => Date.parse(m.date) > now)
+        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
+    }
+    if (!match) {
+      await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
       return;
     }
 
-    if (Date.parse(match.date) <= Date.now()) {
-      const embed = new EmbedBuilder()
-        .setTitle('⏰  Too Late')
-        .setDescription('This match has already started.')
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
+    const matchId = match.id;
 
     const existing = await readPlayerAllIns(userId);
     if (existing[matchId]) {

@@ -18,11 +18,7 @@ const HYPE_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('double-down')
-  .setDescription('Double your stake on a match (1 per matchday)')
-  .addIntegerOption(option => option.setName('match-id')
-    .setDescription('Match ID to double down on')
-    .setMinValue(1)
-    .setRequired(true));
+  .setDescription('Double your stake on a match (1 per matchday)');
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -31,7 +27,6 @@ function pick(arr) {
 export async function execute(interaction) {
   try {
     const userId = interaction.user.id;
-    const matchId = interaction.options.get('match-id').value;
 
     const players = (await readPlayers()).val();
     if (!players || !players[userId]) {
@@ -49,24 +44,21 @@ export async function execute(interaction) {
       return;
     }
 
-    const match = allMatches.find((m) => m.id === matchId);
+    const now = Date.now();
+    let match = allMatches
+      .filter((m) => m.messageId && Date.parse(m.date) > now)
+      .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
     if (!match) {
-      const embed = new EmbedBuilder()
-        .setTitle('❌  Match Not Found')
-        .setDescription(`No match with ID \`${matchId}\`.`)
-        .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      match = allMatches
+        .filter((m) => Date.parse(m.date) > now)
+        .sort((a, b) => Date.parse(a.date) - Date.parse(b.date))[0];
+    }
+    if (!match) {
+      await interaction.reply({ content: '❌ No upcoming matches available.', flags: MessageFlags.Ephemeral });
       return;
     }
 
-    if (Date.parse(match.date) <= Date.now()) {
-      const embed = new EmbedBuilder()
-        .setTitle('⏰  Too Late')
-        .setDescription('This match has already started.')
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
+    const matchId = match.id;
 
     const matchDay = match.date.slice(0, 10);
     const sameDayMatchIds = allMatches

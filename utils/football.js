@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIns } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readPlayerAllIns, readCurses } from './firebase.js';
 import { CronJob } from 'cron';
 
 const STAGE_STAKES = [
@@ -235,6 +235,16 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
 
       await channel.send({ embeds: [embed] });
 
+      const bountyEmbed = await resolveBounty(players, scores, users);
+      if (bountyEmbed) {
+        await channel.send({ embeds: [bountyEmbed] });
+      }
+
+      const rivalryEmbed = await checkRivalry(allMatches, votes, players, users);
+      if (rivalryEmbed) {
+        await channel.send({ embeds: [rivalryEmbed] });
+      }
+
       for (const match of dayMatches) {
         await updateMatch(match.id - 1, { mvpAnnounced: true });
       }
@@ -242,6 +252,116 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
     }
   } catch (err) {
     logger.error('Failed to check matchday MVP:', err);
+  }
+}
+
+async function checkRivalry(allMatches, votes, players, users) {
+  try {
+    const completed = allMatches.filter((m) => m.hasResult && m.isCalculated);
+    if (completed.length < 5) return null;
+
+    const playerIds = Object.keys(players);
+    if (playerIds.length < 2) return null;
+
+    const disagreements = {};
+
+    for (const match of completed) {
+      const key = `${match.id - 1}`;
+      if (!votes || !(key in votes) || !match.messageId || !(match.messageId in votes[key])) continue;
+      const mv = votes[key][match.messageId];
+
+      for (let i = 0; i < playerIds.length; i++) {
+        for (let j = i + 1; j < playerIds.length; j++) {
+          const a = playerIds[i];
+          const b = playerIds[j];
+          if (!(a in mv) || !(b in mv)) continue;
+          const pairKey = [a, b].sort().join('|');
+          if (!disagreements[pairKey]) disagreements[pairKey] = { count: 0, total: 0 };
+          disagreements[pairKey].total++;
+          if (mv[a].vote !== mv[b].vote) disagreements[pairKey].count++;
+        }
+      }
+    }
+
+    let topPair = null;
+    let topCount = 0;
+    for (const [pair, data] of Object.entries(disagreements)) {
+      if (data.total >= 5 && data.count > topCount) {
+        topCount = data.count;
+        topPair = { ids: pair.split('|'), ...data };
+      }
+    }
+
+    if (!topPair || topCount < 3) return null;
+
+    const pct = Math.round((topPair.count / topPair.total) * 100);
+    if (pct < 50) return null;
+
+    const nameA = users[topPair.ids[0]]?.nickname || 'Unknown';
+    const nameB = users[topPair.ids[1]]?.nickname || 'Unknown';
+
+    const RIVAL_LINES = [
+      `Can't agree on anything. Official enemies.`,
+      `If one says left, the other says right.`,
+      `The rivalry is REAL. 🍿`,
+      `Somebody get these two a boxing ring.`,
+      `They'd disagree on what day it is.`,
+    ];
+
+    return new EmbedBuilder()
+      .setTitle('⚔️  Rivalry Alert')
+      .setDescription(
+        `**${nameA}** and **${nameB}** have disagreed on **${topPair.count}** out of **${topPair.total}** matches (**${pct}%**)!\n\n` +
+        RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)]
+      )
+      .setColor(0x9B59B6)
+      .setTimestamp();
+  } catch (err) {
+    logger.error('Failed to check rivalry:', err);
+    return null;
+  }
+}
+
+const BOUNTY_PTS = 5;
+
+async function resolveBounty(players, dayScores, users) {
+  try {
+    const ranked = Object.entries(players)
+      .sort(([, a], [, b]) => b.points - a.points);
+    if (ranked.length < 2) return null;
+
+    const [leaderId] = ranked[0];
+    const leaderDayScore = dayScores[leaderId] || 0;
+
+    const hunters = Object.entries(dayScores)
+      .filter(([id, pts]) => id !== leaderId && pts > leaderDayScore && pts > 0)
+      .sort(([, a], [, b]) => b - a);
+
+    if (hunters.length === 0) return null;
+
+    const [hunterId] = hunters[0];
+    players[hunterId].points += BOUNTY_PTS;
+    players[leaderId].points -= BOUNTY_PTS;
+
+    const hunterName = users[hunterId]?.nickname || 'Unknown';
+    const leaderName = users[leaderId]?.nickname || 'Unknown';
+
+    await updatePlayers({
+      [hunterId]: players[hunterId],
+      [leaderId]: players[leaderId],
+    });
+
+    return new EmbedBuilder()
+      .setTitle('🎯  Bounty Claimed!')
+      .setDescription(
+        `**${hunterName}** outscored the leader **${leaderName}** today and stole **${BOUNTY_PTS} pts**!\n\n` +
+        `The #1 spot comes with a target on your back. 👀`
+      )
+      .setColor(0xE91E63)
+      .setTimestamp();
+  } catch (err) {
+    logger.error('Failed to resolve bounty:', err);
+    return null;
   }
 }
 
@@ -258,6 +378,7 @@ export async function calculateMatches(matches) {
   for (const userId of Object.keys(players)) {
     allIns[userId] = await readPlayerAllIns(userId);
   }
+  const curses = await readCurses();
 
   const calculatedIds = [];
 
@@ -276,7 +397,8 @@ export async function calculateMatches(matches) {
       logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
     }
 
-    calculatePlayerPoints(players, votes, match, wagers, allIns);
+    const votedPlayers = calculatePlayerPoints(players, votes, match, wagers, allIns);
+    resolveCurses(players, curses, match, votingObj, votedPlayers);
     calculatedIds.push(match.id - 1);
     logger.info(`Calculated match ${match.id} successfully`);
   }
@@ -406,4 +528,36 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
   }
 
   return votedPlayers;
+}
+
+function resolveCurses(players, curses, match, votingObj, votedPlayers) {
+  const matchCurses = curses[match.id];
+  if (!matchCurses) return;
+
+  const winner = matchWinner(match);
+  const key = `${match.id - 1}`;
+
+  for (const [curserId, { target }] of Object.entries(matchCurses)) {
+    if (!(curserId in players) || !(target in players)) continue;
+
+    let targetVote = null;
+    if (votingObj && key in votingObj && match.messageId in (votingObj[key] || {})) {
+      const mv = votingObj[key][match.messageId];
+      if (target in mv) targetVote = mv[target].vote;
+    }
+    if (targetVote === null) continue;
+
+    const targetCorrect = targetVote === winner;
+    const CURSE_PTS = 5;
+
+    if (targetCorrect) {
+      players[curserId].points -= CURSE_PTS;
+      players[target].points += CURSE_PTS;
+    } else {
+      players[curserId].points += CURSE_PTS;
+      players[target].points -= CURSE_PTS;
+    }
+
+    logger.info(`Curse resolved: ${curserId} ${targetCorrect ? 'lost' : 'gained'} ${CURSE_PTS} pts (target: ${target}, match: ${match.id})`);
+  }
 }

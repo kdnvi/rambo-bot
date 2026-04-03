@@ -133,3 +133,45 @@ export async function setPlayerAllIn(userId, matchId, amount) {
   await ref.set({ amount });
   logger.info(`Set all-in for user [${userId}] on match [${matchId}] with amount [${amount}]`);
 }
+
+export async function readCurses() {
+  const ref = db.ref('tournament/curses');
+  return (await ref.once('value')).val() || {};
+}
+
+export async function setCurse(curserId, targetId, matchId) {
+  const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
+  await ref.set({ target: targetId });
+  logger.info(`Curse set: [${curserId}] cursed [${targetId}] on match [${matchId}]`);
+}
+
+export async function removeCurse(curserId, matchId) {
+  const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
+  await ref.remove();
+  logger.info(`Curse removed: [${curserId}] on match [${matchId}]`);
+}
+
+export async function removePlayerWager(userId, matchId) {
+  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
+  await ref.remove();
+  logger.info(`Removed wager for user [${userId}] on match [${matchId}]`);
+}
+
+export async function removePlayerAllIn(userId, matchId) {
+  const ref = db.ref(`tournament/allins/${userId}/${matchId}`);
+  await ref.remove();
+  logger.info(`Removed all-in for user [${userId}] on match [${matchId}]`);
+}
+
+export async function readVoteChanges(matchId) {
+  const ref = db.ref(`tournament/voteChanges/${matchId}`);
+  return (await ref.once('value')).val() || {};
+}
+
+export async function incrementVoteChange(matchId, userId) {
+  const ref = db.ref(`tournament/voteChanges/${matchId}/${userId}`);
+  const snap = await ref.once('value');
+  const count = (snap.val() || 0) + 1;
+  await ref.set(count);
+  return count;
+}

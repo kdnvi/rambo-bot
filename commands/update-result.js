@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchResult, readPlayers } from '../utils/firebase.js';
+import { updateMatchResult, readPlayers, readMatchVotes } from '../utils/firebase.js';
 import { calculateMatches } from '../utils/football.js';
 import logger from '../utils/logger.js';
 
@@ -99,6 +99,7 @@ export async function execute(interaction) {
     logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
 
     await postStandings(interaction);
+    await postMatchRoast(interaction, updatedMatch);
   } catch (err) {
     logger.error(err);
     if (!interaction.replied) {
@@ -109,6 +110,64 @@ export async function execute(interaction) {
 
 function pick(arr) {
   return arr[Math.floor(Math.random() * arr.length)];
+}
+
+const ROAST_LINES = [
+  'really thought that was happening huh 💀',
+  'should stick to predicting the weather',
+  '\'s prediction aged like milk in the sun 🥛',
+  'needs to have their crystal ball checked',
+  'bet with their heart, not their brain',
+  'might want to ask a coin next time',
+  '\'s prediction was a war crime',
+  'confidently wrong, as always',
+  'chose violence... against their own points',
+  'looked at the stats and said "nah, vibes"',
+  'predicted like they were blindfolded 🙈',
+  '\'s gut feeling needs surgery',
+];
+
+async function postMatchRoast(interaction, match) {
+  try {
+    if (!match.messageId) return;
+    const votes = (await readMatchVotes(match.id, match.messageId)).val();
+    if (!votes) return;
+
+    const winner = getMatchWinner(match);
+    const users = interaction.client.cachedUsers;
+    const losers = [];
+
+    for (const [userId, v] of Object.entries(votes)) {
+      if (v.vote !== winner) {
+        losers.push(users[userId]?.nickname || 'Unknown');
+      }
+    }
+
+    if (losers.length === 0) return;
+
+    const roasted = losers.slice(0, 3);
+    const lines = roasted.map((name) => `🤡 **${name}** ${pick(ROAST_LINES)}`);
+
+    if (losers.length > 3) {
+      lines.push(`...and **${losers.length - 3}** other clown(s)`);
+    }
+
+    const embed = new EmbedBuilder()
+      .setTitle('🔥  Post-Match Roast')
+      .setDescription(lines.join('\n'))
+      .setColor(0xE67E22)
+      .setTimestamp();
+
+    await interaction.followUp({ embeds: [embed] });
+  } catch (err) {
+    logger.error('Failed to post match roast:', err);
+  }
+}
+
+function getMatchWinner(match) {
+  if (match.result.home > match.result.away) return match.home;
+  if (match.result.home < match.result.away) return match.away;
+  return 'draw';
 }
 
 async function postStandings(interaction) {

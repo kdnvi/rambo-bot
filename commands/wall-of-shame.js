@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readAllVotes, readPlayers, readAllAllIns } from '../utils/firebase.js';
+import { readTournamentData, readTournamentConfig, readAllVotes, readPlayers } from '../utils/firebase.js';
 import { getWinner, getMatchVote } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -96,35 +96,6 @@ export async function execute(interaction) {
     const richest = topBy(pointsMap, 'desc');
     const poorest = topBy(pointsMap, 'asc');
 
-    let biggestAllInWin = null;
-    let biggestAllInFail = null;
-    const allAllIns = await readAllAllIns();
-    for (const id of playerIds) {
-      const allIns = allAllIns[id] || {};
-      for (const [matchId, entry] of Object.entries(allIns)) {
-        const match = completed.find((m) => m.id === parseInt(matchId));
-        if (!match) continue;
-        const winner = getWinner(match);
-        if (!winner) continue;
-        const key = `${match.id - 1}`;
-        const userVote = getMatchVote(votes, key, match.messageId, id);
-        if (!userVote) continue;
-        if (userVote === winner) {
-          if (!biggestAllInWin || entry.amount > biggestAllInWin.amount) {
-            biggestAllInWin = { ids: [id], amount: entry.amount, matchId: match.id };
-          } else if (entry.amount === biggestAllInWin.amount) {
-            biggestAllInWin.ids.push(id);
-          }
-        } else {
-          if (!biggestAllInFail || entry.amount > biggestAllInFail.amount) {
-            biggestAllInFail = { ids: [id], amount: entry.amount, matchId: match.id };
-          } else if (entry.amount === biggestAllInFail.amount) {
-            biggestAllInFail.ids.push(id);
-          }
-        }
-      }
-    }
-
     const lines = [
       `**🔥 Chuỗi thắng vs 🔻 Chuỗi thua**`,
       `👑 ${names(bestStreak.ids)} — **${bestStreak.val}** trận đúng liền`,
@@ -142,16 +113,6 @@ export async function execute(interaction) {
       `👑 ${names(richest.ids)} — **${richest.val}** pts`,
       `💀 ${names(poorest.ids)} — **${poorest.val}** pts`,
     ];
-
-    if (biggestAllInWin || biggestAllInFail) {
-      lines.push('', `**🎰 All-In Huyền Thoại vs 💥 All-In Nát**`);
-      if (biggestAllInWin) {
-        lines.push(`👑 ${names(biggestAllInWin.ids)} — thắng **${biggestAllInWin.amount}** điểm trận #${biggestAllInWin.matchId}`);
-      }
-      if (biggestAllInFail) {
-        lines.push(`💀 ${names(biggestAllInFail.ids)} — thua **${biggestAllInFail.amount}** điểm trận #${biggestAllInFail.matchId}`);
-      }
-    }
 
     let description = lines.join('\n');
     if (description.length > 4096) {

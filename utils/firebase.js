@@ -116,21 +116,6 @@ export async function setPlayerWager(userId, matchId, type) {
   logger.info(`Set ${type} wager for user [${userId}] on match [${matchId}]`);
 }
 
-export async function readPlayerAllIns(userId) {
-  const ref = db.ref(`tournament/allins/${userId}`);
-  return (await ref.once('value')).val() || {};
-}
-
-export async function readAllAllIns() {
-  const ref = db.ref('tournament/allins');
-  return (await ref.once('value')).val() || {};
-}
-
-export async function setPlayerAllIn(userId, matchId, amount) {
-  const ref = db.ref(`tournament/allins/${userId}/${matchId}`);
-  await ref.set({ amount });
-  logger.info(`Set all-in for user [${userId}] on match [${matchId}] with amount [${amount}]`);
-}
 
 export async function readCurses() {
   const ref = db.ref('tournament/curses');
@@ -153,12 +138,6 @@ export async function removePlayerWager(userId, matchId) {
   const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
   await ref.remove();
   logger.info(`Removed wager for user [${userId}] on match [${matchId}]`);
-}
-
-export async function removePlayerAllIn(userId, matchId) {
-  const ref = db.ref(`tournament/allins/${userId}/${matchId}`);
-  await ref.remove();
-  logger.info(`Removed all-in for user [${userId}] on match [${matchId}]`);
 }
 
 export async function readPlayerBadges(userId) {

@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readAllAllIns, readCurses, readAllBadges } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
 import { CronJob } from 'cron';
@@ -339,7 +339,6 @@ export async function calculateMatches(matches, client) {
     }
 
     const wagers = await readPlayerWagers();
-    const allIns = await readAllAllIns();
     const curses = await readCurses();
 
     const calculatedIds = [];
@@ -358,7 +357,7 @@ export async function calculateMatches(matches, client) {
         logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
       }
 
-      const { votedPlayers, randomPicks, deltas } = calculatePlayerPoints(players, votes, match, wagers, allIns);
+      const { votedPlayers, randomPicks, deltas } = calculatePlayerPoints(players, votes, match, wagers);
       resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas);
 
       matchDeltas[match.id] = deltas;
@@ -383,7 +382,6 @@ export async function calculateMatches(matches, client) {
         completedMatches,
         votes: votingObj,
         wagers,
-        allIns,
         existingBadges,
       });
 
@@ -473,7 +471,7 @@ function matchVoteMessageComponent(match, config) {
 }
 
 
-function calculatePlayerPoints(players, votes, match, wagers, allIns) {
+function calculatePlayerPoints(players, votes, match, wagers) {
   const winner = getWinner(match);
   if (!winner) {
     logger.warn(`Match ${match.id} has no result, skipping point calculation`);
@@ -500,18 +498,12 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
     randomPicks[k] = randomPick;
   }
 
-  // DD and all-in are mutex. All-in replaces the base stake entirely with the
-  // player's balance — they risk everything, not everything + base on top.
+  const WAGER_MULTIPLIERS = { 'double-down': 2, 'triple-down': 3 };
   const playerStakes = {};
   for (const k of Object.keys(picks)) {
-    const allIn = allIns?.[k]?.[match.id];
-    if (allIn) {
-      playerStakes[k] = allIn.amount;
-    } else if (wagers?.[k]?.[match.id]?.type === 'double-down') {
-      playerStakes[k] = baseStake * 2;
-    } else {
-      playerStakes[k] = baseStake;
-    }
+    const wagerType = wagers?.[k]?.[match.id]?.type;
+    const multiplier = WAGER_MULTIPLIERS[wagerType] || 1;
+    playerStakes[k] = baseStake * multiplier;
   }
 
   const totalLoserStake = Object.entries(picks)

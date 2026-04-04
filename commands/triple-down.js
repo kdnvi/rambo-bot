@@ -5,21 +5,21 @@ import { pick, findNextMatch, getMatchDay } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 const HYPE_LINES = [
-  'hôm nay máu lắm!',
-  'chê cược thường nhạt, phải gấp đôi mới đã!',
-  'vặn volume lên max luôn!',
-  'đặt cả thể diện vào trận này rồi đó.',
-  'sống liều chết liều hôm nay!',
-  'tự tin kiểu nhà tiên tri, không biết đúng hay sai.',
-  'thiên tài hay điên? Sắp biết thôi.',
-  'tăng cược — theo đúng nghĩa đen luôn á.',
-  'bật chế độ quái thú rồi nha!',
-  'vào đây không phải để chơi cho vui đâu.',
+  'không phải dạng vừa đâu!',
+  'gấp BA luôn — điên hay thiên tài?',
+  'cược như thể ngày mai không tồn tại!',
+  'triple-down = triple drama. LFG!',
+  'tay run mà vẫn bấm. Respect.',
+  'lên đỉnh hay xuống hố? GẤP BA cho biết!',
+  'double chưa đủ đô, phải lên triple!',
+  'đánh bạo liều mạng luôn trận này!',
+  'máu me lắm rồi, gấp ba cho nóng!',
+  'ai cản thì cản, tôi đi triple!',
 ];
 
 export const data = new SlashCommandBuilder()
-  .setName('double-down')
-  .setDescription('Double your stake on a match (1 per matchday)');
+  .setName('triple-down')
+  .setDescription('Triple your stake on a match (1 per matchday)');
 
 export async function execute(interaction) {
   try {
@@ -56,39 +56,39 @@ export async function execute(interaction) {
 
     const myWagers = await readUserWagers(userId);
 
-    if (myWagers[matchId]?.type === 'triple-down') {
+    if (myWagers[matchId]?.type === 'double-down') {
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Đã Triple-Down rồi')
-        .setDescription('Triple-down rồi còn đòi double-down. Tham vừa thôi — huỷ triple-down trước đi.')
+        .setTitle('⚠️  Đã Double-Down rồi')
+        .setDescription('Double-down rồi còn đòi triple-down. Huỷ double-down bằng `/undo-double-down` trước đi.')
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
-    const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'double-down');
-    if (alreadyThisDay) {
-      const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
+    const alreadyTripleThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'triple-down');
+    if (alreadyTripleThisDay) {
+      const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'triple-down');
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Đã dùng rồi')
-        .setDescription(`Xài double-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
+        .setDescription(`Xài triple-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
         .setColor(0xFEE75C);
       await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
       return;
     }
 
     const stake = getMatchStake(match.id);
-    await setPlayerWager(userId, matchId, 'double-down');
+    await setPlayerWager(userId, matchId, 'triple-down');
 
     const embed = new EmbedBuilder()
-      .setTitle('⏫  DOUBLE DOWN!')
+      .setTitle('🔥  TRIPLE DOWN! 🔥')
       .setDescription(
         `**${interaction.user}** ${pick(HYPE_LINES)}\n\n` +
         `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
-        `💰 Mức cược: ${stake} → **${stake * 2} pts**\n\n` +
-        '✅ Đúng → **ăn gấp đôi**\n' +
-        '❌ Sai → **mất gấp đôi**'
+        `💰 Mức cược: ${stake} → **${stake * 3} pts**\n\n` +
+        '✅ Đúng → **ăn gấp ba**\n' +
+        '❌ Sai → **mất gấp ba**'
       )
-      .setColor(0x57F287)
+      .setColor(0xFF4500)
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
@@ -96,7 +96,7 @@ export async function execute(interaction) {
   } catch (err) {
     logger.error(err);
     if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Không thể kích hoạt double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      await interaction.reply({ content: '❌ Không thể kích hoạt triple-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
 }

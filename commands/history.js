@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readTournamentConfig, readAllVotes, readUserWagers, readPlayerAllIns, readCurses } from '../utils/firebase.js';
-import { getWinner, getMatchVote, VND_FORMATTER } from '../utils/helper.js';
+import { readTournamentData, readTournamentConfig, readAllVotes, readUserWagers, readCurses } from '../utils/firebase.js';
+import { getWinner, getMatchVote } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
@@ -29,10 +29,9 @@ export async function execute(interaction) {
       return;
     }
 
-    const [votes, userWagers, userAllIns, allCurses] = await Promise.all([
+    const [votes, userWagers, allCurses] = await Promise.all([
       readAllVotes(),
       readUserWagers(userId),
-      readPlayerAllIns(userId),
       readCurses(),
     ]);
     const users = interaction.client.cachedUsers;
@@ -51,7 +50,6 @@ export async function execute(interaction) {
       const userVote = getMatchVote(votes, key, match.messageId, userId);
 
       const wager = userWagers[match.id];
-      const allIn = userAllIns[match.id];
       const curse = allCurses[match.id]?.[userId];
 
       if (curse) {
@@ -66,8 +64,7 @@ export async function execute(interaction) {
         winner,
         vote: userVote,
         correct: userVote ? userVote === winner : null,
-        isDoubleDown: wager?.type === 'double-down',
-        allInAmount: allIn?.amount || null,
+        wagerType: wager?.type || null,
         curseTarget: curse?.target || null,
       });
     }
@@ -94,8 +91,8 @@ export async function execute(interaction) {
       }
 
       const tags = [];
-      if (r.isDoubleDown) tags.push('⏫ double-down');
-      if (r.allInAmount) tags.push(`🎰 all-in (${VND_FORMATTER.format(r.allInAmount * 1000)})`);
+      if (r.wagerType === 'double-down') tags.push('⏫ double-down');
+      if (r.wagerType === 'triple-down') tags.push('🔥 triple-down');
       if (r.curseTarget) {
         const targetName = users[r.curseTarget]?.nickname || 'Unknown';
         tags.push(`🪄 nguyền **${targetName}**`);
@@ -113,13 +110,13 @@ export async function execute(interaction) {
     let summary = `🎯 Tỉ lệ đúng **${winRate}** (${totalCorrect}/${totalVoted})`;
     if (totalRandomized > 0) summary += ` · 🎲 ${totalRandomized} random`;
 
-    const totalDD = userHistory.filter((r) => r.isDoubleDown).length;
-    const totalAllIn = userHistory.filter((r) => r.allInAmount).length;
+    const totalDD = userHistory.filter((r) => r.wagerType === 'double-down').length;
+    const totalTD = userHistory.filter((r) => r.wagerType === 'triple-down').length;
     const totalCurses = userHistory.filter((r) => r.curseTarget).length;
-    if (totalDD > 0 || totalAllIn > 0 || totalCurses > 0) {
+    if (totalDD > 0 || totalTD > 0 || totalCurses > 0) {
       const parts = [];
       if (totalDD > 0) parts.push(`⏫ ${totalDD} double-down`);
-      if (totalAllIn > 0) parts.push(`🎰 ${totalAllIn} all-in`);
+      if (totalTD > 0) parts.push(`🔥 ${totalTD} triple-down`);
       if (totalCurses > 0) parts.push(`🪄 ${totalCurses} curse`);
       summary += `\n${parts.join(' · ')}`;
     }

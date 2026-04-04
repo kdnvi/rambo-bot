@@ -10,7 +10,7 @@ export const BADGE_DEFS = [
   { id: 'bankrupt', icon: '💀', name: 'Vỡ Nợ', desc: 'Âm điểm' },
   { id: 'comeback', icon: '🦅', name: 'Hồi Sinh', desc: 'Từ âm điểm leo lên dương' },
   { id: 'perfect_day', icon: '💎', name: 'Ngày Hoàn Hảo', desc: 'Đúng hết mọi trận trong ngày' },
-  { id: 'yolo', icon: '🎰', name: 'YOLO', desc: 'Dám all-in' },
+  { id: 'yolo', icon: '🎰', name: 'YOLO', desc: 'Dám triple-down' },
   { id: 'double_trouble', icon: '⏫', name: 'Double Trouble', desc: 'Xài double-down 5 lần' },
   { id: 'streak_breaker', icon: '💔', name: 'Gãy Chuỗi', desc: 'Sai sau khi đúng 3+ trận liền' },
 ];
@@ -23,7 +23,7 @@ const BADGE_MAP = Object.fromEntries(BADGE_DEFS.map((b) => [b.id, b]));
  */
 // Badges only count explicit votes — randomized picks are excluded since the player
 // didn't actually make a prediction. This is intentional: badges reward active participation.
-export async function checkAndAwardBadges({ players, completedMatches, votes, wagers, allIns, existingBadges }) {
+export async function checkAndAwardBadges({ players, completedMatches, votes, wagers, existingBadges }) {
   const newBadges = {};
 
   for (const userId of Object.keys(players)) {
@@ -85,12 +85,12 @@ export async function checkAndAwardBadges({ players, completedMatches, votes, wa
       }
     }
 
-    const userAllIns = allIns?.[userId] || {};
-    if (!has('yolo') && Object.keys(userAllIns).length > 0) {
+    const userWagers = wagers?.[userId] || {};
+    const tdCount = Object.values(userWagers).filter((w) => w.type === 'triple-down').length;
+    if (!has('yolo') && tdCount > 0) {
       earned.push('yolo');
     }
 
-    const userWagers = wagers?.[userId] || {};
     const ddCount = Object.values(userWagers).filter((w) => w.type === 'double-down').length;
     if (!has('double_trouble') && ddCount >= 5) {
       earned.push('double_trouble');

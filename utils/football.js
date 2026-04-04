@@ -343,6 +343,7 @@ export async function calculateMatches(matches, client) {
     const curses = await readCurses();
 
     const calculatedIds = [];
+    const matchDeltas = {};
 
     for (const match of toProcess) {
       if (!match.messageId) {
@@ -357,8 +358,10 @@ export async function calculateMatches(matches, client) {
         logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
       }
 
-      const { votedPlayers, randomPicks } = calculatePlayerPoints(players, votes, match, wagers, allIns);
-      resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks);
+      const { votedPlayers, randomPicks, deltas } = calculatePlayerPoints(players, votes, match, wagers, allIns);
+      resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas);
+
+      matchDeltas[match.id] = deltas;
 
       await updatePlayers(players);
       await updateMatch(match.id - 1, { isCalculated: true });
@@ -388,6 +391,8 @@ export async function calculateMatches(matches, client) {
         await announceBadges(client, newBadges);
       }
     }
+
+    return matchDeltas;
   } finally {
     for (const m of toProcess) calculationLock.delete(m.id);
   }
@@ -520,6 +525,7 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
   // Zero-sum redistribution: losers' stakes are split proportionally among winners.
   // If everyone picks the winner, totalLoserStake is 0 so all deltas are 0 — no points
   // move, which intentionally breaks zero-sum for that match (nobody is penalized).
+  const deltas = {};
   for (const [k, pick] of Object.entries(picks)) {
     const isWinner = pick === winner;
     let delta;
@@ -531,6 +537,8 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
       delta = -playerStakes[k];
     }
 
+    deltas[k] = { delta, pick, isWinner, stake: playerStakes[k], random: k in randomPicks };
+
     const newPoints = players[k].points + delta;
     players[k] = {
       ...players[k],
@@ -540,10 +548,10 @@ function calculatePlayerPoints(players, votes, match, wagers, allIns) {
     };
   }
 
-  return { votedPlayers, randomPicks };
+  return { votedPlayers, randomPicks, deltas };
 }
 
-function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks) {
+function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas) {
   const matchCurses = curses[match.id];
   if (!matchCurses) return;
 
@@ -571,6 +579,9 @@ function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPi
       players[curserId].points += CURSE_PTS;
       players[target].points -= CURSE_PTS;
     }
+
+    if (deltas[curserId]) deltas[curserId].delta += targetCorrect ? -CURSE_PTS : CURSE_PTS;
+    if (deltas[target]) deltas[target].delta += targetCorrect ? CURSE_PTS : -CURSE_PTS;
 
     logger.info(`Curse resolved: ${curserId} ${targetCorrect ? 'lost' : 'gained'} ${CURSE_PTS} pts (target: ${target}, match: ${match.id})`);
   }

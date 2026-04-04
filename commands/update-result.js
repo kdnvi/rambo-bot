@@ -102,9 +102,10 @@ export async function execute(interaction) {
       hasResult: true,
       result: { home: homeScore, away: awayScore },
     };
-    await calculateMatches([updatedMatch], interaction.client);
+    const matchDeltas = await calculateMatches([updatedMatch], interaction.client);
     logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
 
+    await postMatchBreakdown(interaction, updatedMatch, matchDeltas?.[updatedMatch.id]);
     await postStandings(interaction);
     await postMatchRoast(interaction, updatedMatch);
   } catch (err) {
@@ -112,6 +113,39 @@ export async function execute(interaction) {
     if (!interaction.replied && !interaction.deferred) {
       await interaction.reply({ content: '❌ Không thể cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
+  }
+}
+
+async function postMatchBreakdown(interaction, match, deltas) {
+  try {
+    if (!deltas || Object.keys(deltas).length === 0) return;
+
+    const users = interaction.client.cachedUsers;
+    const entries = Object.entries(deltas)
+      .map(([userId, d]) => ({
+        name: users[userId]?.nickname || 'Unknown',
+        ...d,
+        delta: Math.round(d.delta * 100) / 100,
+      }))
+      .sort((a, b) => b.delta - a.delta);
+
+    const winner = getWinner(match);
+    const lines = entries.map((e) => {
+      const sign = e.delta >= 0 ? '+' : '';
+      const icon = e.isWinner ? '👑' : '🤡';
+      const tag = e.random ? ' 🎲' : '';
+      return `${icon} **${e.name}** — ${e.pick.toUpperCase()}${tag} → **${sign}${e.delta}** pts`;
+    });
+
+    const embed = new EmbedBuilder()
+      .setTitle(`💰  Sổ sách trận #${match.id}`)
+      .setDescription(lines.join('\n'))
+      .setColor(0x5865F2)
+      .setTimestamp();
+
+    await interaction.followUp({ embeds: [embed] });
+  } catch (err) {
+    logger.error('Failed to post match breakdown:', err);
   }
 }
 

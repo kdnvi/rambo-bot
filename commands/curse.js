@@ -82,8 +82,8 @@ export async function execute(interaction) {
       .setDescription(
         `**${interaction.user}** ${pick(CURSE_LINES)} **${targetName}**!\n\n` +
         `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n\n` +
-        `**${targetName}** đoán sai → bạn ăn **5 điểm** của nó.\n` +
-        `**${targetName}** đoán đúng → bạn mất **5 điểm** cho nó.\n\n` +
+        `**${targetName}** đoán sai → bạn ăn **5 điểm** của **${targetName}**.\n` +
+        `**${targetName}** đoán đúng → bạn mất **5 điểm** cho **${targetName}**.\n\n` +
         '*Chọn người cho kỹ nha...*'
       )
       .setColor(0x9B59B6)

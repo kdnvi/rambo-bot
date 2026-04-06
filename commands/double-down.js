@@ -56,15 +56,6 @@ export async function execute(interaction) {
 
     const myWagers = await readUserWagers(userId);
 
-    if (myWagers[matchId]?.type === 'triple-down') {
-      const embed = new EmbedBuilder()
-        .setTitle('⚠️  Đã Triple-Down rồi')
-        .setDescription('Triple-down rồi còn đòi double-down. Tham vừa thôi — huỷ triple-down trước đi.')
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
-
     const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'double-down');
     if (alreadyThisDay) {
       const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');

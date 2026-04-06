@@ -191,6 +191,9 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       const players = (await readPlayers()).val();
       if (!players) continue;
 
+      const wagers = await readPlayerWagers();
+      const WAGER_MULTIPLIERS = { 'double-down': 2 };
+
       const scores = {};
       for (const userId of Object.keys(players)) {
         scores[userId] = 0;
@@ -200,12 +203,14 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         const winner = getWinner(match);
         if (!winner) continue;
         const key = `${match.id - 1}`;
-        const stake = getMatchStake(match.id);
+        const baseStake = getMatchStake(match.id);
         const matchVotes = getMatchVotes(votes, key, match.messageId) || {};
 
         for (const userId of Object.keys(players)) {
           const userVote = matchVotes[userId]?.vote ?? null;
           if (userVote === null) continue;
+          const multiplier = WAGER_MULTIPLIERS[wagers?.[userId]?.[match.id]?.type] || 1;
+          const stake = baseStake * multiplier;
           scores[userId] += userVote === winner ? stake : -stake;
         }
       }
@@ -475,7 +480,7 @@ function calculatePlayerPoints(players, votes, match, wagers) {
   const winner = getWinner(match);
   if (!winner) {
     logger.warn(`Match ${match.id} has no result, skipping point calculation`);
-    return { votedPlayers: [], randomPicks: {} };
+    return { votedPlayers: [], randomPicks: {}, deltas: {} };
   }
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
@@ -498,7 +503,7 @@ function calculatePlayerPoints(players, votes, match, wagers) {
     randomPicks[k] = randomPick;
   }
 
-  const WAGER_MULTIPLIERS = { 'double-down': 2, 'triple-down': 3 };
+  const WAGER_MULTIPLIERS = { 'double-down': 2 };
   const playerStakes = {};
   for (const k of Object.keys(picks)) {
     const wagerType = wagers?.[k]?.[match.id]?.type;

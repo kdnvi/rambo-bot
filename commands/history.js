@@ -92,7 +92,6 @@ export async function execute(interaction) {
 
       const tags = [];
       if (r.wagerType === 'double-down') tags.push('⏫ double-down');
-      if (r.wagerType === 'triple-down') tags.push('🔥 triple-down');
       if (r.curseTarget) {
         const targetName = users[r.curseTarget]?.nickname || 'Unknown';
         tags.push(`🪄 nguyền **${targetName}**`);
@@ -111,12 +110,10 @@ export async function execute(interaction) {
     if (totalRandomized > 0) summary += ` · 🎲 ${totalRandomized} random`;
 
     const totalDD = userHistory.filter((r) => r.wagerType === 'double-down').length;
-    const totalTD = userHistory.filter((r) => r.wagerType === 'triple-down').length;
     const totalCurses = userHistory.filter((r) => r.curseTarget).length;
-    if (totalDD > 0 || totalTD > 0 || totalCurses > 0) {
+    if (totalDD > 0 || totalCurses > 0) {
       const parts = [];
       if (totalDD > 0) parts.push(`⏫ ${totalDD} double-down`);
-      if (totalTD > 0) parts.push(`🔥 ${totalTD} triple-down`);
       if (totalCurses > 0) parts.push(`🪄 ${totalCurses} curse`);
       summary += `\n${parts.join(' · ')}`;
     }

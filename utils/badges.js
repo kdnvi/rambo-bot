@@ -10,7 +10,6 @@ export const BADGE_DEFS = [
   { id: 'bankrupt', icon: '💀', name: 'Vỡ Nợ', desc: 'Âm điểm' },
   { id: 'comeback', icon: '🦅', name: 'Hồi Sinh', desc: 'Từ âm điểm leo lên dương' },
   { id: 'perfect_day', icon: '💎', name: 'Ngày Hoàn Hảo', desc: 'Đúng hết mọi trận trong ngày' },
-  { id: 'yolo', icon: '🎰', name: 'YOLO', desc: 'Dám triple-down' },
   { id: 'double_trouble', icon: '⏫', name: 'Double Trouble', desc: 'Xài double-down 5 lần' },
   { id: 'streak_breaker', icon: '💔', name: 'Gãy Chuỗi', desc: 'Sai sau khi đúng 3+ trận liền' },
 ];
@@ -86,11 +85,6 @@ export async function checkAndAwardBadges({ players, completedMatches, votes, wa
     }
 
     const userWagers = wagers?.[userId] || {};
-    const tdCount = Object.values(userWagers).filter((w) => w.type === 'triple-down').length;
-    if (!has('yolo') && tdCount > 0) {
-      earned.push('yolo');
-    }
-
     const ddCount = Object.values(userWagers).filter((w) => w.type === 'double-down').length;
     if (!has('double_trouble') && ddCount >= 5) {
       earned.push('double_trouble');

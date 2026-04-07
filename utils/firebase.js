@@ -53,7 +53,7 @@ export async function updateMatchResult(matchIndex, homeScore, awayScore) {
       result: {
         home: homeScore,
         away: awayScore,
-      }
+      },
     });
 
     bustPrefix('matches');
@@ -177,6 +177,13 @@ export async function awardBadge(userId, badgeId, meta = {}) {
   bustPrefix('badges');
   logger.info(`Badge awarded: [${badgeId}] to user [${userId}]`);
   return true;
+}
+
+export async function updateGroupTeam(groupKey, teamName, stats) {
+  const ref = db.ref(`tournament/groups/${groupKey}/${teamName}`);
+  await ref.update(stats);
+  bustPrefix('groups');
+  logger.info(`Updated group ${groupKey.toUpperCase()} team [${teamName}]: P${stats.played} W${stats.won} D${stats.drawn} L${stats.lost} GD${stats.goalDifference} Pts${stats.points}`);
 }
 
 export async function incrementVoteChange(matchId, userId) {

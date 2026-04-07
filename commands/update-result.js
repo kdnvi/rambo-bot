@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { updateMatchResult, readPlayers, readMatchVotes } from '../utils/firebase.js';
-import { calculateMatches } from '../utils/football.js';
+import { calculateMatches, updateGroupStandings } from '../utils/football.js';
 import { getWinner, pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
 
@@ -102,6 +102,7 @@ export async function execute(interaction) {
       hasResult: true,
       result: { home: homeScore, away: awayScore },
     };
+    await updateGroupStandings(updatedMatch);
     const matchDeltas = await calculateMatches([updatedMatch], interaction.client);
     logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
 

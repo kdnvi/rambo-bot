@@ -3,6 +3,7 @@ const store = new Map();
 const TTL = {
   config: 5 * 60 * 1000,
   matches: 2 * 60 * 1000,
+  groups: 2 * 60 * 1000,
   players: 2 * 60 * 1000,
   badges: 2 * 60 * 1000,
   votes: 30 * 1000,

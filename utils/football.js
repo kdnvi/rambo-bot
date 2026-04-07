@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
 import { CronJob } from 'cron';
@@ -103,7 +103,7 @@ export function voteReminderJob(client) {
             .setTitle(`⏰  Nhắc vote — Trận #${match.id}`)
             .setDescription(
               `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
-              `Còn <t:${ts}:R> là đá — vote đi không thì bị **random**!`
+              `Còn <t:${ts}:R> là đá — vote đi không thì bị **random**!`,
             )
             .setColor(0xFEE75C);
 
@@ -131,6 +131,9 @@ export function calculatingJob(client) {
 
         const uncalculated = allMatches.filter((m) => m.hasResult && !m.isCalculated);
         if (uncalculated.length > 0) {
+          for (const m of uncalculated) {
+            await updateGroupStandings(m);
+          }
           await calculateMatches(uncalculated, client);
           const freshMatches = (await readTournamentData('matches')).val();
           await checkMatchdayMVP(client, freshMatches || allMatches, uncalculated);
@@ -158,7 +161,7 @@ export function calculatingJob(client) {
             .setDescription(
               `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
               `Đá được **${hours}h ${mins}m** rồi — cập nhật kết quả đi!\n\n` +
-              `Gõ \`/update-result match-id:${match.id} home-score:? away-score:?\``
+              `Gõ \`/update-result match-id:${match.id} home-score:? away-score:?\``,
             )
             .setColor(0xED4245);
 
@@ -234,7 +237,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         .setTitle('⭐  MVP hôm nay')
         .setDescription(
           `**${nickname}** cân hết ${dayMatches.length} trận hôm nay ` +
-          `với **+${mvp.pts}** điểm!`
+          `với **+${mvp.pts}** điểm!`,
         )
         .setColor(0xFFD700)
         .setTimestamp();
@@ -306,18 +309,18 @@ function checkRivalry(allMatches, votes, players, users) {
     const nameB = users[topPair.ids[1]]?.nickname || 'Unknown';
 
     const RIVAL_LINES = [
-      `Cái gì cũng chọn ngược nhau. Sinh ra để ghét nhau.`,
-      `Một thằng nói trái, thằng kia nói phải. Kinh điển.`,
-      `Kình địch là THẬT luôn. 🍿`,
-      `Ai kiếm cái võ đài cho hai đứa này đi.`,
-      `Hỏi hôm nay thứ mấy chắc cũng cãi nhau.`,
+      'Cái gì cũng chọn ngược nhau. Sinh ra để ghét nhau.',
+      'Một thằng nói trái, thằng kia nói phải. Kinh điển.',
+      'Kình địch là THẬT luôn. 🍿',
+      'Ai kiếm cái võ đài cho hai đứa này đi.',
+      'Hỏi hôm nay thứ mấy chắc cũng cãi nhau.',
     ];
 
     return new EmbedBuilder()
       .setTitle('⚔️  Kình địch phát hiện')
       .setDescription(
         `**${nameA}** và **${nameB}** bất đồng **${topPair.count}** trong **${topPair.total}** trận (**${pct}%**)!\n\n` +
-        RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)]
+        RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)],
       )
       .setColor(0x9B59B6)
       .setTimestamp();
@@ -464,7 +467,7 @@ function matchVoteMessageComponent(match, config) {
       `**${tournamentName}** — Match #${match.id}\n\n` +
       `🕐 **Kickoff:** ${timeStr} *(VN)* — <t:${timestamp}:R>\n` +
       `🏟️ **Venue:** ${match.location}` +
-      stakeNote
+      stakeNote,
     )
     .setColor(0x5865F2)
     .setFooter({ text: 'Bấm bên dưới để vote trước giờ đá!' })
@@ -550,6 +553,66 @@ function calculatePlayerPoints(players, votes, match, wagers) {
   }
 
   return { votedPlayers, randomPicks, deltas };
+}
+
+const MAX_GROUP_STAGE_ID = 72;
+
+export async function updateGroupStandings(match) {
+  if (match.id > MAX_GROUP_STAGE_ID) return;
+  if (!match.hasResult || match.result == null) return;
+  if (match.groupUpdated) return;
+
+  const groups = (await readTournamentData('groups')).val();
+  if (!groups) return;
+
+  let groupKey = null;
+  for (const [key, teams] of Object.entries(groups)) {
+    if (match.home in teams && match.away in teams) {
+      groupKey = key;
+      break;
+    }
+  }
+
+  if (!groupKey) {
+    logger.warn(`Could not find group for match ${match.id}: ${match.home} vs ${match.away}`);
+    return;
+  }
+
+  const homeGoals = match.result.home;
+  const awayGoals = match.result.away;
+  const homeTeam = groups[groupKey][match.home];
+  const awayTeam = groups[groupKey][match.away];
+
+  const homeWon = homeGoals > awayGoals ? 1 : 0;
+  const awayWon = awayGoals > homeGoals ? 1 : 0;
+  const drawn = homeGoals === awayGoals ? 1 : 0;
+
+  const updatedHome = {
+    played: homeTeam.played + 1,
+    won: homeTeam.won + homeWon,
+    drawn: homeTeam.drawn + drawn,
+    lost: homeTeam.lost + awayWon,
+    for: homeTeam.for + homeGoals,
+    against: homeTeam.against + awayGoals,
+    goalDifference: homeTeam.goalDifference + homeGoals - awayGoals,
+    points: homeTeam.points + (homeWon ? 3 : drawn ? 1 : 0),
+  };
+
+  const updatedAway = {
+    played: awayTeam.played + 1,
+    won: awayTeam.won + awayWon,
+    drawn: awayTeam.drawn + drawn,
+    lost: awayTeam.lost + homeWon,
+    for: awayTeam.for + awayGoals,
+    against: awayTeam.against + homeGoals,
+    goalDifference: awayTeam.goalDifference + awayGoals - homeGoals,
+    points: awayTeam.points + (awayWon ? 3 : drawn ? 1 : 0),
+  };
+
+  await updateGroupTeam(groupKey, match.home, updatedHome);
+  await updateGroupTeam(groupKey, match.away, updatedAway);
+  await updateMatch(match.id - 1, { groupUpdated: true });
+  logger.info(`Updated group ${groupKey.toUpperCase()} standings for match ${match.id}`);
 }
 
 function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas) {

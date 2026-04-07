@@ -28,7 +28,6 @@ export function matchPostJob(client) {
     cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
-        const config = await readTournamentConfig();
         const allMatches = (await readTournamentData('matches')).val();
         if (!allMatches) return;
         const now = Date.now();
@@ -42,6 +41,7 @@ export function matchPostJob(client) {
 
         if (matches.length === 0) return;
 
+        const config = await readTournamentConfig();
         const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
         const channel = await client.channels.fetch(channelId);
 
@@ -65,7 +65,6 @@ export function voteReminderJob(client) {
     cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
-        const config = await readTournamentConfig();
         const allMatches = (await readTournamentData('matches')).val();
         if (!allMatches) return;
         const now = Date.now();
@@ -82,6 +81,7 @@ export function voteReminderJob(client) {
         const players = (await readPlayers()).val();
         if (!players) return;
 
+        const config = await readTournamentConfig();
         const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
         const channel = await client.channels.fetch(channelId);
         const allPlayerIds = Object.keys(players);
@@ -187,11 +187,14 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       const alreadyAnnounced = dayMatches.some((m) => m.mvpAnnounced);
       if (alreadyAnnounced) continue;
 
-      const votes = await readAllVotes();
-      const players = (await readPlayers()).val();
+      const [votes, players, wagers, config] = await Promise.all([
+        readAllVotes(),
+        readPlayers().then((s) => s.val()),
+        readPlayerWagers(),
+        readTournamentConfig(),
+      ]);
       if (!players) continue;
 
-      const wagers = await readPlayerWagers();
       const WAGER_MULTIPLIERS = { 'double-down': 2 };
 
       const scores = {};
@@ -222,7 +225,6 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       if (ranked.length === 0 || ranked[0].pts <= 0) continue;
 
       const mvp = ranked[0];
-      const config = await readTournamentConfig();
       const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
       const channel = await client.channels.fetch(channelId);
       const users = client.cachedUsers;
@@ -243,7 +245,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
 
       await channel.send({ embeds: [embed] });
 
-      const rivalryEmbed = await checkRivalry(allMatches, votes, players, users);
+      const rivalryEmbed = checkRivalry(allMatches, votes, players, users);
       if (rivalryEmbed) {
         await channel.send({ embeds: [rivalryEmbed] });
       }
@@ -258,7 +260,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
   }
 }
 
-async function checkRivalry(allMatches, votes, players, users) {
+function checkRivalry(allMatches, votes, players, users) {
   try {
     const completed = allMatches.filter((m) => m.hasResult && m.isCalculated);
     if (completed.length < 5) return null;
@@ -336,15 +338,17 @@ export async function calculateMatches(matches, client) {
   for (const m of toProcess) calculationLock.add(m.id);
 
   try {
-    const votingObj = await readAllVotes();
-    const players = (await readPlayers()).val();
+    const [votingObj, playersSnap, wagers, curses] = await Promise.all([
+      readAllVotes(),
+      readPlayers(),
+      readPlayerWagers(),
+      readCurses(),
+    ]);
+    const players = playersSnap.val();
     if (!players) {
       logger.warn('No players registered, skipping calculation');
       return;
     }
-
-    const wagers = await readPlayerWagers();
-    const curses = await readCurses();
 
     const calculatedIds = [];
     const matchDeltas = {};

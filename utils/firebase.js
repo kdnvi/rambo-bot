@@ -1,5 +1,6 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
+import { getCached, setCached, bustPrefix } from './cache.js';
 import logger from './logger.js';
 
 initializeApp({
@@ -8,18 +9,28 @@ initializeApp({
 });
 const db = getDatabase();
 
+async function cachedRead(cacheKey, refPath) {
+  const hit = getCached(cacheKey);
+  if (hit !== undefined) return hit;
+  const snapshot = await db.ref(refPath).once('value');
+  const val = snapshot.val();
+  setCached(cacheKey, val);
+  return val;
+}
+
 export async function readTournamentConfig() {
-  const ref = db.ref('tournament/config');
-  return (await ref.once('value')).val();
+  return cachedRead('config', 'tournament/config');
 }
 
 export async function readTournamentData(path) {
-  return db.ref(`tournament/${path}`).once('value');
+  const val = await cachedRead(path, `tournament/${path}`);
+  return { val: () => val };
 }
 
 export async function updateMatch(matchIndex, content) {
   const ref = db.ref(`tournament/matches/${matchIndex}`);
   await ref.update(content);
+  bustPrefix('matches');
   logger.info(`Updated match index [${matchIndex}]: ${Object.keys(content).join(', ')}`);
 }
 
@@ -45,6 +56,7 @@ export async function updateMatchResult(matchIndex, homeScore, awayScore) {
       }
     });
 
+    bustPrefix('matches');
     logger.info(`Updated match index [${matchIndex}] with result ${homeScore} - ${awayScore}`);
     return { success: true, match };
   } catch (err) {
@@ -54,8 +66,8 @@ export async function updateMatchResult(matchIndex, homeScore, awayScore) {
 }
 
 export async function readPlayers() {
-  const ref = db.ref('tournament/players');
-  return ref.once('value');
+  const val = await cachedRead('players', 'tournament/players');
+  return { val: () => val };
 }
 
 export async function registerPlayer(userId) {
@@ -69,6 +81,7 @@ export async function registerPlayer(userId) {
         points: 0,
         matches: 0,
       });
+      bustPrefix('players');
       logger.info(`User [${userId}] successfully set`);
       return { success: true, message: 'Registered successfully.' };
     }
@@ -81,73 +94,79 @@ export async function registerPlayer(userId) {
 export async function updatePlayers(content) {
   const ref = db.ref('tournament/players');
   await ref.update(content);
+  bustPrefix('players');
   logger.info(`Updated ${Object.keys(content).length} player(s)`);
 }
 
 export async function readAllVotes() {
-  const ref = db.ref('tournament/votes');
-  return (await ref.once('value')).val();
+  return cachedRead('votes', 'tournament/votes');
 }
 
 export async function updateMatchVote(matchId, userId, vote, messageId) {
   const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
   await ref.update({ vote: vote });
+  bustPrefix('votes');
   logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
 }
 
 export async function readMatchVotes(matchId, messageId) {
+  const cacheKey = `votes/${matchId}/${messageId}`;
+  const hit = getCached(cacheKey);
+  if (hit !== undefined) return { val: () => hit };
   const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
-  return ref.once('value');
+  const snapshot = await ref.once('value');
+  const val = snapshot.val();
+  setCached(cacheKey, val);
+  return { val: () => val };
 }
 
 export async function readPlayerWagers() {
-  const ref = db.ref('tournament/wagers');
-  return (await ref.once('value')).val() || {};
+  return (await cachedRead('wagers', 'tournament/wagers')) || {};
 }
 
 export async function readUserWagers(userId) {
-  const ref = db.ref(`tournament/wagers/${userId}`);
-  return (await ref.once('value')).val() || {};
+  return (await cachedRead(`wagers/${userId}`, `tournament/wagers/${userId}`)) || {};
 }
 
 export async function setPlayerWager(userId, matchId, type) {
   const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
   await ref.set({ type });
+  bustPrefix('wagers');
   logger.info(`Set ${type} wager for user [${userId}] on match [${matchId}]`);
 }
 
 
 export async function readCurses() {
-  const ref = db.ref('tournament/curses');
-  return (await ref.once('value')).val() || {};
+  return (await cachedRead('curses', 'tournament/curses')) || {};
 }
 
 export async function setCurse(curserId, targetId, matchId) {
   const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
   await ref.set({ target: targetId });
+  bustPrefix('curses');
   logger.info(`Curse set: [${curserId}] cursed [${targetId}] on match [${matchId}]`);
 }
 
 export async function removeCurse(curserId, matchId) {
   const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
   await ref.remove();
+  bustPrefix('curses');
   logger.info(`Curse removed: [${curserId}] on match [${matchId}]`);
 }
 
 export async function removePlayerWager(userId, matchId) {
   const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
   await ref.remove();
+  bustPrefix('wagers');
   logger.info(`Removed wager for user [${userId}] on match [${matchId}]`);
 }
 
 export async function readPlayerBadges(userId) {
-  const ref = db.ref(`tournament/badges/${userId}`);
-  return (await ref.once('value')).val() || {};
+  return (await cachedRead(`badges/${userId}`, `tournament/badges/${userId}`)) || {};
 }
 
 export async function readAllBadges() {
-  const ref = db.ref('tournament/badges');
-  return (await ref.once('value')).val() || {};
+  return (await cachedRead('badges', 'tournament/badges')) || {};
 }
 
 export async function awardBadge(userId, badgeId, meta = {}) {
@@ -155,6 +174,7 @@ export async function awardBadge(userId, badgeId, meta = {}) {
   const existing = (await ref.once('value')).val();
   if (existing) return false;
   await ref.set({ earnedAt: Date.now(), ...meta });
+  bustPrefix('badges');
   logger.info(`Badge awarded: [${badgeId}] to user [${userId}]`);
   return true;
 }

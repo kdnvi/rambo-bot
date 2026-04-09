@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchResult, readPlayers, readMatchVotes } from '../utils/firebase.js';
+import { updateMatchResult, readPlayers, readMatchVotes, readTournamentData } from '../utils/firebase.js';
 import { calculateMatches, updateGroupStandings } from '../utils/football.js';
 import { getWinner, pick, VND_FORMATTER } from '../utils/helper.js';
 import logger from '../utils/logger.js';
@@ -78,6 +78,18 @@ export async function execute(interaction) {
     const matchId = parseInt(interaction.options.get('match-id').value) - 1;
     const homeScore = interaction.options.get('home-score').value;
     const awayScore = interaction.options.get('away-score').value;
+
+    const allMatches = (await readTournamentData('matches')).val();
+    const matchData = allMatches?.[matchId];
+    if (matchData && !matchData.messageId) {
+      const embed = new EmbedBuilder()
+        .setTitle('⚠️  Trận chưa được đăng')
+        .setDescription(`Trận \`#${matchId + 1}\` chưa được đăng lên channel — chưa ai vote được thì cập nhật kết quả làm gì?`)
+        .setColor(0xFEE75C)
+        .setTimestamp();
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
 
     const result = await updateMatchResult(matchId, homeScore, awayScore);
 

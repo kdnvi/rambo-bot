@@ -212,9 +212,18 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         const baseStake = getMatchStake(match.id);
         const matchVotes = getMatchVotes(votes, key, match.messageId) || {};
 
+        const playerVotes = {};
         for (const userId of Object.keys(players)) {
           const userVote = matchVotes[userId]?.vote ?? null;
           if (userVote === null) continue;
+          playerVotes[userId] = userVote;
+        }
+
+        const allCorrect = Object.values(playerVotes).every((v) => v === winner);
+        const allWrong = Object.values(playerVotes).every((v) => v !== winner);
+        if (allCorrect || allWrong) continue;
+
+        for (const [userId, userVote] of Object.entries(playerVotes)) {
           const multiplier = WAGER_MULTIPLIERS[wagers?.[userId]?.[match.id]?.type] || 1;
           const stake = baseStake * multiplier;
           scores[userId] += userVote === winner ? stake : -stake;
@@ -483,6 +492,17 @@ function matchVoteMessageComponent(match, config) {
 }
 
 
+function getLeastVotedOutcome(outcomes, picks) {
+  const counts = {};
+  for (const o of outcomes) counts[o] = 0;
+  for (const vote of Object.values(picks)) {
+    if (vote in counts) counts[vote]++;
+  }
+  const minCount = Math.min(...Object.values(counts));
+  const leastVoted = outcomes.filter((o) => counts[o] === minCount);
+  return leastVoted[Math.floor(Math.random() * leastVoted.length)];
+}
+
 function calculatePlayerPoints(players, votes, match, wagers) {
   const winner = getWinner(match);
   if (!winner) {
@@ -503,11 +523,17 @@ function calculatePlayerPoints(players, votes, match, wagers) {
     }
   }
 
-  for (const k of Object.keys(players)) {
-    if (votedPlayers.includes(k)) continue;
-    const randomPick = outcomes[Math.floor(Math.random() * outcomes.length)];
-    picks[k] = randomPick;
-    randomPicks[k] = randomPick;
+  const unvoted = Object.keys(players).filter((k) => !votedPlayers.includes(k));
+  if (unvoted.length > 0) {
+    const leastPicked = getLeastVotedOutcome(outcomes, picks);
+    for (const k of unvoted) {
+      const usesRandom = wagers?.[k]?.[match.id]?.type === 'random';
+      const pick = usesRandom
+        ? outcomes[Math.floor(Math.random() * outcomes.length)]
+        : leastPicked;
+      picks[k] = pick;
+      randomPicks[k] = pick;
+    }
   }
 
   const WAGER_MULTIPLIERS = { 'double-down': 2 };
@@ -518,22 +544,22 @@ function calculatePlayerPoints(players, votes, match, wagers) {
     playerStakes[k] = baseStake * multiplier;
   }
 
-  const totalLoserStake = Object.entries(picks)
-    .filter(([, pick]) => pick !== winner)
-    .reduce((sum, [k]) => sum + playerStakes[k], 0);
+  const winnerEntries = Object.entries(picks).filter(([, pick]) => pick === winner);
+  const loserEntries = Object.entries(picks).filter(([, pick]) => pick !== winner);
 
-  const totalWinnerStake = Object.entries(picks)
-    .filter(([, pick]) => pick === winner)
-    .reduce((sum, [k]) => sum + playerStakes[k], 0);
+  const allWin = loserEntries.length === 0;
+  const allLose = winnerEntries.length === 0;
 
-  // Zero-sum redistribution: losers' stakes are split proportionally among winners.
-  // If everyone picks the winner, totalLoserStake is 0 so all deltas are 0 — no points
-  // move, which intentionally breaks zero-sum for that match (nobody is penalized).
+  const totalLoserStake = loserEntries.reduce((sum, [k]) => sum + playerStakes[k], 0);
+  const totalWinnerStake = winnerEntries.reduce((sum, [k]) => sum + playerStakes[k], 0);
+
   const deltas = {};
   for (const [k, pick] of Object.entries(picks)) {
     const isWinner = pick === winner;
     let delta;
-    if (isWinner) {
+    if (allWin || allLose) {
+      delta = 0;
+    } else if (isWinner) {
       delta = totalWinnerStake > 0
         ? (playerStakes[k] / totalWinnerStake) * totalLoserStake
         : 0;

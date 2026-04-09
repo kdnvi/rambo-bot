@@ -31,6 +31,24 @@ const BOTTOM_LINES = [
   'xem kèo xong bảo "kệ, đi theo trái tim" rồi cháy túi.',
 ];
 
+const ALL_WIN_LINES = [
+  '🤝 Cả hội chọn giống nhau và đúng — không ai ăn, không ai mất. Hoà vốn tập thể!',
+  '🫱🫲 Đồng lòng và đúng luôn — nhưng không có ai thua thì lấy đâu điểm chia? **+0** hết.',
+  '🧠 Cả nhóm cùng một sóng não — nhưng sóng não giống nhau thì không ai thắng ai cả.',
+  '📎 Vote giống nhau 100%. Trận này như chưa bao giờ xảy ra. **+0** cho tất cả.',
+  '🪞 Ai cũng đúng, ai cũng hòa. Có lẽ trận này quá dễ đoán.',
+  '🎯 Cả hội đúng hết — đẹp thì có đẹp nhưng điểm thì **+0**. Cuộc đời công bằng.',
+];
+
+const ALL_LOSE_LINES = [
+  '💀 Cả hội sai hết — không ai mất điểm vì không có ai đúng để nhận. **+0** tập thể!',
+  '🪦 Đồng lòng và sai luôn — ít nhất là sai cùng nhau. **+0** hết.',
+  '🧊 Cả nhóm cùng lạc đường — nhưng lạc chung nên không ai bị phạt.',
+  '🫠 Vote giống nhau, sai giống nhau. Trận này coi như không tồn tại. **+0** cho tất cả.',
+  '🤡 Cả hội thua nhưng không ai mất gì — vì ai cũng thua. Buồn cười ghê.',
+  '🌚 Tất cả sai bét — nhưng số phận nương tay, **+0** cho cả đám.',
+];
+
 export const data = new SlashCommandBuilder()
   .setName('update-result')
   .setDescription('Update result of a specific match')
@@ -131,6 +149,9 @@ async function postMatchBreakdown(interaction, match, deltas) {
       .sort((a, b) => b.delta - a.delta);
 
     const winner = getWinner(match);
+    const allWin = entries.every((e) => e.isWinner);
+    const allLose = entries.every((e) => !e.isWinner);
+
     const lines = entries.map((e) => {
       const sign = e.delta >= 0 ? '+' : '';
       const icon = e.isWinner ? '👑' : '🤡';
@@ -138,10 +159,16 @@ async function postMatchBreakdown(interaction, match, deltas) {
       return `${icon} **${e.name}** — ${e.pick.toUpperCase()}${tag} → **${sign}${e.delta}** pts`;
     });
 
+    if (allWin) {
+      lines.push('', pick(ALL_WIN_LINES));
+    } else if (allLose) {
+      lines.push('', pick(ALL_LOSE_LINES));
+    }
+
     const embed = new EmbedBuilder()
       .setTitle(`💰  Sổ sách trận #${match.id}`)
       .setDescription(lines.join('\n'))
-      .setColor(0x5865F2)
+      .setColor(allWin ? 0x57F287 : allLose ? 0xED4245 : 0x5865F2)
       .setTimestamp();
 
     await interaction.followUp({ embeds: [embed] });
@@ -221,6 +248,8 @@ async function postStandings(interaction) {
     if (ranked.length < 2) return;
 
     const leader = ranked[0];
+    if (leader.points <= 0) return;
+
     const bottom = ranked[ranked.length - 1];
 
     const lines = [

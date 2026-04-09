@@ -4,9 +4,9 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('schedule')
-  .setDescription('View upcoming matches')
+  .setDescription('Lịch sắp tới — chuẩn bị tinh thần đi')
   .addIntegerOption(option => option.setName('count')
-    .setDescription('Number of upcoming matches to show (default 5)')
+    .setDescription('Số trận muốn xem (mặc định 5)')
     .setMinValue(1)
     .setMaxValue(10)
     .setRequired(false));

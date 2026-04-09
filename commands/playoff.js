@@ -4,7 +4,7 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('worldcup-playoff')
-  .setDescription('View WC 2026 Round of 32 bracket based on current group standings');
+  .setDescription('Nhánh đấu vòng 32 — ai gặp ai, run chưa?');
 
 const R32_MATCH_IDS = Array.from({ length: 16 }, (_, i) => 73 + i);
 

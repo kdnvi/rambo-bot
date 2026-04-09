@@ -2,9 +2,9 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 
 export const data = new SlashCommandBuilder()
   .setName('spam')
-  .setDescription('Spam a specific user')
+  .setDescription('Spam một người cho vui')
   .addUserOption(option => option.setName('user')
-    .setDescription('User to spam')
+    .setDescription('Nạn nhân')
     .setRequired(true));
 
 export async function execute(interaction) {

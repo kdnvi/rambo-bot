@@ -8,7 +8,7 @@ const MEDAL = ['🥇', '🥈', '🥉'];
 
 export const data = new SlashCommandBuilder()
   .setName('rank')
-  .setDescription('Player ranking for the current tournament');
+  .setDescription('Bảng xếp hạng — ai đầu bảng, ai đội sổ');
 
 export async function execute(interaction) {
   try {

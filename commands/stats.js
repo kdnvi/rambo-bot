@@ -6,9 +6,9 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('stats')
-  .setDescription('View your personal tournament stats')
+  .setDescription('Thống kê cá nhân — đối mặt sự thật đi')
   .addUserOption(option => option.setName('user')
-    .setDescription('Check another player (leave empty for yourself)')
+    .setDescription('Soi ai (bỏ trống = soi mình)')
     .setRequired(false));
 
 export async function execute(interaction) {

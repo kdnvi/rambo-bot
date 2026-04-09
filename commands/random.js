@@ -16,7 +16,7 @@ const RANDOM_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('random')
-  .setDescription('Randomly pick a team for the next match instead of getting the least-voted default');
+  .setDescription('Giao số phận cho ông trời — random thay vì bị gán đội ít vote nhất');
 
 export async function execute(interaction) {
   try {

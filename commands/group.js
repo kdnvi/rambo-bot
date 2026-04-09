@@ -4,9 +4,9 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('group')
-  .setDescription('View group standings')
+  .setDescription('Bảng đấu — xem ai đang sống ai đang chết')
   .addStringOption(option => option.setName('name')
-    .setDescription('Group letter (A–L), or leave empty for all groups')
+    .setDescription('Chữ bảng (A–L), bỏ trống = xem hết')
     .setRequired(false));
 
 export async function execute(interaction) {

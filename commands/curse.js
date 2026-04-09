@@ -16,9 +16,9 @@ const CURSE_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('curse')
-  .setDescription('Curse a player on the next match — if they lose, steal 5 pts!')
+  .setDescription('Nguyền một người ở trận tới — người đó sai thì bạn ăn 5 điểm!')
   .addUserOption(option => option.setName('player')
-    .setDescription('Player to curse')
+    .setDescription('Chọn nạn nhân')
     .setRequired(true));
 
 export async function execute(interaction) {

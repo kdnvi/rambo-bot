@@ -6,9 +6,9 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('match')
-  .setDescription('Look up details for a specific match')
+  .setDescription('Chi tiết trận đấu — ai đúng ai sai, rõ ràng')
   .addIntegerOption(option => option.setName('id')
-    .setDescription('Match ID (defaults to last finished match)')
+    .setDescription('ID trận (bỏ trống = trận gần nhất)')
     .setMinValue(1)
     .setRequired(false));
 

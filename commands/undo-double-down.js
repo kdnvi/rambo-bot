@@ -14,7 +14,7 @@ const CHICKEN_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
-  .setDescription('Remove your double-down (if the match hasn\'t started yet)');
+  .setDescription('Sợ rồi hả? Huỷ double-down trước giờ đá');
 
 export async function execute(interaction) {
   try {

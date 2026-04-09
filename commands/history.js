@@ -5,12 +5,12 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('history')
-  .setDescription('View vote history for a player')
+  .setDescription('Lật lại lịch sử vote — đúng sai không trốn được')
   .addUserOption(option => option.setName('user')
-    .setDescription('Player to view (defaults to yourself)')
+    .setDescription('Soi ai (bỏ trống = soi mình)')
     .setRequired(false))
   .addIntegerOption(option => option.setName('count')
-    .setDescription('Number of recent matches to show (default 5)')
+    .setDescription('Số trận muốn xem (mặc định 5)')
     .setMinValue(1)
     .setMaxValue(20)
     .setRequired(false));

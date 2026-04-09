@@ -4,7 +4,7 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('register')
-  .setDescription('Join the current tournament');
+  .setDescription('Đăng ký vào cuộc — có gan thì bấm');
 
 export async function execute(interaction) {
   try {

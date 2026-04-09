@@ -5,7 +5,7 @@ import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('wall-of-shame')
-  .setDescription('The Hall of Infamy — worst predictions, biggest fails, most shame');
+  .setDescription('Bảng phong thần — ai tệ nhất, nhục nhất, fail nặng nhất');
 
 export async function execute(interaction) {
   try {

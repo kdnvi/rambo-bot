@@ -19,7 +19,7 @@ const HYPE_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('double-down')
-  .setDescription('Double your stake on a match (1 per matchday)');
+  .setDescription('Nhân đôi cược — gan thì bấm, mỗi ngày 1 lần');
 
 export async function execute(interaction) {
   try {

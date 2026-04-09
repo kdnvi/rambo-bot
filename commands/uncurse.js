@@ -14,7 +14,7 @@ const RELIEF_LINES = [
 
 export const data = new SlashCommandBuilder()
   .setName('uncurse')
-  .setDescription('Remove your active curse (if the match hasn\'t started yet)');
+  .setDescription('Hối hận rồi? Gỡ bùa trước giờ đá');
 
 export async function execute(interaction) {
   try {

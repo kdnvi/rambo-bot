@@ -35,7 +35,6 @@ export const execute = withErrorHandler(async (interaction) => {
   }
 
   const groupKeys = requested ? [requested] : Object.keys(groups).sort();
-  const RANK_ICONS = ['🥇', '🥈', '🥉', '4.'];
   const GROUPS_PER_EMBED = 3;
 
   const groupBlocks = groupKeys.map((key) => {
@@ -45,7 +44,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const rows = teams.map((t, i) => {
       const gd = t.goalDifference >= 0 ? `+${t.goalDifference}` : `${t.goalDifference}`;
-      return `${RANK_ICONS[i] || `${i + 1}.`} **${t.name.toUpperCase()}** · ${t.won}W ${t.drawn}D ${t.lost}L · ${gd} · **${t.points}**pts`;
+      return `\`${i + 1}.\` **${t.name.toUpperCase()}** · ${t.won}W ${t.drawn}D ${t.lost}L · ${gd} · **${t.points}**pts`;
     });
 
     return `📊 **Group ${key.toUpperCase()}**\n${rows.join('\n')}`;
@@ -74,4 +73,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
   const allEmbeds = [title, ...embeds];
   await interaction.reply({ embeds: allEmbeds.slice(0, 10) });
+  for (let i = 10; i < allEmbeds.length; i += 10) {
+    await interaction.followUp({ embeds: allEmbeds.slice(i, i + 10) });
+  }
 });

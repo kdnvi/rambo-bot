@@ -22,19 +22,25 @@ for (const file of commandFiles) {
   }
 }
 
+for (const key of ['TOKEN', 'APP_ID', 'GUILD_ID']) {
+  if (!process.env[key]) {
+    logger.error(`Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+
 const rest = new REST().setToken(process.env.TOKEN);
 
-(async () => {
-  try {
-    logger.info(`Started refreshing ${commands.length} application (/) commands.`);
+try {
+  logger.info(`Started refreshing ${commands.length} application (/) commands.`);
 
-    const data = await rest.put(
-      Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
-      { body: commands },
-    );
+  const data = await rest.put(
+    Routes.applicationGuildCommands(process.env.APP_ID, process.env.GUILD_ID),
+    { body: commands },
+  );
 
-    logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
-  } catch (error) {
-    logger.error(error);
-  }
-})();
+  logger.info(`Successfully reloaded ${data.length} application (/) commands.`);
+} catch (error) {
+  logger.error(error);
+  process.exit(1);
+}

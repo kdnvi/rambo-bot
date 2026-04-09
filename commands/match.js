@@ -79,9 +79,10 @@ export const execute = withErrorHandler(async (interaction) => {
         const icon = winner ? (v.vote === winner ? '👑' : '🤡') : '🗳️';
         grouped[pick].push(`${icon} ${name}`);
       }
-      const voteLines = Object.entries(grouped)
+      let voteLines = Object.entries(grouped)
         .map(([pick, names]) => `**${pick}**\n${names.join('\n')}`)
         .join('\n\n');
+      if (voteLines.length > 1024) voteLines = voteLines.slice(0, 1021) + '...';
       embed.addFields({ name: '🗳️ Vote', value: voteLines, inline: false });
     } else {
       embed.addFields({ name: '🗳️ Vote', value: '*Không có vote*', inline: false });

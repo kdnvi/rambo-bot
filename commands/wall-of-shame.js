@@ -16,7 +16,7 @@ export const execute = withErrorHandler(async (interaction) => {
   const players = await readPlayers();
   const users = interaction.client.cachedUsers;
 
-  if (!players) {
+  if (!players || Object.keys(players).length === 0) {
     await interaction.editReply({ content: '❌ Chưa có người chơi.' });
     return;
   }

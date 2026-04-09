@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readPlayers, readAllVotes, readPlayerBadges } from '../utils/firebase.js';
+import { readTournamentData, readPlayers, readAllVotes, readUserWagers, readPlayerBadges } from '../utils/firebase.js';
 import { formatBadgesDetailed } from '../utils/badges.js';
 import { getWinner, getMatchVote, VND_FORMATTER } from '../utils/helper.js';
 import { withErrorHandler, getTournamentName } from '../utils/command.js';
@@ -33,8 +33,11 @@ export const execute = withErrorHandler(async (interaction) => {
   }
 
   const player = players[userId];
-  const allMatches = await readTournamentData('matches');
-  const votes = await readAllVotes();
+  const [allMatches, votes, userWagers] = await Promise.all([
+    readTournamentData('matches'),
+    readAllVotes(),
+    readUserWagers(userId),
+  ]);
 
   let correctCount = 0;
   let votedCount = 0;
@@ -61,6 +64,7 @@ export const execute = withErrorHandler(async (interaction) => {
       vote: voted ? userVote : null,
       correct: isCorrect,
       auto: !voted,
+      wagerType: userWagers[match.id]?.type || null,
     });
   }
 
@@ -83,7 +87,8 @@ export const execute = withErrorHandler(async (interaction) => {
   if (recent.length > 0) {
     const lines = recent.map((r) => {
       const icon = r.correct ? '👑' : '🤡';
-      const voteLabel = r.auto ? '🎲 auto' : `vote **${r.vote.toUpperCase()}**`;
+      const autoLabel = r.wagerType === 'random' ? '🎲 random' : '🤖 auto';
+      const voteLabel = r.auto ? autoLabel : `vote **${r.vote.toUpperCase()}**`;
       return `${icon} #${r.matchId} ${r.home.toUpperCase()} vs ${r.away.toUpperCase()} — ${voteLabel}`;
     });
     embed.addFields({ name: '🕐 Mấy trận gần đây', value: lines.join('\n'), inline: false });

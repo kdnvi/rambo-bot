@@ -1,6 +1,6 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
-import { getCached, getSubkey, setCached, bustPrefix } from './cache.js';
+import { getCached, getSubkey, setCached, bustPrefix, getGeneration } from './cache.js';
 import logger from './logger.js';
 
 initializeApp({
@@ -12,9 +12,10 @@ const db = getDatabase();
 async function cachedRead(cacheKey, refPath) {
   const hit = getCached(cacheKey);
   if (hit !== undefined) return hit;
+  const gen = getGeneration(cacheKey);
   const snapshot = await db.ref(refPath).once('value');
   const val = snapshot.val();
-  setCached(cacheKey, val);
+  setCached(cacheKey, val, gen);
   return val;
 }
 
@@ -123,10 +124,11 @@ export async function readMatchVotes(matchId, messageId) {
     setCached(cacheKey, parentHit);
     return parentHit;
   }
+  const gen = getGeneration(cacheKey);
   const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
   const snapshot = await ref.once('value');
   const val = snapshot.val();
-  setCached(cacheKey, val);
+  setCached(cacheKey, val, gen);
   return val;
 }
 
@@ -143,9 +145,10 @@ export async function readUserWagers(userId) {
     setCached(cacheKey, parentHit);
     return parentHit || {};
   }
+  const gen = getGeneration(cacheKey);
   const snapshot = await db.ref(`tournament/wagers/${userId}`).once('value');
   const val = snapshot.val();
-  setCached(cacheKey, val);
+  setCached(cacheKey, val, gen);
   return val || {};
 }
 
@@ -191,9 +194,10 @@ export async function readPlayerBadges(userId) {
     setCached(cacheKey, parentHit);
     return parentHit || {};
   }
+  const gen = getGeneration(cacheKey);
   const snapshot = await db.ref(`tournament/badges/${userId}`).once('value');
   const val = snapshot.val();
-  setCached(cacheKey, val);
+  setCached(cacheKey, val, gen);
   return val || {};
 }
 

@@ -78,6 +78,7 @@ for (const path of TEMPLATES) {
 
   if (groupKeys.length !== 12) {
     console.error(`FAIL: Expected 12 groups, got ${groupKeys.length}`);
+    console.log(`\n${path}: FAIL (structural)`);
     allPassed = false;
     continue;
   }
@@ -101,6 +102,7 @@ for (const path of TEMPLATES) {
   console.log(`R32 matches found: ${r32.length}`);
   if (r32.length !== 16) {
     console.error(`FAIL: Expected 16 R32 matches (IDs 73-88), got ${r32.length}`);
+    console.log(`\n${path}: FAIL (structural)`);
     allPassed = false;
     continue;
   }

@@ -17,7 +17,9 @@ export const execute = withErrorHandler(async (interaction) => {
     .setTimestamp();
 
   if (rulesText) {
-    embed.setDescription(rulesText.replace(/\\n/g, '\n'));
+    let description = rulesText.replace(/\\n/g, '\n');
+    if (description.length > 4096) description = description.slice(0, 4093) + '...';
+    embed.setDescription(description);
   } else {
     embed
       .setDescription('Chưa có luật chơi cho giải này.')

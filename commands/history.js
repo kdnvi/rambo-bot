@@ -129,13 +129,15 @@ export const execute = withErrorHandler(async (interaction) => {
     summary += `\n🪄 Nguyền: ${curseList}`;
   }
 
+  let description =
+    `**${tournamentName}**\n\n` +
+    lines.join('\n') +
+    `\n\n${summary}`;
+  if (description.length > 4096) description = description.slice(0, 4093) + '...';
+
   const embed = new EmbedBuilder()
     .setTitle(`📜  Lịch sử vote ${nickname}`)
-    .setDescription(
-      `**${tournamentName}**\n\n` +
-      lines.join('\n') +
-      `\n\n${summary}`
-    )
+    .setDescription(description)
     .setColor(0x5865F2)
     .setThumbnail(targetUser.displayAvatarURL())
     .setFooter({ text: `Hiển thị ${recent.length}/${userHistory.length} trận gần nhất` })

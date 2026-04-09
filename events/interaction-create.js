@@ -104,8 +104,13 @@ export async function execute(interaction) {
     } catch (error) {
       logger.error(`Error executing ${interaction.commandName}`);
       logger.error(error);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Có lỗi xảy ra.', flags: MessageFlags.Ephemeral }).catch(() => {});
+      const content = '❌ Có lỗi xảy ra.';
+      if (interaction.replied) {
+        await interaction.followUp({ content, flags: MessageFlags.Ephemeral }).catch(() => {});
+      } else if (interaction.deferred) {
+        await interaction.editReply({ content }).catch(() => {});
+      } else {
+        await interaction.reply({ content, flags: MessageFlags.Ephemeral }).catch(() => {});
       }
     }
 

@@ -350,6 +350,12 @@ export async function calculateMatches(matches, client) {
       readCurses(),
     ]);
 
+    const players = await readPlayers();
+    if (!players) {
+      logger.warn('No players registered, skipping calculation');
+      return;
+    }
+
     const calculatedIds = [];
     const matchDeltas = {};
 
@@ -359,12 +365,6 @@ export async function calculateMatches(matches, client) {
         continue;
       }
 
-      const players = await readPlayers();
-      if (!players) {
-        logger.warn('No players registered, skipping calculation');
-        return;
-      }
-
       const key = `${match.id - 1}`;
       const votes = getMatchVotes(votingObj, key, match.messageId);
 
@@ -372,8 +372,8 @@ export async function calculateMatches(matches, client) {
         logger.warn(`Match ${match.id} has no votes — all picks will be randomized`);
       }
 
-      const { votedPlayers, randomPicks, deltas } = calculatePlayerPoints(players, votes, match, wagers);
-      resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas);
+      const { randomPicks, deltas } = calculatePlayerPoints(players, votes, match, wagers);
+      resolveCurses(players, curses, match, votingObj, randomPicks, deltas);
 
       matchDeltas[match.id] = deltas;
 
@@ -654,7 +654,7 @@ export async function updateGroupStandings(match) {
   logger.info(`Updated group ${groupKey.toUpperCase()} standings for match ${match.id}`);
 }
 
-function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPicks, deltas) {
+function resolveCurses(players, curses, match, votingObj, randomPicks, deltas) {
   const matchCurses = curses[match.id];
   if (!matchCurses) return;
 

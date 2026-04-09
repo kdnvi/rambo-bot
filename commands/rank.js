@@ -45,9 +45,12 @@ export const execute = withErrorHandler(async (interaction) => {
     return `${rank} **${player.nickname}** — ${balance}  *(${player.matches} trận)*${badges}`;
   });
 
+  let description = lines.join('\n');
+  if (description.length > 4096) description = description.slice(0, 4093) + '...';
+
   const embed = new EmbedBuilder()
     .setTitle(`🏆  ${tournamentName} Bảng xếp hạng`)
-    .setDescription(lines.join('\n'))
+    .setDescription(description)
     .setColor(0xFFD700)
     .setFooter({ text: `${rankedPlayers.length} chiến binh` })
     .setTimestamp();

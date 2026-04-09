@@ -1,4 +1,5 @@
 const store = new Map();
+const bustGeneration = new Map();
 
 const TTL = {
   config: 5 * 60 * 1000,
@@ -19,6 +20,15 @@ function ttlFor(key) {
     if (key === prefix || key.startsWith(`${prefix}/`)) return ms;
   }
   return DEFAULT_TTL;
+}
+
+function prefixOf(key) {
+  const slash = key.indexOf('/');
+  return slash === -1 ? key : key.slice(0, slash);
+}
+
+export function getGeneration(key) {
+  return bustGeneration.get(prefixOf(key)) || 0;
 }
 
 export function getCached(key) {
@@ -47,7 +57,8 @@ export function getSubkey(parentKey, childPath) {
   return clone(val ?? null);
 }
 
-export function setCached(key, value) {
+export function setCached(key, value, generation) {
+  if (generation !== undefined && generation !== getGeneration(key)) return;
   store.set(key, { value: clone(value), expires: Date.now() + ttlFor(key) });
 }
 
@@ -58,10 +69,10 @@ function clone(val) {
 }
 
 export function bustPrefix(prefix) {
-  for (const key of store.keys()) {
+  bustGeneration.set(prefix, (bustGeneration.get(prefix) || 0) + 1);
+  for (const key of [...store.keys()]) {
     if (key === prefix || key.startsWith(`${prefix}/`)) {
       store.delete(key);
     }
   }
 }
-

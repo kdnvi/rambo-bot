@@ -64,7 +64,8 @@ export const execute = withErrorHandler(async (interaction) => {
       winner,
       vote: userVote,
       correct: userVote ? userVote === winner : null,
-      wagerType: wager?.type || null,
+      hasDoubleDown: wager?.doubleDown || false,
+      hasRandom: wager?.random || false,
       curseTarget: curse?.target || null,
     });
   }
@@ -84,7 +85,7 @@ export const execute = withErrorHandler(async (interaction) => {
     const score = `${r.result.home}-${r.result.away}`;
     let line;
     if (r.vote === null) {
-      const autoLabel = r.wagerType === 'random' ? 'ngẫu nhiên 🎲' : 'tự động (least-voted)';
+      const autoLabel = r.hasRandom ? 'ngẫu nhiên 🎲' : 'tự động (least-voted)';
       line = `🤖 **#${r.matchId}** ${r.home.toUpperCase()} ${score} ${r.away.toUpperCase()} — *${autoLabel}*`;
     } else {
       const icon = r.correct ? '👑' : '🤡';
@@ -92,7 +93,7 @@ export const execute = withErrorHandler(async (interaction) => {
     }
 
     const tags = [];
-    if (r.wagerType === 'double-down') tags.push('⏫ double-down');
+    if (r.hasDoubleDown) tags.push('⏫ double-down');
     if (r.curseTarget) {
       const targetName = users[r.curseTarget]?.nickname || 'Unknown';
       tags.push(`🪄 nguyền **${targetName}**`);
@@ -104,15 +105,15 @@ export const execute = withErrorHandler(async (interaction) => {
 
   const totalVoted = userHistory.filter((r) => r.vote !== null).length;
   const totalCorrect = userHistory.filter((r) => r.correct === true).length;
-  const totalRandom = userHistory.filter((r) => r.vote === null && r.wagerType === 'random').length;
-  const totalAutoAssigned = userHistory.filter((r) => r.vote === null && r.wagerType !== 'random').length;
+  const totalRandom = userHistory.filter((r) => r.vote === null && r.hasRandom).length;
+  const totalAutoAssigned = userHistory.filter((r) => r.vote === null && !r.hasRandom).length;
   const winRate = totalVoted > 0 ? `${Math.round((totalCorrect / totalVoted) * 100)}%` : '—';
 
   let summary = `🎯 Tỉ lệ đúng **${winRate}** (${totalCorrect}/${totalVoted})`;
   if (totalRandom > 0) summary += ` · 🎲 ${totalRandom} random`;
   if (totalAutoAssigned > 0) summary += ` · 🤖 ${totalAutoAssigned} tự động`;
 
-  const totalDD = userHistory.filter((r) => r.wagerType === 'double-down').length;
+  const totalDD = userHistory.filter((r) => r.hasDoubleDown).length;
   const totalCurses = userHistory.filter((r) => r.curseTarget).length;
   if (totalDD > 0 || totalCurses > 0) {
     const parts = [];

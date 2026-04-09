@@ -497,8 +497,6 @@ function getLeastVotedOutcome(outcomes, picks) {
   return leastVoted[Math.floor(Math.random() * leastVoted.length)];
 }
 
-const WAGER_MULTIPLIERS = { 'double-down': 2 };
-
 export function resolveMatchPicks(playerIds, votes, match, wagers) {
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
@@ -518,7 +516,7 @@ export function resolveMatchPicks(playerIds, votes, match, wagers) {
   if (unvoted.length > 0) {
     const leastPicked = getLeastVotedOutcome(outcomes, picks);
     for (const k of unvoted) {
-      const usesRandom = wagers?.[k]?.[match.id]?.type === 'random';
+      const usesRandom = wagers?.[k]?.[match.id]?.random === true;
       const pick = usesRandom
         ? outcomes[Math.floor(Math.random() * outcomes.length)]
         : leastPicked;
@@ -529,8 +527,8 @@ export function resolveMatchPicks(playerIds, votes, match, wagers) {
 
   const playerStakes = {};
   for (const k of Object.keys(picks)) {
-    const wagerType = wagers?.[k]?.[match.id]?.type;
-    const multiplier = WAGER_MULTIPLIERS[wagerType] || 1;
+    const hasDoubleDown = wagers?.[k]?.[match.id]?.doubleDown === true;
+    const multiplier = hasDoubleDown ? 2 : 1;
     playerStakes[k] = baseStake * multiplier;
   }
 

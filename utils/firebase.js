@@ -152,11 +152,11 @@ export async function readUserWagers(userId) {
   return val || {};
 }
 
-export async function setPlayerWager(userId, matchId, type) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
-  await ref.set({ type });
+export async function setPlayerWager(userId, matchId, flag) {
+  const ref = db.ref(`tournament/wagers/${userId}/${matchId}/${flag}`);
+  await ref.set(true);
   bustPrefix('wagers');
-  logger.info(`Set ${type} wager for user [${userId}] on match [${matchId}]`);
+  logger.info(`Set ${flag} wager for user [${userId}] on match [${matchId}]`);
 }
 
 
@@ -178,11 +178,13 @@ export async function removeCurse(curserId, matchId) {
   logger.info(`Curse removed: [${curserId}] on match [${matchId}]`);
 }
 
-export async function removePlayerWager(userId, matchId) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
+export async function removePlayerWager(userId, matchId, flag) {
+  const ref = flag
+    ? db.ref(`tournament/wagers/${userId}/${matchId}/${flag}`)
+    : db.ref(`tournament/wagers/${userId}/${matchId}`);
   await ref.remove();
   bustPrefix('wagers');
-  logger.info(`Removed wager for user [${userId}] on match [${matchId}]`);
+  logger.info(`Removed ${flag || 'all'} wager(s) for user [${userId}] on match [${matchId}]`);
 }
 
 export async function readPlayerBadges(userId) {

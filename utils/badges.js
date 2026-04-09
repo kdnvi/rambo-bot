@@ -85,7 +85,7 @@ export async function checkAndAwardBadges({ players, completedMatches, votes, wa
     }
 
     const userWagers = wagers?.[userId] || {};
-    const ddCount = Object.values(userWagers).filter((w) => w.type === 'double-down').length;
+    const ddCount = Object.values(userWagers).filter((w) => w.doubleDown).length;
     if (!has('double_trouble') && ddCount >= 5) {
       earned.push('double_trouble');
     }

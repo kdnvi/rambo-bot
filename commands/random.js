@@ -35,7 +35,7 @@ export const execute = withErrorHandler(async (interaction) => {
     const matchId = match.id;
     const myWagers = await readUserWagers(userId);
 
-    if (myWagers[matchId]?.type === 'random') {
+    if (myWagers[matchId]?.random) {
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Đã kích hoạt rồi')
         .setDescription(`Random đã bật cho trận \`#${matchId}\` rồi. Nằm chờ số phận thôi!`)
@@ -121,6 +121,7 @@ export const handleRandomButton = withErrorHandler(async (interaction) => {
 
 async function activateRandom(interaction, match, isUpdate = false) {
   await setPlayerWager(interaction.user.id, match.id, 'random');
+
 
   const randomLine = await pickLine('random');
 

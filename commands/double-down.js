@@ -42,9 +42,18 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const myWagers = await readUserWagers(userId);
 
-    const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'double-down');
+    if (myWagers[matchId]?.doubleDown) {
+      const embed = new EmbedBuilder()
+        .setTitle('⚠️  Đã dùng rồi')
+        .setDescription(`Trận \`#${matchId}\` đã double-down rồi!`)
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.doubleDown);
     if (alreadyThisDay) {
-      const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
+      const usedId = sameDayMatchIds.find((id) => myWagers[id]?.doubleDown);
       const embed = new EmbedBuilder()
         .setTitle('⚠️  Đã dùng rồi')
         .setDescription(`Xài double-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
@@ -54,7 +63,7 @@ export const execute = withErrorHandler(async (interaction) => {
     }
 
     const stake = getMatchStake(match.id);
-    await setPlayerWager(userId, matchId, 'double-down');
+    await setPlayerWager(userId, matchId, 'doubleDown');
 
     const hypeLine = await pickLine('hype');
 

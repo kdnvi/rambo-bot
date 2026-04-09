@@ -64,7 +64,7 @@ export const execute = withErrorHandler(async (interaction) => {
       vote: voted ? userVote : null,
       correct: isCorrect,
       auto: !voted,
-      wagerType: userWagers[match.id]?.type || null,
+      hasRandom: userWagers[match.id]?.random || false,
     });
   }
 
@@ -87,7 +87,7 @@ export const execute = withErrorHandler(async (interaction) => {
   if (recent.length > 0) {
     const lines = recent.map((r) => {
       const icon = r.correct ? '👑' : '🤡';
-      const autoLabel = r.wagerType === 'random' ? '🎲 random' : '🤖 auto';
+      const autoLabel = r.hasRandom ? '🎲 random' : '🤖 auto';
       const voteLabel = r.auto ? autoLabel : `vote **${r.vote.toUpperCase()}**`;
       return `${icon} #${r.matchId} ${r.home.toUpperCase()} vs ${r.away.toUpperCase()} — ${voteLabel}`;
     });

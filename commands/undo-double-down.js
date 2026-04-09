@@ -17,7 +17,7 @@ export const execute = withErrorHandler(async (interaction) => {
   if (!allMatches) return;
 
   const myWagers = await readUserWagers(userId);
-  const found = findActiveEntry(myWagers, allMatches, (wager) => wager.type === 'double-down');
+  const found = findActiveEntry(myWagers, allMatches, (wager) => wager.doubleDown);
 
   if (!found) {
     const embed = new EmbedBuilder()
@@ -31,7 +31,7 @@ export const execute = withErrorHandler(async (interaction) => {
   const activeMatchId = found.matchId;
   const activeMatch = found.match;
 
-  await removePlayerWager(userId, activeMatchId);
+  await removePlayerWager(userId, activeMatchId, 'doubleDown');
 
   const chickenLine = await pickLine('chicken');
 

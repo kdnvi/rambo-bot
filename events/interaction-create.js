@@ -44,8 +44,8 @@ export async function execute(interaction) {
       await updateMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
 
       const userWagers = await readUserWagers(interaction.user.id);
-      if (userWagers[matchId]?.type === 'random') {
-        await removePlayerWager(interaction.user.id, matchId);
+      if (userWagers[matchId]?.random) {
+        await removePlayerWager(interaction.user.id, matchId, 'random');
       }
 
       const votes = await readMatchVotes(matchId, interaction.message.id);

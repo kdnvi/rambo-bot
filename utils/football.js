@@ -103,7 +103,7 @@ export function voteReminderJob(client) {
             .setTitle(`⏰  Nhắc vote — Trận #${match.id}`)
             .setDescription(
               `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
-              `Còn <t:${ts}:R> là đá — vote đi không thì bị **random**!`,
+              `Còn <t:${ts}:R> là đá — vote đi không thì bị gán **đội ít vote nhất**!`,
             )
             .setColor(0xFEE75C);
 

@@ -12,6 +12,11 @@ const CURSE_LINES = [
   'mở con mắt thứ ba nhắm vào',
   'thả mèo đen đi theo',
   'mướn thầy bùa chuyên trị',
+  'đốt nhang cầu cho xui xẻo tới',
+  'vẽ bùa dán sau lưng',
+  'cắm kim vào hình nộm mang tên',
+  'gửi quạ đen bay ba vòng quanh nhà',
+  'lẩm bẩm tên ba lần lúc nửa đêm:',
 ];
 
 export const data = new SlashCommandBuilder()

@@ -11,6 +11,11 @@ const DRUNK_LINES = [
   'mồ hôi tay ướt hết cả điện thoại 😰',
   'lại đổi vote NỮA. Vô đối chọn nhầm.',
   'trận này làm khủng hoảng cả tuổi thanh xuân 🌀',
+  'đổi vote nhiều hơn đổi áo trong tuần 👔',
+  'phân vân quá trời — chắc vote xong lại đổi tiếp 🔄',
+  'hệ thống ghi nhận bạn là người hay thay đổi nhất 📝',
+  'vote xong hối hận, hối hận xong vote lại. Vòng lặp vô tận ♾️',
+  'bấm nút như đang chơi piano — nốt nào cũng bấm 🎹',
 ];
 
 const LAST_SEC_LINES = [
@@ -18,6 +23,11 @@ const LAST_SEC_LINES = [
   'suýt trễ! Ngủ nướng tới giờ này hả mậy? ⏰',
   'vote khi đồng hồ đếm ngược. Gan cùng mình. 🫣',
   'lách vào khe cửa hẹp. Pro hay hên? 🎰',
+  'trọng tài sắp thổi còi mà mới chọn xong. Liều mạng! ⚡',
+  'vote lúc cầu thủ đang ra sân. Kịch tính ghê. 🏃',
+  'bóng sắp lăn mà tay vẫn còn run run bấm vote 😬',
+  'chen vào giây cuối — kiểu người thích sống trên lằn ranh ⏱️',
+  'deadline là động lực duy nhất. Vote xong thở phào 😮‍💨',
 ];
 
 export const name = Events.InteractionCreate;

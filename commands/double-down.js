@@ -15,6 +15,11 @@ const HYPE_LINES = [
   'tăng cược — theo đúng nghĩa đen luôn á.',
   'bật chế độ quái thú rồi nha!',
   'vào đây không phải để chơi cho vui đâu.',
+  'all-in không nói nhiều. Xong.',
+  'đập bàn gấp đôi — không run tay.',
+  'cược như thể ngày mai không đến.',
+  'lên đồ full damage, không cần phòng thủ.',
+  'hít một hơi thật sâu rồi bấm. Xong rồi không hối hận.',
 ];
 
 export const data = new SlashCommandBuilder()

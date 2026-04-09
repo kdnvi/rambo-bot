@@ -12,6 +12,11 @@ const RANDOM_LINES = [
   'quay xổ số thôi, suy nghĩ chi cho mệt.',
   'số phận dẫn lối, bước đi không cần não.',
   'gieo xúc xắc rồi ngồi cầu nguyện.',
+  'bấm mắt chọn đại — đời mà, tính gì nhiều.',
+  'não nghỉ phép hôm nay, để vận mệnh đi làm thay.',
+  'chọn bằng linh cảm? Không. Chọn bằng xác suất thuần tuý.',
+  'thả trôi theo dòng đời, trôi tới đâu hay tới đó.',
+  'không phân tích, không suy nghĩ, không hối hận. Random!',
 ];
 
 export const data = new SlashCommandBuilder()

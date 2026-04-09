@@ -10,6 +10,11 @@ const RELIEF_LINES = [
   'gọi thầy bùa về nhà, hết việc rồi.',
   'bẻ đôi hình nhân. Xong, hết chuyện.',
   'nhắm mắt lại. Đêm nay ngủ ngon đi nha.',
+  'rút kim ra khỏi hình nộm. Bình an rồi.',
+  'quạ đen bay về. Nhiệm vụ huỷ.',
+  'xé bùa giữa ban ngày. Thiện lành trở lại.',
+  'lương tâm cắn rứt rồi hả? Thôi tha.',
+  'buông dao đồ tể. Trở về con đường sáng.',
 ];
 
 export const data = new SlashCommandBuilder()

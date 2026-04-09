@@ -15,6 +15,11 @@ const LEADER_LINES = [
   'đoán đại mà cũng đúng, ghê chưa!',
   'sáng ra đã chọn con đường thống trị!',
   'sống trong đầu mọi người không trả tiền thuê!',
+  'đoán bóng như đọc kịch bản — chắc viết luôn rồi!',
+  'nhìn BXH mà tưởng nhìn tài khoản ngân hàng — toàn số đẹp!',
+  'bước vào trận nào thắng trận đó, dị quá trời!',
+  'cả hội ngước lên chỉ thấy một cái tên — khỏi nói ai.',
+  'chơi kiểu này thì ai dám ngồi cùng bàn?',
 ];
 
 const BOTTOM_LINES = [
@@ -29,6 +34,11 @@ const BOTTOM_LINES = [
   'lạc vào vùng tối bảng xếp hạng mất rồi.',
   'một mình giữ ấm đáy bảng, ai nhìn cũng thương.',
   'xem kèo xong bảo "kệ, đi theo trái tim" rồi cháy túi.',
+  'chọn đội nào là đội đó thua — nên đi làm cố vấn cho đối thủ.',
+  'mỗi trận sai một kiểu khác nhau, sáng tạo ghê.',
+  'nhìn điểm mà tưởng nhìn nhiệt độ Bắc Cực.',
+  'đang âm nặng hơn tài khoản cuối tháng.',
+  'lần cuối đúng là khi nào? Chắc kiếp trước.',
 ];
 
 const ALL_WIN_LINES = [
@@ -38,6 +48,11 @@ const ALL_WIN_LINES = [
   '📎 Vote giống nhau 100%. Trận này như chưa bao giờ xảy ra. **+0** cho tất cả.',
   '🪞 Ai cũng đúng, ai cũng hòa. Có lẽ trận này quá dễ đoán.',
   '🎯 Cả hội đúng hết — đẹp thì có đẹp nhưng điểm thì **+0**. Cuộc đời công bằng.',
+  '🧬 Cùng DNA đoán bóng luôn — đúng hết mà chẳng ai lời. **+0**.',
+  '🫡 Đoàn kết là sức mạnh — nhưng sức mạnh hôm nay bằng không.',
+  '🏖️ Trận này nhẹ quá, ai cũng đúng, ai cũng **+0**. Đi biển cho rồi.',
+  '🤷 Đúng cả lũ thì thắng ai? Câu hỏi triết học hôm nay.',
+  '🎪 Show diễn hoành tráng nhưng vé miễn phí — **+0** cho tất cả.',
 ];
 
 const ALL_LOSE_LINES = [
@@ -47,6 +62,11 @@ const ALL_LOSE_LINES = [
   '🫠 Vote giống nhau, sai giống nhau. Trận này coi như không tồn tại. **+0** cho tất cả.',
   '🤡 Cả hội thua nhưng không ai mất gì — vì ai cũng thua. Buồn cười ghê.',
   '🌚 Tất cả sai bét — nhưng số phận nương tay, **+0** cho cả đám.',
+  '🧊 Cả hội đóng băng não cùng lúc. Ít nhất không ai mất gì. **+0**.',
+  '🪂 Nhảy dù không dù — nhưng may là cả đám cùng rơi nên không ai đau. **+0**.',
+  '🐑 Cả bầy đi lạc cùng hướng. Không phạt vì... tội nghiệp quá.',
+  '🎭 Bi kịch tập thể — sai hết nhưng không ai chịu trách nhiệm. **+0**.',
+  '🔮 Cầu pha lê hỏng hàng loạt. May mà bảo hành — **+0** cho cả nhóm.',
 ];
 
 export const data = new SlashCommandBuilder()
@@ -218,6 +238,11 @@ const ROAST_LINES = [
   'xem stats xong bảo "kệ, tin linh cảm" rồi toang',
   'chọn kiểu bịt mắt rồi chỉ đại 🙈',
   'linh cảm cần phải đi cấp cứu gấp',
+  'đoán ngược hoàn toàn — thiên tài ngược cũng là thiên tài',
+  'có khi đặt ngược lại thì giàu rồi',
+  'não bảo trái, tay bấm phải, kết quả: cháy',
+  'mỗi lần vote là một lần đặt niềm tin sai chỗ',
+  'bạn bè khuyên đừng chọn mà vẫn chọn — giờ thì biết',
 ];
 
 async function postMatchRoast(interaction, match) {

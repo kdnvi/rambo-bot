@@ -323,6 +323,11 @@ function checkRivalry(allMatches, votes, players, users) {
       'Kình địch là THẬT luôn. 🍿',
       'Ai kiếm cái võ đài cho hai đứa này đi.',
       'Hỏi hôm nay thứ mấy chắc cũng cãi nhau.',
+      'Chắc kiếp trước là Tom & Jerry.',
+      'Một người chọn trắng, người kia chọn đen. Mọi trận.',
+      'Nếu có giải "bất đồng quan điểm" thì hai đứa này vô địch.',
+      'Không cần xem trận, chỉ cần xem hai đứa này chọn gì là đủ drama.',
+      'Đặt cạnh nhau là có chuyện. Như nam châm cùng cực.',
     ];
 
     return new EmbedBuilder()

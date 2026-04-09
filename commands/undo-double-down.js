@@ -10,6 +10,11 @@ const CHICKEN_LINES = [
   'hổng chơi nữa. Nhạt nhưng khôn.',
   'giật dây dù kịp lúc. Hạ cánh an toàn.',
   'nhận ra mình không đủ gan.',
+  'tay đã đặt lên bàn rồi rút về. Thua tâm lý.',
+  'hứa với lòng lần sau sẽ dũng cảm hơn. Hứa thôi.',
+  'não nói tiến, tim nói lùi. Tim thắng.',
+  'bỏ chạy nhanh hơn cầu thủ trên sân.',
+  'huỷ cược êm ru — giống như chưa từng liều.',
 ];
 
 export const data = new SlashCommandBuilder()

@@ -69,19 +69,21 @@ export async function execute(message) {
   if (!isMentioned && !isReply) return;
 
   try {
+    if (isReply) {
+      const repliedTo = await message.channel.messages.fetch(message.reference.messageId);
+      if (repliedTo.author.id === botId) {
+        if (Math.random() > REPLY_CHANCE) return;
+        const line = REPLY_LINES[Math.floor(Math.random() * REPLY_LINES.length)];
+        await message.reply(line);
+        return;
+      }
+    }
+
     if (isMentioned) {
       const line = MENTION_LINES[Math.floor(Math.random() * MENTION_LINES.length)];
       await message.reply(line);
       return;
     }
-
-    const repliedTo = await message.channel.messages.fetch(message.reference.messageId);
-    if (repliedTo.author.id !== botId) return;
-
-    if (Math.random() > REPLY_CHANCE) return;
-
-    const line = REPLY_LINES[Math.floor(Math.random() * REPLY_LINES.length)];
-    await message.reply(line);
   } catch {
     // silently ignore fetch failures
   }

@@ -1,4 +1,5 @@
-import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { withErrorHandler } from '../utils/command.js';
 
 export const data = new SlashCommandBuilder()
   .setName('spam')
@@ -7,21 +8,15 @@ export const data = new SlashCommandBuilder()
     .setDescription('Nạn nhân')
     .setRequired(true));
 
-export async function execute(interaction) {
-  try {
-    const user = interaction.options.get('user').user;
+export const execute = withErrorHandler(async (interaction) => {
+  const user = interaction.options.get('user').user;
 
-    const embed = new EmbedBuilder()
-      .setTitle('📢  CHÚ Ý')
-      .setDescription(`${user} `.repeat(20))
-      .setColor(0xED4245)
-      .setThumbnail(user.displayAvatarURL())
-      .setFooter({ text: `${interaction.user.displayName} triệu hồi` });
+  const embed = new EmbedBuilder()
+    .setTitle('📢  CHÚ Ý')
+    .setDescription(`${user} `.repeat(20))
+    .setColor(0xED4245)
+    .setThumbnail(user.displayAvatarURL())
+    .setFooter({ text: `${interaction.user.displayName} triệu hồi` });
 
-    await interaction.reply({ embeds: [embed] });
-  } catch {
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Đã xảy ra lỗi.', flags: MessageFlags.Ephemeral }).catch(() => {});
-    }
-  }
-}
+  await interaction.reply({ embeds: [embed] });
+});

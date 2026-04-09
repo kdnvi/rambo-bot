@@ -87,8 +87,39 @@ Tournament data
 * Tournament data (matches, groups, config) lives entirely in Firebase
   under the `tournament/` path. See templates/ for reference JSON files.
 
-* To set up a new tournament, push the template data to Firebase via the
-  console or a script -- no code changes needed.
+* To set up a new tournament, push the template to Firebase:
+  firebase database:set /tournament templates/worldcup2026.json --project <PROJECT_ID>
+
+* Template files:
+  templates/worldcup2026.json       — production (full 104-match bracket)
+  templates/worldcup2026-test.json  — testing (same structure, smaller dataset)
+
+* A template contains:
+  - config    — tournament name, rules text, channel overrides
+  - groups    — 12 groups (A–L) with 4 teams each, zeroed standings
+  - matches   — all matches (group stage + knockout), with dates, venues, and team codes
+
+* Validate a template before pushing:
+  node validate-playoff.js
+
+* To update config (e.g. rulesText, channelId) without resetting the whole
+  tournament, edit directly in the Firebase console under tournament/config.
+
+Flavor text (bot personality)
+-----
+
+* All flavor text (roasts, curse lines, hype lines, etc.) is stored in
+  Firebase under the `flavor/` path and cached for 24 hours.
+
+* To seed or reset flavor text from the template:
+  firebase database:set /flavor templates/flavor.json --project <PROJECT_ID>
+
+* To update lines without redeploying, edit directly in the Firebase
+  console. Changes take effect within 24 hours (or immediately on restart).
+
+* See templates/flavor.json for all available keys:
+  drunk, last_sec, reply, mention, leader, bottom, all_win, all_lose,
+  curse_win, curse_lose, curse, relief, roast, hype, chicken, random, rival
 
 References
 -----

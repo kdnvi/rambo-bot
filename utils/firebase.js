@@ -1,6 +1,6 @@
 import { initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getDatabase } from 'firebase-admin/database';
-import { getCached, setCached, bustPrefix } from './cache.js';
+import { getCached, getSubkey, setCached, bustPrefix } from './cache.js';
 import logger from './logger.js';
 
 initializeApp({
@@ -23,8 +23,7 @@ export async function readTournamentConfig() {
 }
 
 export async function readTournamentData(path) {
-  const val = await cachedRead(path, `tournament/${path}`);
-  return { val: () => val };
+  return cachedRead(path, `tournament/${path}`);
 }
 
 export async function updateMatch(matchIndex, content) {
@@ -66,8 +65,7 @@ export async function updateMatchResult(matchIndex, homeScore, awayScore) {
 }
 
 export async function readPlayers() {
-  const val = await cachedRead('players', 'tournament/players');
-  return { val: () => val };
+  return cachedRead('players', 'tournament/players');
 }
 
 export async function registerPlayer(userId) {
@@ -119,12 +117,17 @@ export async function removeMatchVote(matchId, userId, messageId) {
 export async function readMatchVotes(matchId, messageId) {
   const cacheKey = `votes/${matchId}/${messageId}`;
   const hit = getCached(cacheKey);
-  if (hit !== undefined) return { val: () => hit };
+  if (hit !== undefined) return hit;
+  const parentHit = getSubkey('votes', `${matchId - 1}/${messageId}`);
+  if (parentHit !== undefined) {
+    setCached(cacheKey, parentHit);
+    return parentHit;
+  }
   const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}`);
   const snapshot = await ref.once('value');
   const val = snapshot.val();
   setCached(cacheKey, val);
-  return { val: () => val };
+  return val;
 }
 
 export async function readPlayerWagers() {
@@ -132,7 +135,18 @@ export async function readPlayerWagers() {
 }
 
 export async function readUserWagers(userId) {
-  return (await cachedRead(`wagers/${userId}`, `tournament/wagers/${userId}`)) || {};
+  const cacheKey = `wagers/${userId}`;
+  const hit = getCached(cacheKey);
+  if (hit !== undefined) return hit || {};
+  const parentHit = getSubkey('wagers', userId);
+  if (parentHit !== undefined) {
+    setCached(cacheKey, parentHit);
+    return parentHit || {};
+  }
+  const snapshot = await db.ref(`tournament/wagers/${userId}`).once('value');
+  const val = snapshot.val();
+  setCached(cacheKey, val);
+  return val || {};
 }
 
 export async function setPlayerWager(userId, matchId, type) {
@@ -169,7 +183,18 @@ export async function removePlayerWager(userId, matchId) {
 }
 
 export async function readPlayerBadges(userId) {
-  return (await cachedRead(`badges/${userId}`, `tournament/badges/${userId}`)) || {};
+  const cacheKey = `badges/${userId}`;
+  const hit = getCached(cacheKey);
+  if (hit !== undefined) return hit || {};
+  const parentHit = getSubkey('badges', userId);
+  if (parentHit !== undefined) {
+    setCached(cacheKey, parentHit);
+    return parentHit || {};
+  }
+  const snapshot = await db.ref(`tournament/badges/${userId}`).once('value');
+  const val = snapshot.val();
+  setCached(cacheKey, val);
+  return val || {};
 }
 
 export async function readAllBadges() {
@@ -197,4 +222,8 @@ export async function incrementVoteChange(matchId, userId) {
   const ref = db.ref(`tournament/voteChanges/${matchId}/${userId}`);
   const result = await ref.transaction((current) => (current || 0) + 1);
   return result.snapshot.val();
+}
+
+export async function readFlavor() {
+  return (await cachedRead('flavor', 'flavor')) || {};
 }

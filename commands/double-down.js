@@ -1,98 +1,66 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readUserWagers, setPlayerWager } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager } from '../utils/firebase.js';
+import { requirePlayer, requireMatches, withErrorHandler } from '../utils/command.js';
+import { pickLine } from '../utils/flavor.js';
 import { getMatchStake } from '../utils/football.js';
-import { pick, findNextMatch, getMatchDay } from '../utils/helper.js';
-import logger from '../utils/logger.js';
-
-const HYPE_LINES = [
-  'hôm nay máu lắm!',
-  'chê cược thường nhạt, phải gấp đôi mới đã!',
-  'vặn volume lên max luôn!',
-  'đặt cả thể diện vào trận này rồi đó.',
-  'sống liều chết liều hôm nay!',
-  'tự tin kiểu nhà tiên tri, không biết đúng hay sai.',
-  'thiên tài hay điên? Sắp biết thôi.',
-  'tăng cược — theo đúng nghĩa đen luôn á.',
-  'bật chế độ quái thú rồi nha!',
-  'vào đây không phải để chơi cho vui đâu.',
-  'all-in không nói nhiều. Xong.',
-  'đập bàn gấp đôi — không run tay.',
-  'cược như thể ngày mai không đến.',
-  'lên đồ full damage, không cần phòng thủ.',
-  'hít một hơi thật sâu rồi bấm. Xong rồi không hối hận.',
-];
+import { findNextMatch, getMatchDay } from '../utils/helper.js';
 
 export const data = new SlashCommandBuilder()
   .setName('double-down')
   .setDescription('Nhân đôi cược — gan thì bấm, mỗi ngày 1 lần');
 
-export async function execute(interaction) {
-  try {
-    const userId = interaction.user.id;
+export const execute = withErrorHandler(async (interaction) => {
+  const userId = interaction.user.id;
 
-    const players = (await readPlayers()).val();
-    if (!players || !players[userId]) {
-      const embed = new EmbedBuilder()
-        .setTitle('❌  Chưa đăng ký')
-        .setDescription('Bạn cần `/register` trước.')
-        .setColor(0xED4245);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
+  const players = await requirePlayer(interaction, userId);
+  if (!players) return;
 
-    const allMatches = (await readTournamentData('matches')).val();
-    if (!allMatches) {
-      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
-      return;
-    }
+  const allMatches = await requireMatches(interaction);
+  if (!allMatches) return;
 
-    const match = findNextMatch(allMatches);
-    if (!match) {
-      await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    const matchId = match.id;
-
-    const matchDay = getMatchDay(match.date);
-    const sameDayMatchIds = allMatches
-      .filter((m) => getMatchDay(m.date) === matchDay)
-      .map((m) => m.id);
-
-    const myWagers = await readUserWagers(userId);
-
-    const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'double-down');
-    if (alreadyThisDay) {
-      const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
-      const embed = new EmbedBuilder()
-        .setTitle('⚠️  Đã dùng rồi')
-        .setDescription(`Xài double-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    const stake = getMatchStake(match.id);
-    await setPlayerWager(userId, matchId, 'double-down');
-
-    const embed = new EmbedBuilder()
-      .setTitle('⏫  DOUBLE DOWN!')
-      .setDescription(
-        `**${interaction.user}** ${pick(HYPE_LINES)}\n\n` +
-        `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
-        `💰 Mức cược: ${stake} → **${stake * 2} pts**\n\n` +
-        '✅ Đúng → **ăn gấp đôi**\n' +
-        '❌ Sai → **mất gấp đôi**'
-      )
-      .setColor(0x57F287)
-      .setThumbnail(interaction.user.displayAvatarURL())
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
-  } catch (err) {
-    logger.error(err);
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Không thể kích hoạt double-down.', flags: MessageFlags.Ephemeral }).catch(() => {});
-    }
+  const match = findNextMatch(allMatches);
+  if (!match) {
+    await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
+    return;
   }
-}
+
+  const matchId = match.id;
+
+  const matchDay = getMatchDay(match.date);
+  const sameDayMatchIds = allMatches
+    .filter((m) => getMatchDay(m.date) === matchDay)
+    .map((m) => m.id);
+
+  const myWagers = await readUserWagers(userId);
+
+  const alreadyThisDay = sameDayMatchIds.some((id) => myWagers[id]?.type === 'double-down');
+  if (alreadyThisDay) {
+    const usedId = sameDayMatchIds.find((id) => myWagers[id]?.type === 'double-down');
+    const embed = new EmbedBuilder()
+      .setTitle('⚠️  Đã dùng rồi')
+      .setDescription(`Xài double-down cho trận \`#${usedId}\` rồi. Mỗi ngày một phát thôi, tham quá!`)
+      .setColor(0xFEE75C);
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return;
+  }
+
+  const stake = getMatchStake(match.id);
+  await setPlayerWager(userId, matchId, 'double-down');
+
+  const hypeLine = await pickLine('hype');
+
+  const embed = new EmbedBuilder()
+    .setTitle('⏫  DOUBLE DOWN!')
+    .setDescription(
+      `**${interaction.user}** ${hypeLine}\n\n` +
+      `⚽ **Trận #${matchId}:** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}\n` +
+      `💰 Mức cược: ${stake} → **${stake * 2} pts**\n\n` +
+      '✅ Đúng → **ăn gấp đôi**\n' +
+      '❌ Sai → **mất gấp đôi**'
+    )
+    .setColor(0x57F287)
+    .setThumbnail(interaction.user.displayAvatarURL())
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed] });
+});

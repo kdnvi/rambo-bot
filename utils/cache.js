@@ -9,6 +9,7 @@ const TTL = {
   votes: 30 * 1000,
   curses: 60 * 1000,
   wagers: 60 * 1000,
+  flavor: 24 * 60 * 60 * 1000,
 };
 
 const DEFAULT_TTL = 30 * 1000;
@@ -30,6 +31,22 @@ export function getCached(key) {
   return clone(entry.value);
 }
 
+export function getSubkey(parentKey, childPath) {
+  const entry = store.get(parentKey);
+  if (!entry) return undefined;
+  if (Date.now() > entry.expires) {
+    store.delete(parentKey);
+    return undefined;
+  }
+  if (entry.value === null || entry.value === undefined) return null;
+  let val = entry.value;
+  for (const seg of childPath.split('/')) {
+    if (val === null || val === undefined || typeof val !== 'object') return null;
+    val = val[seg];
+  }
+  return clone(val ?? null);
+}
+
 export function setCached(key, value) {
   store.set(key, { value: clone(value), expires: Date.now() + ttlFor(key) });
 }
@@ -48,10 +65,3 @@ export function bustPrefix(prefix) {
   }
 }
 
-export function bustAll() {
-  store.clear();
-}
-
-export function cacheStats() {
-  return { size: store.size };
-}

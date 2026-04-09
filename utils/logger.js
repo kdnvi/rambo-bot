@@ -7,6 +7,8 @@ const baseFormat = _format.combine(
   _format.printf(l => `${l.timestamp} ${l.level}: ${l.message}` + (l.splat !== undefined ? `${l.splat}` : '')),
 );
 
+const MAX_QUEUE_SIZE = 50;
+
 class DiscordTransport extends TransportStream {
   constructor(opts = {}) {
     super({ ...opts, level: 'warn' });
@@ -25,6 +27,10 @@ class DiscordTransport extends TransportStream {
     const label = info.level.toUpperCase();
     const text = info.stack || info.message;
     const truncated = text.length > 1900 ? text.slice(0, 1900) + '…' : text;
+    if (this._queue.length >= MAX_QUEUE_SIZE) {
+      const dropped = this._queue.shift();
+      console.warn(`[Logger] Discord queue full (${MAX_QUEUE_SIZE}), dropped oldest message: ${dropped.slice(0, 80)}…`);
+    }
     this._queue.push(`${icon} **${label}** — \`${info.timestamp}\`\n\`\`\`\n${truncated}\n\`\`\``);
     this._flush();
     callback();

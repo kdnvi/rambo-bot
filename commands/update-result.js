@@ -1,73 +1,10 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchResult, readPlayers, readMatchVotes, readTournamentData } from '../utils/firebase.js';
-import { calculateMatches, updateGroupStandings } from '../utils/football.js';
-import { getWinner, pick, VND_FORMATTER } from '../utils/helper.js';
+import { updateMatchResult, readPlayers, readMatchVotes, readTournamentData, readCurses } from '../utils/firebase.js';
+import { calculateMatches, updateGroupStandings, CURSE_PTS } from '../utils/football.js';
+import { getWinner, VND_FORMATTER } from '../utils/helper.js';
+import { withErrorHandler } from '../utils/command.js';
+import { pickLine } from '../utils/flavor.js';
 import logger from '../utils/logger.js';
-
-const LEADER_LINES = [
-  'đang on fire không ai cản nổi!',
-  'đè đầu cỡi cổ cả hội!',
-  'thắng muốn phát chán luôn!',
-  'chắc sinh ra để đoán bóng!',
-  'là GOAT (tạm thời thôi nha)!',
-  'ăn điểm ngon lành như ăn cháo!',
-  'chắc có bạn bè trong FIFA hay sao...',
-  'đoán đại mà cũng đúng, ghê chưa!',
-  'sáng ra đã chọn con đường thống trị!',
-  'sống trong đầu mọi người không trả tiền thuê!',
-  'đoán bóng như đọc kịch bản — chắc viết luôn rồi!',
-  'nhìn BXH mà tưởng nhìn tài khoản ngân hàng — toàn số đẹp!',
-  'bước vào trận nào thắng trận đó, dị quá trời!',
-  'cả hội ngước lên chỉ thấy một cái tên — khỏi nói ai.',
-  'chơi kiểu này thì ai dám ngồi cùng bàn?',
-];
-
-const BOTTOM_LINES = [
-  'đang tệ... tệ thiệt sự luôn á.',
-  'hay tung đồng xu đi, chắc còn trúng hơn.',
-  'chuyển nghề đi bạn, cái này không hợp.',
-  'đang phục vụ cộng đồng — ai nhìn xuống cũng thấy vui.',
-  'cho điểm thiên hạ như đại gia cho tiền tip.',
-  'chọn bừa chắc còn trúng hơn chọn nghiêm túc.',
-  'tưởng vào đây làm từ thiện.',
-  'speedrun cháy tài khoản, sắp phá kỷ lục.',
-  'lạc vào vùng tối bảng xếp hạng mất rồi.',
-  'một mình giữ ấm đáy bảng, ai nhìn cũng thương.',
-  'xem kèo xong bảo "kệ, đi theo trái tim" rồi cháy túi.',
-  'chọn đội nào là đội đó thua — nên đi làm cố vấn cho đối thủ.',
-  'mỗi trận sai một kiểu khác nhau, sáng tạo ghê.',
-  'nhìn điểm mà tưởng nhìn nhiệt độ Bắc Cực.',
-  'đang âm nặng hơn tài khoản cuối tháng.',
-  'lần cuối đúng là khi nào? Chắc kiếp trước.',
-];
-
-const ALL_WIN_LINES = [
-  '🤝 Cả hội chọn giống nhau và đúng — không ai ăn, không ai mất. Hoà vốn tập thể!',
-  '🫱🫲 Đồng lòng và đúng luôn — nhưng không có ai thua thì lấy đâu điểm chia? **+0** hết.',
-  '🧠 Cả nhóm cùng một sóng não — nhưng sóng não giống nhau thì không ai thắng ai cả.',
-  '📎 Vote giống nhau 100%. Trận này như chưa bao giờ xảy ra. **+0** cho tất cả.',
-  '🪞 Ai cũng đúng, ai cũng hòa. Có lẽ trận này quá dễ đoán.',
-  '🎯 Cả hội đúng hết — đẹp thì có đẹp nhưng điểm thì **+0**. Cuộc đời công bằng.',
-  '🧬 Cùng DNA đoán bóng luôn — đúng hết mà chẳng ai lời. **+0**.',
-  '🫡 Đoàn kết là sức mạnh — nhưng sức mạnh hôm nay bằng không.',
-  '🏖️ Trận này nhẹ quá, ai cũng đúng, ai cũng **+0**. Đi biển cho rồi.',
-  '🤷 Đúng cả lũ thì thắng ai? Câu hỏi triết học hôm nay.',
-  '🎪 Show diễn hoành tráng nhưng vé miễn phí — **+0** cho tất cả.',
-];
-
-const ALL_LOSE_LINES = [
-  '💀 Cả hội sai hết — không ai mất điểm vì không có ai đúng để nhận. **+0** tập thể!',
-  '🪦 Đồng lòng và sai luôn — ít nhất là sai cùng nhau. **+0** hết.',
-  '🧊 Cả nhóm cùng lạc đường — nhưng lạc chung nên không ai bị phạt.',
-  '🫠 Vote giống nhau, sai giống nhau. Trận này coi như không tồn tại. **+0** cho tất cả.',
-  '🤡 Cả hội thua nhưng không ai mất gì — vì ai cũng thua. Buồn cười ghê.',
-  '🌚 Tất cả sai bét — nhưng số phận nương tay, **+0** cho cả đám.',
-  '🧊 Cả hội đóng băng não cùng lúc. Ít nhất không ai mất gì. **+0**.',
-  '🪂 Nhảy dù không dù — nhưng may là cả đám cùng rơi nên không ai đau. **+0**.',
-  '🐑 Cả bầy đi lạc cùng hướng. Không phạt vì... tội nghiệp quá.',
-  '🎭 Bi kịch tập thể — sai hết nhưng không ai chịu trách nhiệm. **+0**.',
-  '🔮 Cầu pha lê hỏng hàng loạt. May mà bảo hành — **+0** cho cả nhóm.',
-];
 
 export const data = new SlashCommandBuilder()
   .setName('update-result')
@@ -88,100 +25,96 @@ export const data = new SlashCommandBuilder()
 
 const ALLOWED_USERS = new Set((process.env.AUDITED_USERS || '').split(',').filter(Boolean));
 
-export async function execute(interaction) {
-  try {
-    if (!ALLOWED_USERS.has(interaction.user.id)) {
-      await interaction.reply({ content: '❌ Bạn không có quyền cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral });
-      return;
-    }
+export const execute = withErrorHandler(async (interaction) => {
+  if (!ALLOWED_USERS.has(interaction.user.id)) {
+    await interaction.reply({ content: '❌ Bạn không có quyền cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral });
+    return;
+  }
 
-    const matchId = parseInt(interaction.options.get('match-id').value) - 1;
-    const homeScore = interaction.options.get('home-score').value;
-    const awayScore = interaction.options.get('away-score').value;
+  await interaction.deferReply();
 
-    const allMatches = (await readTournamentData('matches')).val();
-    const matchData = allMatches?.[matchId];
-    if (matchData && !matchData.messageId) {
+  const matchId = interaction.options.get('match-id').value - 1;
+  const homeScore = interaction.options.get('home-score').value;
+  const awayScore = interaction.options.get('away-score').value;
+
+  const allMatches = await readTournamentData('matches');
+  const matchData = allMatches?.[matchId];
+  if (matchData && !matchData.messageId) {
+    const embed = new EmbedBuilder()
+      .setTitle('⚠️  Trận chưa được đăng')
+      .setDescription(`Trận \`#${matchId + 1}\` chưa được đăng lên channel — chưa ai vote được thì cập nhật kết quả làm gì?`)
+      .setColor(0xFEE75C)
+      .setTimestamp();
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  if (matchData?.date) {
+    const kickoff = Date.parse(matchData.date);
+    const elapsed = Date.now() - kickoff;
+    const MIN_90 = 90 * 60 * 1000;
+    if (elapsed < MIN_90) {
+      const remaining = Math.ceil((MIN_90 - elapsed) / 60000);
       const embed = new EmbedBuilder()
-        .setTitle('⚠️  Trận chưa được đăng')
-        .setDescription(`Trận \`#${matchId + 1}\` chưa được đăng lên channel — chưa ai vote được thì cập nhật kết quả làm gì?`)
+        .setTitle('⏳  Chưa đủ 90 phút')
+        .setDescription(`Trận \`#${matchId + 1}\` mới đá được chút xíu — chờ thêm **${remaining} phút** nữa rồi hãy cập nhật.`)
         .setColor(0xFEE75C)
         .setTimestamp();
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      await interaction.editReply({ embeds: [embed] });
       return;
-    }
-
-    if (matchData?.date) {
-      const kickoff = Date.parse(matchData.date);
-      const elapsed = Date.now() - kickoff;
-      const MIN_90 = 90 * 60 * 1000;
-      if (elapsed < MIN_90) {
-        const remaining = Math.ceil((MIN_90 - elapsed) / 60000);
-        const embed = new EmbedBuilder()
-          .setTitle('⏳  Chưa đủ 90 phút')
-          .setDescription(`Trận \`#${matchId + 1}\` mới đá được chút xíu — chờ thêm **${remaining} phút** nữa rồi hãy cập nhật.`)
-          .setColor(0xFEE75C)
-          .setTimestamp();
-        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-        return;
-      }
-    }
-
-    const result = await updateMatchResult(matchId, homeScore, awayScore);
-
-    if (!result.success) {
-      const embed = new EmbedBuilder().setTimestamp();
-
-      if (result.error === 'not_found') {
-        embed
-          .setTitle('❌  Không tìm thấy trận')
-          .setDescription(`Không tìm thấy trận đấu với ID \`${matchId + 1}\`.`)
-          .setColor(0xED4245);
-      } else if (result.error === 'already_exists') {
-        const m = result.match;
-        embed
-          .setTitle('⚠️  Kết quả đã tồn tại')
-          .setDescription(`**${m.home.toUpperCase()}** ${m.result.home} - ${m.result.away} **${m.away.toUpperCase()}**`)
-          .setColor(0xFEE75C);
-      }
-
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    const m = result.match;
-    const embed = new EmbedBuilder()
-      .setTitle('✅  Đã cập nhật kết quả')
-      .setDescription(`**${m.home.toUpperCase()}** ${homeScore} - ${awayScore} **${m.away.toUpperCase()}**`)
-      .setColor(0x57F287)
-      .addFields(
-        { name: '🏟️ Sân vận động', value: m.location, inline: true },
-        { name: '🆔 Match ID', value: `${matchId + 1}`, inline: true },
-      )
-      .setFooter({ text: `Cập nhật bởi ${interaction.user.displayName}` })
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
-
-    const updatedMatch = {
-      ...m,
-      hasResult: true,
-      result: { home: homeScore, away: awayScore },
-    };
-    await updateGroupStandings(updatedMatch);
-    const matchDeltas = await calculateMatches([updatedMatch], interaction.client);
-    logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
-
-    await postMatchBreakdown(interaction, updatedMatch, matchDeltas?.[updatedMatch.id]);
-    await postStandings(interaction);
-    await postMatchRoast(interaction, updatedMatch);
-  } catch (err) {
-    logger.error(err);
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Không thể cập nhật kết quả trận đấu.', flags: MessageFlags.Ephemeral }).catch(() => {});
     }
   }
-}
+
+  const result = await updateMatchResult(matchId, homeScore, awayScore);
+
+  if (!result.success) {
+    const embed = new EmbedBuilder().setTimestamp();
+
+    if (result.error === 'not_found') {
+      embed
+        .setTitle('❌  Không tìm thấy trận')
+        .setDescription(`Không tìm thấy trận đấu với ID \`${matchId + 1}\`.`)
+        .setColor(0xED4245);
+    } else if (result.error === 'already_exists') {
+      const m = result.match;
+      embed
+        .setTitle('⚠️  Kết quả đã tồn tại')
+        .setDescription(`**${m.home.toUpperCase()}** ${m.result.home} - ${m.result.away} **${m.away.toUpperCase()}**`)
+        .setColor(0xFEE75C);
+    }
+
+    await interaction.editReply({ embeds: [embed] });
+    return;
+  }
+
+  const m = result.match;
+  const embed = new EmbedBuilder()
+    .setTitle('✅  Đã cập nhật kết quả')
+    .setDescription(`**${m.home.toUpperCase()}** ${homeScore} - ${awayScore} **${m.away.toUpperCase()}**`)
+    .setColor(0x57F287)
+    .addFields(
+      { name: '🏟️ Sân vận động', value: m.location, inline: true },
+      { name: '🆔 Match ID', value: `${matchId + 1}`, inline: true },
+    )
+    .setFooter({ text: `Cập nhật bởi ${interaction.user.displayName}` })
+    .setTimestamp();
+
+  await interaction.editReply({ embeds: [embed] });
+
+  const updatedMatch = {
+    ...m,
+    hasResult: true,
+    result: { home: homeScore, away: awayScore },
+  };
+  await updateGroupStandings(updatedMatch);
+  const matchDeltas = await calculateMatches([updatedMatch], interaction.client);
+  logger.info(`Immediate calculation triggered for match ${matchId + 1}`);
+
+  await postMatchBreakdown(interaction, updatedMatch, matchDeltas?.[updatedMatch.id]);
+  await postCurseResults(interaction, updatedMatch, matchDeltas?.[updatedMatch.id]);
+  await postStandings(interaction);
+  await postMatchRoast(interaction, updatedMatch);
+});
 
 async function postMatchBreakdown(interaction, match, deltas) {
   try {
@@ -208,9 +141,9 @@ async function postMatchBreakdown(interaction, match, deltas) {
     });
 
     if (allWin) {
-      lines.push('', pick(ALL_WIN_LINES));
+      lines.push('', await pickLine('all_win'));
     } else if (allLose) {
-      lines.push('', pick(ALL_LOSE_LINES));
+      lines.push('', await pickLine('all_lose'));
     }
 
     const embed = new EmbedBuilder()
@@ -225,30 +158,52 @@ async function postMatchBreakdown(interaction, match, deltas) {
   }
 }
 
-const ROAST_LINES = [
-  'thiệt hả... tin thiệt luôn hả 💀',
-  'nên chuyển qua đoán thời tiết cho rồi',
-  'chọn thiu rồi, như sữa phơi nắng ba ngày 🥛',
-  'quả cầu pha lê chắc bị nứt rồi',
-  'chọn bằng trái tim, quên mang não theo',
-  'lần sau nhờ thằng bạn chọn dùm đi',
-  'cú đoán đó là tội ác chiến tranh luôn',
-  'sai một cách rất tự tin, y như mọi khi',
-  'tự tay phá nát điểm của mình',
-  'xem stats xong bảo "kệ, tin linh cảm" rồi toang',
-  'chọn kiểu bịt mắt rồi chỉ đại 🙈',
-  'linh cảm cần phải đi cấp cứu gấp',
-  'đoán ngược hoàn toàn — thiên tài ngược cũng là thiên tài',
-  'có khi đặt ngược lại thì giàu rồi',
-  'não bảo trái, tay bấm phải, kết quả: cháy',
-  'mỗi lần vote là một lần đặt niềm tin sai chỗ',
-  'bạn bè khuyên đừng chọn mà vẫn chọn — giờ thì biết',
-];
+async function postCurseResults(interaction, match, deltas) {
+  try {
+    const curses = await readCurses();
+    const matchCurses = curses[match.id];
+    if (!matchCurses || Object.keys(matchCurses).length === 0) return;
+
+    const winner = getWinner(match);
+    if (!winner) return;
+
+    const users = interaction.client.cachedUsers;
+
+    const lines = [];
+    for (const [curserId, { target }] of Object.entries(matchCurses)) {
+      const curserName = users[curserId]?.nickname || 'Unknown';
+      const targetName = users[target]?.nickname || 'Unknown';
+
+      const targetPick = deltas?.[target]?.pick ?? null;
+      if (targetPick === null) continue;
+
+      const targetCorrect = targetPick === winner;
+      const autoTag = deltas?.[target]?.random ? ' *(auto)*' : '';
+      if (targetCorrect) {
+        lines.push(`🧿 **${curserName}** nguyền **${targetName}**${autoTag} — người đó đúng! **${curserName}** mất **${CURSE_PTS}** pts. ${await pickLine('curse_lose')}`);
+      } else {
+        lines.push(`🧿 **${curserName}** nguyền **${targetName}**${autoTag} — người đó sai! **${curserName}** ăn **${CURSE_PTS}** pts. ${await pickLine('curse_win')}`);
+      }
+    }
+
+    if (lines.length === 0) return;
+
+    const embed = new EmbedBuilder()
+      .setTitle(`🧿  Bùa chú trận #${match.id}`)
+      .setDescription(lines.join('\n'))
+      .setColor(0x9B59B6)
+      .setTimestamp();
+
+    await interaction.followUp({ embeds: [embed] });
+  } catch (err) {
+    logger.error('Failed to post curse results:', err);
+  }
+}
 
 async function postMatchRoast(interaction, match) {
   try {
     if (!match.messageId) return;
-    const votes = (await readMatchVotes(match.id, match.messageId)).val();
+    const votes = await readMatchVotes(match.id, match.messageId);
     if (!votes) return;
 
     const winner = getWinner(match);
@@ -264,7 +219,10 @@ async function postMatchRoast(interaction, match) {
     if (losers.length === 0) return;
 
     const roasted = losers.slice(0, 3);
-    const lines = roasted.map((name) => `🤡 **${name}** ${pick(ROAST_LINES)}`);
+    const lines = [];
+    for (const name of roasted) {
+      lines.push(`🤡 **${name}** ${await pickLine('roast')}`);
+    }
 
     if (losers.length > 3) {
       lines.push(`...cùng **${losers.length - 3}** thánh sai khác`);
@@ -284,7 +242,7 @@ async function postMatchRoast(interaction, match) {
 
 async function postStandings(interaction) {
   try {
-    const players = (await readPlayers()).val();
+    const players = await readPlayers();
     if (!players) return;
     const users = interaction.client.cachedUsers;
 
@@ -305,10 +263,13 @@ async function postStandings(interaction) {
 
     const bottom = ranked[ranked.length - 1];
 
+    const leaderLine = await pickLine('leader');
+    const bottomLine = await pickLine('bottom');
+
     const lines = [
-      `👑 **${leader.nickname}** ${pick(LEADER_LINES)} (${VND_FORMATTER.format(leader.points * 1000)})`,
+      `👑 **${leader.nickname}** ${leaderLine} (${VND_FORMATTER.format(leader.points * 1000)})`,
       '',
-      `💀 **${bottom.nickname}** ${pick(BOTTOM_LINES)} (${VND_FORMATTER.format(bottom.points * 1000)})`,
+      `💀 **${bottom.nickname}** ${bottomLine} (${VND_FORMATTER.format(bottom.points * 1000)})`,
     ];
 
     const embed = new EmbedBuilder()

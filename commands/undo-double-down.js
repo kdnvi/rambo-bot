@@ -1,85 +1,50 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readTournamentData, readPlayers, readUserWagers, removePlayerWager } from '../utils/firebase.js';
-import { pick } from '../utils/helper.js';
-import logger from '../utils/logger.js';
-
-const CHICKEN_LINES = [
-  'run rồi, rút lui rồi. Thông cảm.',
-  'sống an toàn cũng là một nghệ thuật.',
-  'chùn bước — áp lực quá mạnh.',
-  'hổng chơi nữa. Nhạt nhưng khôn.',
-  'giật dây dù kịp lúc. Hạ cánh an toàn.',
-  'nhận ra mình không đủ gan.',
-  'tay đã đặt lên bàn rồi rút về. Thua tâm lý.',
-  'hứa với lòng lần sau sẽ dũng cảm hơn. Hứa thôi.',
-  'não nói tiến, tim nói lùi. Tim thắng.',
-  'bỏ chạy nhanh hơn cầu thủ trên sân.',
-  'huỷ cược êm ru — giống như chưa từng liều.',
-];
+import { readUserWagers, removePlayerWager } from '../utils/firebase.js';
+import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler } from '../utils/command.js';
+import { pickLine } from '../utils/flavor.js';
 
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
   .setDescription('Sợ rồi hả? Huỷ double-down trước giờ đá');
 
-export async function execute(interaction) {
-  try {
-    const userId = interaction.user.id;
+export const execute = withErrorHandler(async (interaction) => {
+  const userId = interaction.user.id;
 
-    const players = (await readPlayers()).val();
-    if (!players || !players[userId]) {
-      await interaction.reply({ content: '❌ Bạn cần `/register` trước.', flags: MessageFlags.Ephemeral });
-      return;
-    }
+  const players = await requirePlayer(interaction, userId);
+  if (!players) return;
 
-    const allMatches = (await readTournamentData('matches')).val();
-    if (!allMatches) {
-      await interaction.reply({ content: '❌ Không có dữ liệu trận đấu.', flags: MessageFlags.Ephemeral });
-      return;
-    }
+  const allMatches = await requireMatches(interaction);
+  if (!allMatches) return;
 
-    const myWagers = await readUserWagers(userId);
-    const now = Date.now();
+  const myWagers = await readUserWagers(userId);
+  const found = findActiveEntry(myWagers, allMatches, (wager) => wager.type === 'double-down');
 
-    let activeMatchId = null;
-    let activeMatch = null;
-    for (const [matchId, wager] of Object.entries(myWagers)) {
-      if (wager.type === 'double-down') {
-        const match = allMatches.find((m) => m.id === Number(matchId));
-        if (match && Date.parse(match.date) > now) {
-          activeMatchId = Number(matchId);
-          activeMatch = match;
-          break;
-        }
-      }
-    }
-
-    if (!activeMatchId) {
-      const embed = new EmbedBuilder()
-        .setTitle('🤷  Không có Double-Down')
-        .setDescription('Đang không có double-down nào để huỷ cả.')
-        .setColor(0xFEE75C);
-      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-      return;
-    }
-
-    await removePlayerWager(userId, activeMatchId);
-
+  if (!found) {
     const embed = new EmbedBuilder()
-      .setTitle('🐔  HUỶ DOUBLE-DOWN')
-      .setDescription(
-        `**${interaction.user}** ${pick(CHICKEN_LINES)}\n\n` +
-        `⏫ Huỷ double-down Trận #${activeMatchId} ` +
-        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
-        'Quay về mức cược bình thường.'
-      )
-      .setColor(0xFEE75C)
-      .setTimestamp();
-
-    await interaction.reply({ embeds: [embed] });
-  } catch (err) {
-    logger.error(err);
-    if (!interaction.replied && !interaction.deferred) {
-      await interaction.reply({ content: '❌ Huỷ double-down thất bại.', flags: MessageFlags.Ephemeral }).catch(() => {});
-    }
+      .setTitle('🤷  Không có Double-Down')
+      .setDescription('Đang không có double-down nào để huỷ cả.')
+      .setColor(0xFEE75C);
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+    return;
   }
-}
+
+  const activeMatchId = found.matchId;
+  const activeMatch = found.match;
+
+  await removePlayerWager(userId, activeMatchId);
+
+  const chickenLine = await pickLine('chicken');
+
+  const embed = new EmbedBuilder()
+    .setTitle('🐔  HUỶ DOUBLE-DOWN')
+    .setDescription(
+      `**${interaction.user}** ${chickenLine}\n\n` +
+      `⏫ Huỷ double-down Trận #${activeMatchId} ` +
+      `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
+      'Quay về mức cược bình thường.'
+    )
+    .setColor(0xFEE75C)
+    .setTimestamp();
+
+  await interaction.reply({ embeds: [embed] });
+});

@@ -3,7 +3,11 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'disc
 import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
+import { getChannelId } from './command.js';
+import { pickLine } from './flavor.js';
 import { CronJob } from 'cron';
+
+export const CURSE_PTS = 5;
 
 const STAGE_STAKES = [
   { minId: 1, maxId: 72, stake: 10 },
@@ -28,7 +32,7 @@ export function matchPostJob(client) {
     cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
-        const allMatches = (await readTournamentData('matches')).val();
+        const allMatches = await readTournamentData('matches');
         if (!allMatches) return;
         const now = Date.now();
 
@@ -41,8 +45,7 @@ export function matchPostJob(client) {
 
         if (matches.length === 0) return;
 
-        const config = await readTournamentConfig();
-        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+        const [config, channelId] = await Promise.all([readTournamentConfig(), getChannelId()]);
         const channel = await client.channels.fetch(channelId);
 
         for (const match of matches) {
@@ -65,7 +68,7 @@ export function voteReminderJob(client) {
     cronTime: '0 */15 * * * *',
     onTick: async () => {
       try {
-        const allMatches = (await readTournamentData('matches')).val();
+        const allMatches = await readTournamentData('matches');
         if (!allMatches) return;
         const now = Date.now();
 
@@ -78,16 +81,15 @@ export function voteReminderJob(client) {
 
         if (matches.length === 0) return;
 
-        const players = (await readPlayers()).val();
+        const players = await readPlayers();
         if (!players) return;
 
-        const config = await readTournamentConfig();
-        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+        const channelId = await getChannelId();
         const channel = await client.channels.fetch(channelId);
         const allPlayerIds = Object.keys(players);
 
         for (const match of matches) {
-          const votes = (await readMatchVotes(match.id, match.messageId)).val();
+          const votes = await readMatchVotes(match.id, match.messageId);
           const votedIds = votes ? Object.keys(votes) : [];
           const unvoted = allPlayerIds.filter((id) => !votedIds.includes(id));
 
@@ -125,7 +127,7 @@ export function calculatingJob(client) {
     cronTime: '0 */30 * * * *',
     onTick: async () => {
       try {
-        const allMatches = (await readTournamentData('matches')).val();
+        const allMatches = await readTournamentData('matches');
         if (!allMatches) return;
         const now = Date.now();
 
@@ -135,7 +137,7 @@ export function calculatingJob(client) {
             await updateGroupStandings(m);
           }
           await calculateMatches(uncalculated, client);
-          const freshMatches = (await readTournamentData('matches')).val();
+          const freshMatches = await readTournamentData('matches');
           await checkMatchdayMVP(client, freshMatches || allMatches, uncalculated);
         }
 
@@ -147,8 +149,7 @@ export function calculatingJob(client) {
 
         if (pending.length === 0) return;
 
-        const config = await readTournamentConfig();
-        const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+        const channelId = await getChannelId();
         const channel = await client.channels.fetch(channelId);
 
         for (const match of pending) {
@@ -190,18 +191,18 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       const alreadyAnnounced = dayMatches.some((m) => m.mvpAnnounced);
       if (alreadyAnnounced) continue;
 
-      const [votes, players, wagers, config] = await Promise.all([
+      const [votes, players, wagers, curses, channelId] = await Promise.all([
         readAllVotes(),
-        readPlayers().then((s) => s.val()),
+        readPlayers(),
         readPlayerWagers(),
-        readTournamentConfig(),
+        readCurses(),
+        getChannelId(),
       ]);
       if (!players) continue;
 
-      const WAGER_MULTIPLIERS = { 'double-down': 2 };
-
+      const playerIds = Object.keys(players);
       const scores = {};
-      for (const userId of Object.keys(players)) {
+      for (const userId of playerIds) {
         scores[userId] = 0;
       }
 
@@ -209,24 +210,25 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         const winner = getWinner(match);
         if (!winner) continue;
         const key = `${match.id - 1}`;
-        const baseStake = getMatchStake(match.id);
-        const matchVotes = getMatchVotes(votes, key, match.messageId) || {};
+        const matchVotes = getMatchVotes(votes, key, match.messageId);
 
-        const playerVotes = {};
-        for (const userId of Object.keys(players)) {
-          const userVote = matchVotes[userId]?.vote ?? null;
-          if (userVote === null) continue;
-          playerVotes[userId] = userVote;
+        const { picks, randomPicks, playerStakes } = resolveMatchPicks(playerIds, matchVotes, match, wagers);
+        const deltas = computeDeltas(picks, playerStakes, winner);
+
+        for (const [userId, d] of Object.entries(deltas)) {
+          scores[userId] += d.delta;
         }
 
-        const allCorrect = Object.values(playerVotes).every((v) => v === winner);
-        const allWrong = Object.values(playerVotes).every((v) => v !== winner);
-        if (allCorrect || allWrong) continue;
-
-        for (const [userId, userVote] of Object.entries(playerVotes)) {
-          const multiplier = WAGER_MULTIPLIERS[wagers?.[userId]?.[match.id]?.type] || 1;
-          const stake = baseStake * multiplier;
-          scores[userId] += userVote === winner ? stake : -stake;
+        const matchCurses = curses[match.id];
+        if (matchCurses) {
+          for (const [curserId, { target }] of Object.entries(matchCurses)) {
+            if (!(curserId in scores) || !(target in scores)) continue;
+            const targetVote = matchVotes?.[target]?.vote ?? randomPicks[target] ?? null;
+            if (targetVote === null) continue;
+            const targetCorrect = targetVote === winner;
+            scores[curserId] += targetCorrect ? -CURSE_PTS : CURSE_PTS;
+            scores[target] += targetCorrect ? CURSE_PTS : -CURSE_PTS;
+          }
         }
       }
 
@@ -237,7 +239,6 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
       if (ranked.length === 0 || ranked[0].pts <= 0) continue;
 
       const mvp = ranked[0];
-      const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
       const channel = await client.channels.fetch(channelId);
       const users = client.cachedUsers;
       const nickname = users[mvp.id]?.nickname || 'Unknown';
@@ -257,7 +258,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
 
       await channel.send({ embeds: [embed] });
 
-      const rivalryEmbed = checkRivalry(allMatches, votes, players, users);
+      const rivalryEmbed = await checkRivalry(allMatches, votes, players, users);
       if (rivalryEmbed) {
         await channel.send({ embeds: [rivalryEmbed] });
       }
@@ -272,7 +273,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
   }
 }
 
-function checkRivalry(allMatches, votes, players, users) {
+async function checkRivalry(allMatches, votes, players, users) {
   try {
     const completed = allMatches.filter((m) => m.hasResult && m.isCalculated);
     if (completed.length < 5) return null;
@@ -317,24 +318,12 @@ function checkRivalry(allMatches, votes, players, users) {
     const nameA = users[topPair.ids[0]]?.nickname || 'Unknown';
     const nameB = users[topPair.ids[1]]?.nickname || 'Unknown';
 
-    const RIVAL_LINES = [
-      'Cái gì cũng chọn ngược nhau. Sinh ra để ghét nhau.',
-      'Một thằng nói trái, thằng kia nói phải. Kinh điển.',
-      'Kình địch là THẬT luôn. 🍿',
-      'Ai kiếm cái võ đài cho hai đứa này đi.',
-      'Hỏi hôm nay thứ mấy chắc cũng cãi nhau.',
-      'Chắc kiếp trước là Tom & Jerry.',
-      'Một người chọn trắng, người kia chọn đen. Mọi trận.',
-      'Nếu có giải "bất đồng quan điểm" thì hai đứa này vô địch.',
-      'Không cần xem trận, chỉ cần xem hai đứa này chọn gì là đủ drama.',
-      'Đặt cạnh nhau là có chuyện. Như nam châm cùng cực.',
-    ];
-
+    const rivalLine = await pickLine('rival');
     return new EmbedBuilder()
       .setTitle('⚔️  Kình địch phát hiện')
       .setDescription(
         `**${nameA}** và **${nameB}** bất đồng **${topPair.count}** trong **${topPair.total}** trận (**${pct}%**)!\n\n` +
-        RIVAL_LINES[Math.floor(Math.random() * RIVAL_LINES.length)],
+        rivalLine,
       )
       .setColor(0x9B59B6)
       .setTimestamp();
@@ -355,17 +344,11 @@ export async function calculateMatches(matches, client) {
   for (const m of toProcess) calculationLock.add(m.id);
 
   try {
-    const [votingObj, playersSnap, wagers, curses] = await Promise.all([
+    const [votingObj, wagers, curses] = await Promise.all([
       readAllVotes(),
-      readPlayers(),
       readPlayerWagers(),
       readCurses(),
     ]);
-    const players = playersSnap.val();
-    if (!players) {
-      logger.warn('No players registered, skipping calculation');
-      return;
-    }
 
     const calculatedIds = [];
     const matchDeltas = {};
@@ -374,6 +357,12 @@ export async function calculateMatches(matches, client) {
       if (!match.messageId) {
         logger.warn(`Skipped match ${match.id} due to empty message ID, consider to update manually.`);
         continue;
+      }
+
+      const players = await readPlayers();
+      if (!players) {
+        logger.warn('No players registered, skipping calculation');
+        return;
       }
 
       const key = `${match.id - 1}`;
@@ -388,8 +377,8 @@ export async function calculateMatches(matches, client) {
 
       matchDeltas[match.id] = deltas;
 
-      await updatePlayers(players);
       await updateMatch(match.id - 1, { isCalculated: true });
+      await updatePlayers(players);
       calculatedIds.push(match.id - 1);
       logger.info(`Calculated and persisted match ${match.id} successfully`);
     }
@@ -397,7 +386,8 @@ export async function calculateMatches(matches, client) {
     if (calculatedIds.length > 0) {
       logger.info(`Calculated ${calculatedIds.length} match(es) total`);
 
-      const allMatches = (await readTournamentData('matches')).val() || [];
+      const players = await readPlayers();
+      const allMatches = await readTournamentData('matches') || [];
       const completedMatches = allMatches
         .filter((m) => m.hasResult && (m.isCalculated || calculatedIds.includes(m.id - 1)))
         .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
@@ -424,8 +414,7 @@ export async function calculateMatches(matches, client) {
 
 async function announceBadges(client, newBadges) {
   try {
-    const config = await readTournamentConfig();
-    const channelId = config?.channelId || process.env.FOOTBALL_CHANNEL_ID;
+    const channelId = await getChannelId();
     const channel = await client.channels.fetch(channelId);
     const users = client.cachedUsers;
 
@@ -508,12 +497,9 @@ function getLeastVotedOutcome(outcomes, picks) {
   return leastVoted[Math.floor(Math.random() * leastVoted.length)];
 }
 
-function calculatePlayerPoints(players, votes, match, wagers) {
-  const winner = getWinner(match);
-  if (!winner) {
-    logger.warn(`Match ${match.id} has no result, skipping point calculation`);
-    return { votedPlayers: [], randomPicks: {}, deltas: {} };
-  }
+const WAGER_MULTIPLIERS = { 'double-down': 2 };
+
+export function resolveMatchPicks(playerIds, votes, match, wagers) {
   const outcomes = [match.home, 'draw', match.away];
   const baseStake = getMatchStake(match.id);
   const votedPlayers = [];
@@ -522,13 +508,13 @@ function calculatePlayerPoints(players, votes, match, wagers) {
   const picks = {};
   if (votes) {
     for (const [k, v] of Object.entries(votes)) {
-      if (!(k in players)) continue;
+      if (!playerIds.includes(k)) continue;
       votedPlayers.push(k);
       picks[k] = v.vote;
     }
   }
 
-  const unvoted = Object.keys(players).filter((k) => !votedPlayers.includes(k));
+  const unvoted = playerIds.filter((k) => !votedPlayers.includes(k));
   if (unvoted.length > 0) {
     const leastPicked = getLeastVotedOutcome(outcomes, picks);
     for (const k of unvoted) {
@@ -541,7 +527,6 @@ function calculatePlayerPoints(players, votes, match, wagers) {
     }
   }
 
-  const WAGER_MULTIPLIERS = { 'double-down': 2 };
   const playerStakes = {};
   for (const k of Object.keys(picks)) {
     const wagerType = wagers?.[k]?.[match.id]?.type;
@@ -549,6 +534,10 @@ function calculatePlayerPoints(players, votes, match, wagers) {
     playerStakes[k] = baseStake * multiplier;
   }
 
+  return { picks, votedPlayers, randomPicks, playerStakes };
+}
+
+function computeDeltas(picks, playerStakes, winner) {
   const winnerEntries = Object.entries(picks).filter(([, pick]) => pick === winner);
   const loserEntries = Object.entries(picks).filter(([, pick]) => pick !== winner);
 
@@ -566,15 +555,34 @@ function calculatePlayerPoints(players, votes, match, wagers) {
       delta = 0;
     } else if (isWinner) {
       delta = totalWinnerStake > 0
-        ? (playerStakes[k] / totalWinnerStake) * totalLoserStake
+        ? Math.round(((playerStakes[k] / totalWinnerStake) * totalLoserStake) * 100) / 100
         : 0;
     } else {
       delta = -playerStakes[k];
     }
+    deltas[k] = { delta, pick, isWinner, stake: playerStakes[k] };
+  }
 
-    deltas[k] = { delta, pick, isWinner, stake: playerStakes[k], random: k in randomPicks };
+  return deltas;
+}
 
-    const newPoints = players[k].points + delta;
+function calculatePlayerPoints(players, votes, match, wagers) {
+  const winner = getWinner(match);
+  if (!winner) {
+    logger.warn(`Match ${match.id} has no result, skipping point calculation`);
+    return { votedPlayers: [], randomPicks: {}, deltas: {} };
+  }
+
+  const { picks, votedPlayers, randomPicks, playerStakes } =
+    resolveMatchPicks(Object.keys(players), votes, match, wagers);
+
+  const rawDeltas = computeDeltas(picks, playerStakes, winner);
+
+  const deltas = {};
+  for (const [k, d] of Object.entries(rawDeltas)) {
+    deltas[k] = { ...d, random: k in randomPicks };
+
+    const newPoints = Math.round((players[k].points + d.delta) * 100) / 100;
     players[k] = {
       ...players[k],
       matches: players[k].matches + 1,
@@ -593,7 +601,7 @@ export async function updateGroupStandings(match) {
   if (!match.hasResult || match.result == null) return;
   if (match.groupUpdated) return;
 
-  const groups = (await readTournamentData('groups')).val();
+  const groups = await readTournamentData('groups');
   if (!groups) return;
 
   let groupKey = null;
@@ -665,7 +673,6 @@ function resolveCurses(players, curses, match, votingObj, votedPlayers, randomPi
     if (targetVote === null) continue;
 
     const targetCorrect = targetVote === winner;
-    const CURSE_PTS = 5;
 
     if (targetCorrect) {
       players[curserId].points -= CURSE_PTS;

@@ -91,6 +91,22 @@ export async function execute(interaction) {
       return;
     }
 
+    if (matchData?.date) {
+      const kickoff = Date.parse(matchData.date);
+      const elapsed = Date.now() - kickoff;
+      const MIN_90 = 90 * 60 * 1000;
+      if (elapsed < MIN_90) {
+        const remaining = Math.ceil((MIN_90 - elapsed) / 60000);
+        const embed = new EmbedBuilder()
+          .setTitle('⏳  Chưa đủ 90 phút')
+          .setDescription(`Trận \`#${matchId + 1}\` mới đá được chút xíu — chờ thêm **${remaining} phút** nữa rồi hãy cập nhật.`)
+          .setColor(0xFEE75C)
+          .setTimestamp();
+        await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+        return;
+      }
+    }
+
     const result = await updateMatchResult(matchId, homeScore, awayScore);
 
     if (!result.success) {

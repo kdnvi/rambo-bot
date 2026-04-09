@@ -44,6 +44,16 @@ const MENTION_LINES = [
   'Rambo xin phép không trả lời vì... không liên quan. ⚽',
   'Nếu không phải bóng đá thì Rambo sẽ giả vờ không thấy. 🫣',
   'Alo, Rambo nè. Nói chuyện bóng đá thôi, cảm ơn. 📞',
+  'Bạn nghĩ tag Rambo là Rambo vui lắm hả? Sai. 😐',
+  'Rambo đang thiền. Đừng phá. 🧘',
+  'Tui nghe nè. Nhưng tui chọn im lặng... à thôi, nói luôn: vote đi. ⚽',
+  'Tag Rambo 10 lần cũng không thêm điểm đâu nha.',
+  'Rambo nhận được tin nhắn. Rambo phân loại: rác. 🗑️',
+  'Bạn vừa làm Rambo tốn pin. Cảm ơn. 🔋',
+  'Rambo đề nghị bạn dồn năng lượng vào vote thay vì tag bot.',
+  'Nãy giờ đọc hoài mà không thấy chữ "bóng đá" nào hết.',
+  'Rambo có quyền im lặng. Nhưng hôm nay Rambo chọn nói. Vote chưa?',
+  'Đây là lần thứ mấy bạn tag Rambo hôm nay? Rambo đếm hết á. 📊',
 ];
 
 const REPLY_CHANCE = 0.5;
@@ -53,7 +63,7 @@ export async function execute(message) {
   if (message.author.bot) return;
 
   const botId = message.client.user.id;
-  const isMentioned = message.mentions.has(botId) && !message.reference;
+  const isMentioned = message.mentions.has(botId);
   const isReply = !!message.reference;
 
   if (!isMentioned && !isReply) return;

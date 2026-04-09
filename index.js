@@ -39,17 +39,24 @@ const eventFiles = readdirSync(eventsPath).filter(file => file.endsWith('.js'));
 
 for (const file of eventFiles) {
   const filePath = join(eventsPath, file);
-  const event = await import(filePath);
-  if (event.once) {
-    client.once(event.name, (...args) => event.execute(...args));
-  } else {
-    client.on(event.name, (...args) => event.execute(...args));
+  try {
+    const event = await import(filePath);
+    if (event.once) {
+      client.once(event.name, (...args) => event.execute(...args));
+    } else {
+      client.on(event.name, (...args) => event.execute(...args));
+    }
+  } catch (err) {
+    logger.error(`Failed to load event at ${filePath}: ${err.message}`);
   }
 }
 
 async function shutdown(signal) {
   logger.info(`Received ${signal}, shutting down...`);
-  await notifyDev(client, 'stop');
+  await Promise.race([
+    notifyDev(client, 'stop'),
+    new Promise((resolve) => setTimeout(resolve, 5000)),
+  ]);
   client.destroy();
   process.exit(0);
 }
@@ -57,4 +64,7 @@ async function shutdown(signal) {
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));
 
-client.login(process.env.TOKEN);
+client.login(process.env.TOKEN).catch((err) => {
+  logger.error(`Failed to login: ${err.message}`);
+  process.exit(1);
+});

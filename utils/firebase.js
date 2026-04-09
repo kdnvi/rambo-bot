@@ -120,7 +120,7 @@ export async function readMatchVotes(matchId, messageId) {
   const hit = getCached(cacheKey);
   if (hit !== undefined) return hit;
   const parentHit = getSubkey('votes', `${matchId - 1}/${messageId}`);
-  if (parentHit !== undefined) {
+  if (parentHit !== undefined && parentHit !== null) {
     setCached(cacheKey, parentHit);
     return parentHit;
   }
@@ -141,9 +141,9 @@ export async function readUserWagers(userId) {
   const hit = getCached(cacheKey);
   if (hit !== undefined) return hit || {};
   const parentHit = getSubkey('wagers', userId);
-  if (parentHit !== undefined) {
+  if (parentHit !== undefined && parentHit !== null) {
     setCached(cacheKey, parentHit);
-    return parentHit || {};
+    return parentHit;
   }
   const gen = getGeneration(cacheKey);
   const snapshot = await db.ref(`tournament/wagers/${userId}`).once('value');
@@ -192,9 +192,9 @@ export async function readPlayerBadges(userId) {
   const hit = getCached(cacheKey);
   if (hit !== undefined) return hit || {};
   const parentHit = getSubkey('badges', userId);
-  if (parentHit !== undefined) {
+  if (parentHit !== undefined && parentHit !== null) {
     setCached(cacheKey, parentHit);
-    return parentHit || {};
+    return parentHit;
   }
   const gen = getGeneration(cacheKey);
   const snapshot = await db.ref(`tournament/badges/${userId}`).once('value');
@@ -222,6 +222,12 @@ export async function updateGroupTeam(groupKey, teamName, stats) {
   await ref.update(stats);
   bustPrefix('groups');
   logger.info(`Updated group ${groupKey.toUpperCase()} team [${teamName}]: P${stats.played} W${stats.won} D${stats.drawn} L${stats.lost} GD${stats.goalDifference} Pts${stats.points}`);
+}
+
+export async function saveMatchRandomPicks(matchIndex, randomPicks) {
+  if (!randomPicks || Object.keys(randomPicks).length === 0) return;
+  const ref = db.ref(`tournament/matches/${matchIndex}/randomPicks`);
+  await ref.set(randomPicks);
 }
 
 export async function incrementVoteChange(matchId, userId) {

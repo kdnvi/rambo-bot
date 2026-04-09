@@ -43,7 +43,8 @@ class DiscordTransport extends TransportStream {
     try {
       const channel = await this._client.channels.fetch(channelId);
       while (this._queue.length > 0) {
-        await channel.send(this._queue.shift());
+        await channel.send(this._queue[0]);
+        this._queue.shift();
       }
     } catch {
       // avoid recursive error logging

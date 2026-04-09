@@ -7,44 +7,56 @@ export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
   .setDescription('Sợ rồi hả? Huỷ double-down trước giờ đá');
 
+const pendingUsers = new Set();
+
 export const execute = withErrorHandler(async (interaction) => {
   const userId = interaction.user.id;
 
-  const players = await requirePlayer(interaction, userId);
-  if (!players) return;
-
-  const allMatches = await requireMatches(interaction);
-  if (!allMatches) return;
-
-  const myWagers = await readUserWagers(userId);
-  const found = findActiveEntry(myWagers, allMatches, (wager) => wager.doubleDown);
-
-  if (!found) {
-    const embed = new EmbedBuilder()
-      .setTitle('🤷  Không có Double-Down')
-      .setDescription('Đang không có double-down nào để huỷ cả.')
-      .setColor(0xFEE75C);
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+  if (pendingUsers.has(userId)) {
+    await interaction.reply({ content: '⏳ Đang xử lý, đợi xíu...', flags: MessageFlags.Ephemeral });
     return;
   }
+  pendingUsers.add(userId);
 
-  const activeMatchId = found.matchId;
-  const activeMatch = found.match;
+  try {
+    const players = await requirePlayer(interaction, userId);
+    if (!players) return;
 
-  await removePlayerWager(userId, activeMatchId, 'doubleDown');
+    const allMatches = await requireMatches(interaction);
+    if (!allMatches) return;
 
-  const chickenLine = await pickLine('chicken');
+    const myWagers = await readUserWagers(userId);
+    const found = findActiveEntry(myWagers, allMatches, (wager) => wager.doubleDown);
 
-  const embed = new EmbedBuilder()
-    .setTitle('🐔  HUỶ DOUBLE-DOWN')
-    .setDescription(
-      `**${interaction.user}** ${chickenLine}\n\n` +
-      `⏫ Huỷ double-down Trận #${activeMatchId} ` +
-      `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
-      'Quay về mức cược bình thường.'
-    )
-    .setColor(0xFEE75C)
-    .setTimestamp();
+    if (!found) {
+      const embed = new EmbedBuilder()
+        .setTitle('🤷  Không có Double-Down')
+        .setDescription('Đang không có double-down nào để huỷ cả.')
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
 
-  await interaction.reply({ embeds: [embed] });
+    const activeMatchId = found.matchId;
+    const activeMatch = found.match;
+
+    await removePlayerWager(userId, activeMatchId, 'doubleDown');
+
+    const chickenLine = await pickLine('chicken');
+
+    const embed = new EmbedBuilder()
+      .setTitle('🐔  HUỶ DOUBLE-DOWN')
+      .setDescription(
+        `**${interaction.user}** ${chickenLine}\n\n` +
+        `⏫ Huỷ double-down Trận #${activeMatchId} ` +
+        `(${activeMatch.home.toUpperCase()} vs ${activeMatch.away.toUpperCase()}).\n` +
+        'Quay về mức cược bình thường.'
+      )
+      .setColor(0xFEE75C)
+      .setTimestamp();
+
+    await interaction.reply({ embeds: [embed] });
+  } finally {
+    pendingUsers.delete(userId);
+  }
 });

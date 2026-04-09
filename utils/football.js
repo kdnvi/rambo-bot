@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam, saveMatchRandomPicks } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
 import { getChannelId } from './command.js';
@@ -211,9 +211,28 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         if (!winner) continue;
         const key = `${match.id - 1}`;
         const matchVotes = getMatchVotes(votes, key, match.messageId);
+        const storedRandomPicks = match.randomPicks || {};
 
-        const { picks, randomPicks, playerStakes } = resolveMatchPicks(playerIds, matchVotes, match, wagers);
-        const deltas = computeDeltas(picks, playerStakes, winner);
+        const picks = {};
+        if (matchVotes) {
+          for (const [k, v] of Object.entries(matchVotes)) {
+            if (playerIds.includes(k)) picks[k] = v.vote;
+          }
+        }
+        for (const k of playerIds) {
+          if (!(k in picks)) picks[k] = storedRandomPicks[k] || null;
+        }
+
+        const baseStake = getMatchStake(match.id);
+        const playerStakes = {};
+        for (const k of Object.keys(picks)) {
+          if (picks[k] === null) continue;
+          const hasDoubleDown = wagers?.[k]?.[match.id]?.doubleDown === true;
+          playerStakes[k] = baseStake * (hasDoubleDown ? 2 : 1);
+        }
+
+        const validPicks = Object.fromEntries(Object.entries(picks).filter(([, v]) => v !== null));
+        const deltas = computeDeltas(validPicks, playerStakes, winner);
 
         for (const [userId, d] of Object.entries(deltas)) {
           scores[userId] += d.delta;
@@ -223,7 +242,7 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         if (matchCurses) {
           for (const [curserId, { target }] of Object.entries(matchCurses)) {
             if (!(curserId in scores) || !(target in scores)) continue;
-            const targetVote = matchVotes?.[target]?.vote ?? randomPicks[target] ?? null;
+            const targetVote = matchVotes?.[target]?.vote ?? storedRandomPicks[target] ?? null;
             if (targetVote === null) continue;
             const targetCorrect = targetVote === winner;
             scores[curserId] += targetCorrect ? -CURSE_PTS : CURSE_PTS;
@@ -336,12 +355,17 @@ async function checkRivalry(allMatches, votes, players, users) {
 const calculationLock = new Set();
 
 export async function calculateMatches(matches, client) {
-  const toProcess = matches.filter((m) => !calculationLock.has(m.id));
+  const toProcess = [];
+  for (const m of matches) {
+    if (!calculationLock.has(m.id)) {
+      calculationLock.add(m.id);
+      toProcess.push(m);
+    }
+  }
   if (toProcess.length === 0) {
     logger.info('All matches already being calculated, skipping');
     return;
   }
-  for (const m of toProcess) calculationLock.add(m.id);
 
   try {
     const [votingObj, wagers, curses] = await Promise.all([
@@ -353,7 +377,7 @@ export async function calculateMatches(matches, client) {
     const players = await readPlayers();
     if (!players) {
       logger.warn('No players registered, skipping calculation');
-      return;
+      return {};
     }
 
     const calculatedIds = [];
@@ -361,8 +385,7 @@ export async function calculateMatches(matches, client) {
 
     for (const match of toProcess) {
       if (!match.messageId) {
-        logger.warn(`Skipped match ${match.id} due to empty message ID, consider to update manually.`);
-        continue;
+        logger.warn(`Match ${match.id} has no message ID — calculating with no votes`);
       }
 
       const key = `${match.id - 1}`;
@@ -377,16 +400,17 @@ export async function calculateMatches(matches, client) {
 
       matchDeltas[match.id] = deltas;
 
+      await saveMatchRandomPicks(match.id - 1, randomPicks);
       await updateMatch(match.id - 1, { isCalculated: true });
-      await updatePlayers(players);
       calculatedIds.push(match.id - 1);
-      logger.info(`Calculated and persisted match ${match.id} successfully`);
+      logger.info(`Calculated match ${match.id} successfully`);
     }
 
     if (calculatedIds.length > 0) {
-      logger.info(`Calculated ${calculatedIds.length} match(es) total`);
+      await updatePlayers(players);
+      logger.info(`Persisted player data after ${calculatedIds.length} match(es)`);
 
-      const players = await readPlayers();
+      const freshPlayers = await readPlayers();
       const allMatches = await readTournamentData('matches') || [];
       const completedMatches = allMatches
         .filter((m) => m.hasResult && (m.isCalculated || calculatedIds.includes(m.id - 1)))
@@ -394,7 +418,7 @@ export async function calculateMatches(matches, client) {
 
       const existingBadges = await readAllBadges();
       const newBadges = await checkAndAwardBadges({
-        players,
+        players: freshPlayers,
         completedMatches,
         votes: votingObj,
         wagers,
@@ -593,63 +617,74 @@ function calculatePlayerPoints(players, votes, match, wagers) {
 }
 
 const MAX_GROUP_STAGE_ID = 72;
+const groupLock = new Set();
 
 export async function updateGroupStandings(match) {
   if (match.id > MAX_GROUP_STAGE_ID) return;
   if (!match.hasResult || match.result == null) return;
   if (match.groupUpdated) return;
+  if (groupLock.has(match.id)) return;
+  groupLock.add(match.id);
 
-  const groups = await readTournamentData('groups');
-  if (!groups) return;
+  try {
+    const freshMatches = await readTournamentData('matches');
+    const freshMatch = freshMatches?.[match.id - 1];
+    if (freshMatch?.groupUpdated) return;
 
-  let groupKey = null;
-  for (const [key, teams] of Object.entries(groups)) {
-    if (match.home in teams && match.away in teams) {
-      groupKey = key;
-      break;
+    const groups = await readTournamentData('groups');
+    if (!groups) return;
+
+    let groupKey = null;
+    for (const [key, teams] of Object.entries(groups)) {
+      if (match.home in teams && match.away in teams) {
+        groupKey = key;
+        break;
+      }
     }
+
+    if (!groupKey) {
+      logger.warn(`Could not find group for match ${match.id}: ${match.home} vs ${match.away}`);
+      return;
+    }
+
+    const homeGoals = match.result.home;
+    const awayGoals = match.result.away;
+    const homeTeam = groups[groupKey][match.home];
+    const awayTeam = groups[groupKey][match.away];
+
+    const homeWon = homeGoals > awayGoals ? 1 : 0;
+    const awayWon = awayGoals > homeGoals ? 1 : 0;
+    const drawn = homeGoals === awayGoals ? 1 : 0;
+
+    const updatedHome = {
+      played: homeTeam.played + 1,
+      won: homeTeam.won + homeWon,
+      drawn: homeTeam.drawn + drawn,
+      lost: homeTeam.lost + awayWon,
+      for: homeTeam.for + homeGoals,
+      against: homeTeam.against + awayGoals,
+      goalDifference: homeTeam.goalDifference + homeGoals - awayGoals,
+      points: homeTeam.points + (homeWon ? 3 : drawn ? 1 : 0),
+    };
+
+    const updatedAway = {
+      played: awayTeam.played + 1,
+      won: awayTeam.won + awayWon,
+      drawn: awayTeam.drawn + drawn,
+      lost: awayTeam.lost + homeWon,
+      for: awayTeam.for + awayGoals,
+      against: awayTeam.against + homeGoals,
+      goalDifference: awayTeam.goalDifference + awayGoals - homeGoals,
+      points: awayTeam.points + (awayWon ? 3 : drawn ? 1 : 0),
+    };
+
+    await updateGroupTeam(groupKey, match.home, updatedHome);
+    await updateGroupTeam(groupKey, match.away, updatedAway);
+    await updateMatch(match.id - 1, { groupUpdated: true });
+    logger.info(`Updated group ${groupKey.toUpperCase()} standings for match ${match.id}`);
+  } finally {
+    groupLock.delete(match.id);
   }
-
-  if (!groupKey) {
-    logger.warn(`Could not find group for match ${match.id}: ${match.home} vs ${match.away}`);
-    return;
-  }
-
-  const homeGoals = match.result.home;
-  const awayGoals = match.result.away;
-  const homeTeam = groups[groupKey][match.home];
-  const awayTeam = groups[groupKey][match.away];
-
-  const homeWon = homeGoals > awayGoals ? 1 : 0;
-  const awayWon = awayGoals > homeGoals ? 1 : 0;
-  const drawn = homeGoals === awayGoals ? 1 : 0;
-
-  const updatedHome = {
-    played: homeTeam.played + 1,
-    won: homeTeam.won + homeWon,
-    drawn: homeTeam.drawn + drawn,
-    lost: homeTeam.lost + awayWon,
-    for: homeTeam.for + homeGoals,
-    against: homeTeam.against + awayGoals,
-    goalDifference: homeTeam.goalDifference + homeGoals - awayGoals,
-    points: homeTeam.points + (homeWon ? 3 : drawn ? 1 : 0),
-  };
-
-  const updatedAway = {
-    played: awayTeam.played + 1,
-    won: awayTeam.won + awayWon,
-    drawn: awayTeam.drawn + drawn,
-    lost: awayTeam.lost + homeWon,
-    for: awayTeam.for + awayGoals,
-    against: awayTeam.against + homeGoals,
-    goalDifference: awayTeam.goalDifference + awayGoals - homeGoals,
-    points: awayTeam.points + (awayWon ? 3 : drawn ? 1 : 0),
-  };
-
-  await updateGroupTeam(groupKey, match.home, updatedHome);
-  await updateGroupTeam(groupKey, match.away, updatedAway);
-  await updateMatch(match.id - 1, { groupUpdated: true });
-  logger.info(`Updated group ${groupKey.toUpperCase()} standings for match ${match.id}`);
 }
 
 function resolveCurses(players, curses, match, votingObj, randomPicks, deltas) {
@@ -673,11 +708,11 @@ function resolveCurses(players, curses, match, votingObj, randomPicks, deltas) {
     const targetCorrect = targetVote === winner;
 
     if (targetCorrect) {
-      players[curserId].points -= CURSE_PTS;
-      players[target].points += CURSE_PTS;
+      players[curserId].points = Math.round((players[curserId].points - CURSE_PTS) * 100) / 100;
+      players[target].points = Math.round((players[target].points + CURSE_PTS) * 100) / 100;
     } else {
-      players[curserId].points += CURSE_PTS;
-      players[target].points -= CURSE_PTS;
+      players[curserId].points = Math.round((players[curserId].points + CURSE_PTS) * 100) / 100;
+      players[target].points = Math.round((players[target].points - CURSE_PTS) * 100) / 100;
     }
 
     if (deltas[curserId]) deltas[curserId].delta += targetCorrect ? -CURSE_PTS : CURSE_PTS;

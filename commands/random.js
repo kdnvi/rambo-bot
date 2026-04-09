@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { readUserWagers, setPlayerWager, readMatchVotes, removeMatchVote } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager, readMatchVotes, removeMatchVote, readTournamentData } from '../utils/firebase.js';
 import { findNextMatch, updatePollEmbed } from '../utils/helper.js';
 import { withErrorHandler, requirePlayer, requireMatches } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
@@ -96,15 +96,20 @@ export const handleRandomButton = withErrorHandler(async (interaction) => {
   pendingConfirms.add(userId);
 
   try {
+    await interaction.deferUpdate();
+
     const [, matchIdStr] = interaction.customId.split('|');
     const matchId = parseInt(matchIdStr);
 
-    const allMatches = await requireMatches(interaction);
-    if (!allMatches) return;
+    const allMatches = await readTournamentData('matches');
+    if (!allMatches) {
+      await interaction.editReply({ content: '❌ Không có dữ liệu trận đấu.', embeds: [], components: [] });
+      return;
+    }
 
     const match = allMatches.find((m) => m.id === matchId);
-    if (!match) {
-      await interaction.update({ content: '❌ Không tìm thấy trận.', embeds: [], components: [] });
+    if (!match || Date.parse(match.date) < Date.now()) {
+      await interaction.editReply({ content: '⏰ Trận đã bắt đầu hoặc không tìm thấy.', embeds: [], components: [] });
       return;
     }
 
@@ -121,7 +126,6 @@ export const handleRandomButton = withErrorHandler(async (interaction) => {
 
 async function activateRandom(interaction, match, isUpdate = false) {
   await setPlayerWager(interaction.user.id, match.id, 'random');
-
 
   const randomLine = await pickLine('random');
 
@@ -140,7 +144,7 @@ async function activateRandom(interaction, match, isUpdate = false) {
     const doneEmbed = new EmbedBuilder()
       .setDescription('✅ Đã xoá vote và kích hoạt random.')
       .setColor(0x57F287);
-    await interaction.update({ embeds: [doneEmbed], components: [] });
+    await interaction.editReply({ embeds: [doneEmbed], components: [] });
     await interaction.followUp({ embeds: [embed] });
   } else {
     await interaction.reply({ embeds: [embed] });

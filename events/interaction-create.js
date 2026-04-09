@@ -1,7 +1,8 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, readTournamentConfig } from '../utils/firebase.js';
+import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, readTournamentConfig, removePlayerWager, readUserWagers } from '../utils/firebase.js';
 import { pick } from '../utils/helper.js';
+import { handleRandomButton } from '../commands/random.js';
 
 const DRUNK_LINES = [
   'chọn kiểu gì cũng không yên tâm... say hay sao? 🍺',
@@ -22,6 +23,10 @@ const LAST_SEC_LINES = [
 export const name = Events.InteractionCreate;
 export async function execute(interaction) {
   if (interaction.isButton()) {
+    if (interaction.customId.startsWith('random-')) {
+      return handleRandomButton(interaction);
+    }
+
     const [matchIdStr, teamId] = interaction.customId.split('|');
     const matchId = parseInt(matchIdStr);
 
@@ -47,6 +52,12 @@ export async function execute(interaction) {
       }
 
       await updateMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
+
+      const userWagers = await readUserWagers(interaction.user.id);
+      if (userWagers[matchId]?.type === 'random') {
+        await removePlayerWager(interaction.user.id, matchId);
+      }
+
       const votes = (await readMatchVotes(matchId, interaction.message.id)).val();
       const voteCount = votes ? Object.keys(votes).length : 0;
 

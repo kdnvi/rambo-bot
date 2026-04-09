@@ -109,6 +109,13 @@ export async function updateMatchVote(matchId, userId, vote, messageId) {
   logger.info(`Updated votes match ID [${matchId}] with message ID [${messageId}] of user ${userId}`);
 }
 
+export async function removeMatchVote(matchId, userId, messageId) {
+  const ref = db.ref(`tournament/votes/${matchId - 1}/${messageId}/${userId}`);
+  await ref.remove();
+  bustPrefix('votes');
+  logger.info(`Removed vote for match ID [${matchId}] message ID [${messageId}] of user ${userId}`);
+}
+
 export async function readMatchVotes(matchId, messageId) {
   const cacheKey = `votes/${matchId}/${messageId}`;
   const hit = getCached(cacheKey);

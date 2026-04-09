@@ -8,63 +8,77 @@ export const data = new SlashCommandBuilder()
   .setName('random')
   .setDescription('Giao số phận cho ông trời — random thay vì bị gán đội ít vote nhất');
 
+const pendingUsers = new Set();
+
 export const execute = withErrorHandler(async (interaction) => {
   const userId = interaction.user.id;
 
-  const players = await requirePlayer(interaction, userId);
-  if (!players) return;
-
-  const allMatches = await requireMatches(interaction);
-  if (!allMatches) return;
-
-  const match = findNextMatch(allMatches);
-  if (!match) {
-    await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
+  if (pendingUsers.has(userId)) {
+    await interaction.reply({ content: '⏳ Đang xử lý, đợi xíu...', flags: MessageFlags.Ephemeral });
     return;
   }
+  pendingUsers.add(userId);
 
-  const matchId = match.id;
-  const myWagers = await readUserWagers(userId);
+  try {
+    const players = await requirePlayer(interaction, userId);
+    if (!players) return;
 
-  if (myWagers[matchId]?.type === 'random') {
-    const embed = new EmbedBuilder()
-      .setTitle('⚠️  Đã kích hoạt rồi')
-      .setDescription(`Random đã bật cho trận \`#${matchId}\` rồi. Nằm chờ số phận thôi!`)
-      .setColor(0xFEE75C);
-    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
-    return;
-  }
+    const allMatches = await requireMatches(interaction);
+    if (!allMatches) return;
 
-  if (match.messageId) {
-    const votes = await readMatchVotes(matchId, match.messageId);
-    if (votes && votes[userId]) {
-      const currentVote = votes[userId].vote;
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId(`random-confirm|${matchId}`)
-          .setLabel('Xoá vote & random')
-          .setStyle(ButtonStyle.Danger),
-        new ButtonBuilder()
-          .setCustomId('random-cancel')
-          .setLabel('Giữ vote')
-          .setStyle(ButtonStyle.Secondary),
-      );
-
-      const embed = new EmbedBuilder()
-        .setTitle('⚠️  Bạn đã vote rồi')
-        .setDescription(
-          `Bạn đang chọn **${currentVote.toUpperCase()}** cho trận \`#${matchId}\`.\n\n` +
-          'Kích hoạt random sẽ **xoá vote** hiện tại. Chắc chưa?',
-        )
-        .setColor(0xFEE75C);
-
-      await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
+    const match = findNextMatch(allMatches);
+    if (!match) {
+      await interaction.reply({ content: '❌ Không có trận nào sắp tới.', flags: MessageFlags.Ephemeral });
       return;
     }
-  }
 
-  await activateRandom(interaction, match);
+    const matchId = match.id;
+    const myWagers = await readUserWagers(userId);
+
+    if (myWagers[matchId]?.type === 'random') {
+      const embed = new EmbedBuilder()
+        .setTitle('⚠️  Đã kích hoạt rồi')
+        .setDescription(`Random đã bật cho trận \`#${matchId}\` rồi. Nằm chờ số phận thôi!`)
+        .setColor(0xFEE75C);
+      await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
+      return;
+    }
+
+    if (match.messageId) {
+      const votes = await readMatchVotes(matchId, match.messageId);
+      if (votes && votes[userId]) {
+        const currentVote = votes[userId].vote;
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId(`random-confirm|${matchId}`)
+            .setLabel('Xoá vote & random')
+            .setStyle(ButtonStyle.Danger),
+          new ButtonBuilder()
+            .setCustomId('random-cancel')
+            .setLabel('Giữ vote')
+            .setStyle(ButtonStyle.Secondary),
+        );
+
+        const embed = new EmbedBuilder()
+          .setTitle('⚠️  Bạn đã vote rồi')
+          .setDescription(
+            `Bạn đang chọn **${currentVote.toUpperCase()}** cho trận \`#${matchId}\`.\n\n` +
+            'Kích hoạt random sẽ **xoá vote** hiện tại. Chắc chưa?',
+          )
+          .setColor(0xFEE75C);
+
+        await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
+        return;
+      }
+    }
+
+    await activateRandom(interaction, match);
+  } finally {
+    pendingUsers.delete(userId);
+  }
 });
+
+const pendingConfirms = new Set();
 
 export const handleRandomButton = withErrorHandler(async (interaction) => {
   if (interaction.customId === 'random-cancel') {
@@ -75,24 +89,34 @@ export const handleRandomButton = withErrorHandler(async (interaction) => {
     return;
   }
 
-  const [, matchIdStr] = interaction.customId.split('|');
-  const matchId = parseInt(matchIdStr);
-
-  const allMatches = await requireMatches(interaction);
-  if (!allMatches) return;
-
-  const match = allMatches.find((m) => m.id === matchId);
-  if (!match) {
-    await interaction.update({ content: '❌ Không tìm thấy trận.', embeds: [], components: [] });
+  const userId = interaction.user.id;
+  if (pendingConfirms.has(userId)) {
     return;
   }
+  pendingConfirms.add(userId);
 
-  if (match.messageId) {
-    await removeMatchVote(matchId, interaction.user.id, match.messageId);
-    await updatePollEmbed(interaction.client, match);
+  try {
+    const [, matchIdStr] = interaction.customId.split('|');
+    const matchId = parseInt(matchIdStr);
+
+    const allMatches = await requireMatches(interaction);
+    if (!allMatches) return;
+
+    const match = allMatches.find((m) => m.id === matchId);
+    if (!match) {
+      await interaction.update({ content: '❌ Không tìm thấy trận.', embeds: [], components: [] });
+      return;
+    }
+
+    if (match.messageId) {
+      await removeMatchVote(matchId, interaction.user.id, match.messageId);
+      await updatePollEmbed(interaction.client, match);
+    }
+
+    await activateRandom(interaction, match, true);
+  } finally {
+    pendingConfirms.delete(userId);
   }
-
-  await activateRandom(interaction, match, true);
 });
 
 async function activateRandom(interaction, match, isUpdate = false) {

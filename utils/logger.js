@@ -1,72 +1,59 @@
-import { createLogger, format as _format, transports as _transports } from 'winston';
-import TransportStream from 'winston-transport';
-
-const baseFormat = _format.combine(
-  _format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-  _format.errors({ stack: true }),
-  _format.printf(l => `${l.timestamp} ${l.level}: ${l.message}` + (l.splat !== undefined ? `${l.splat}` : '')),
-);
-
+const LEVELS = { error: 0, warn: 1, info: 2, debug: 3 };
+const CURRENT = LEVELS.debug;
 const MAX_QUEUE_SIZE = 50;
 
-class DiscordTransport extends TransportStream {
-  constructor(opts = {}) {
-    super({ ...opts, level: 'warn' });
-    this._client = null;
-    this._queue = [];
-    this._sending = false;
-  }
+function ts() {
+  return new Date().toISOString().replace('T', ' ').slice(0, 19);
+}
 
-  setClient(client) {
-    this._client = client;
-    this._flush();
-  }
+const _queue = [];
+let _client = null;
+let _sending = false;
 
-  log(info, callback) {
-    const icon = info.level === 'error' ? '🚨' : '⚠️';
-    const label = info.level.toUpperCase();
-    const text = info.stack || info.message;
-    const truncated = text.length > 1900 ? text.slice(0, 1900) + '…' : text;
-    if (this._queue.length >= MAX_QUEUE_SIZE) {
-      const dropped = this._queue.shift();
-      console.warn(`[Logger] Discord queue full (${MAX_QUEUE_SIZE}), dropped oldest message: ${dropped.slice(0, 80)}…`);
+async function _flush() {
+  const channelId = process.env.DEV_CHANNEL_ID;
+  if (!_client || !channelId || _sending || _queue.length === 0) return;
+  _sending = true;
+  try {
+    const channel = await _client.channels.fetch(channelId);
+    while (_queue.length > 0) {
+      await channel.send(_queue[0]);
+      _queue.shift();
     }
-    this._queue.push(`${icon} **${label}** — \`${info.timestamp}\`\n\`\`\`\n${truncated}\n\`\`\``);
-    this._flush();
-    callback();
-  }
-
-  async _flush() {
-    const channelId = process.env.DEV_CHANNEL_ID;
-    if (!this._client || !channelId || this._sending || this._queue.length === 0) return;
-    this._sending = true;
-    try {
-      const channel = await this._client.channels.fetch(channelId);
-      while (this._queue.length > 0) {
-        await channel.send(this._queue[0]);
-        this._queue.shift();
-      }
-    } catch {
-      // avoid recursive error logging
-    } finally {
-      this._sending = false;
-    }
+  } catch {
+    // avoid recursive error logging
+  } finally {
+    _sending = false;
   }
 }
 
-export const discordTransport = new DiscordTransport();
+function log(level, msg) {
+  if (LEVELS[level] > CURRENT) return;
+  const timestamp = ts();
+  const out = `${timestamp} ${level}: ${msg}`;
+  if (level === 'error') console.error(out);
+  else console.log(out);
 
-const logger = createLogger({
-  level: 'debug',
-  format: baseFormat,
-  transports: [
-    new _transports.Console({
-      format: _format.combine(_format.colorize(), baseFormat),
-    }),
-    new _transports.File({ filename: 'error.log', level: 'error' }),
-    new _transports.File({ filename: 'combined.log' }),
-    discordTransport,
-  ],
-});
+  if (LEVELS[level] <= LEVELS.warn) {
+    const icon = level === 'error' ? '🚨' : '⚠️';
+    const text = typeof msg === 'string' ? msg : String(msg);
+    const truncated = text.length > 1900 ? text.slice(0, 1900) + '…' : text;
+    if (_queue.length >= MAX_QUEUE_SIZE) _queue.shift();
+    _queue.push(`${icon} **${level.toUpperCase()}** — \`${timestamp}\`\n\`\`\`\n${truncated}\n\`\`\``);
+    _flush();
+  }
+}
 
-export default logger;
+export const discordTransport = {
+  setClient(client) {
+    _client = client;
+    _flush();
+  },
+};
+
+export default {
+  error: (m) => log('error', m),
+  warn:  (m) => log('warn', m),
+  info:  (m) => log('info', m),
+  debug: (m) => log('debug', m),
+};

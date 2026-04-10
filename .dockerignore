@@ -1,0 +1,16 @@
+node_modules/
+.git
+.env
+.env.*
+*.log
+.DS_Store
+.vscode
+.idea
+# Not needed at runtime
+Dockerfile
+.dockerignore
+.gitignore
+.editorconfig
+.eslintrc.json
+LICENSE
+readme.txt

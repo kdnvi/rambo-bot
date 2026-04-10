@@ -3,7 +3,7 @@ import { readTournamentData } from '../utils/firebase.js';
 import { withErrorHandler, getTournamentName } from '../utils/command.js';
 
 export const data = new SlashCommandBuilder()
-  .setName('worldcup-playoff')
+  .setName('playoff')
   .setDescription('Nhánh đấu vòng 32 — ai gặp ai, run chưa?');
 
 const R32_MATCH_IDS = Array.from({ length: 16 }, (_, i) => 73 + i);

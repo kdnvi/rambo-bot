@@ -23,13 +23,28 @@ npm install
 * Dev bot locally (reads from .env):
 npm run dev
 
-* Serve:
-npm start
+* Deploy slash commands:
+npm run deploy:commands
+
+Docker
+-----
+
+* Build and push via GitHub Actions (recommended):
+  Trigger from the Actions tab on GitHub, or via CLI:
+  gh workflow run deploy
+
+* Build and push locally:
+npm run docker:deploy
+
+* Or separately:
+npm run docker:build
+npm run docker:push
 
 GCP Deployment (e2-micro free tier)
 -----
 
 Prerequisites: the VM and Firebase must be in the same GCP project.
+The Docker image's entrypoint automatically fetches config from GCP instance metadata.
 
 1. Find your VM's service account:
    gcloud compute instances describe <INSTANCE> --zone <ZONE> --format='get(serviceAccounts[0].email)'
@@ -68,18 +83,16 @@ Prerequisites: the VM and Firebase must be in the same GCP project.
      match-post-before-mins=720,\
      vote-reminder-before-mins=30
 
-5. SSH into the VM and run the setup script:
-   curl -fsSL https://raw.githubusercontent.com/kdnvi/rambo-bot/main/deploy/setup.sh | sudo bash
+5. SSH into the VM, install Docker, and run the bot:
+   curl -fsSL https://get.docker.com | sh
+   docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest
 
-6. Start the bot:
-   sudo systemctl start rambo-bot
+6. View logs:
+   docker logs -f rambo-bot
 
-7. View logs:
-   sudo journalctl -fu rambo-bot
-
-8. Deploy updates:
-   cd /opt/rambo-bot && sudo git pull && sudo npm ci --omit=dev
-   sudo systemctl restart rambo-bot
+7. Deploy updates (from your local machine, then on the VM):
+   npm run docker:deploy
+   docker pull ghcr.io/kdnvi/rambo-bot:latest && docker rm -f rambo-bot && docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest
 
 Tournament data
 -----

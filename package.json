@@ -6,9 +6,11 @@
   "type": "module",
   "scripts": {
     "start": "node index.js",
-    "deplc": "node --env-file=.env deploy-commands.js",
-    "deplc:runtime": "node --env-file=.env.runtime deploy-commands.js",
-    "dev": "node --env-file=.env index.js"
+    "deploy:commands": "node --env-file=.env deploy-commands.js",
+    "dev": "node --env-file=.env index.js",
+    "docker:build": "docker build -t ghcr.io/kdnvi/rambo-bot:latest .",
+    "docker:push": "docker push ghcr.io/kdnvi/rambo-bot:latest",
+    "docker:deploy": "npm run docker:build && npm run docker:push"
   },
   "repository": {
     "type": "git",
@@ -26,8 +28,7 @@
   "dependencies": {
     "cron": "^4.3.3",
     "discord.js": "^14.22.1",
-    "firebase-admin": "^13.5.0",
-    "winston": "^3.17.0"
+    "firebase-admin": "^13.5.0"
   },
   "devDependencies": {
     "eslint": "^9.35.0"

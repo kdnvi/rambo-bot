@@ -2,6 +2,7 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readCurses, removeCurse } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
+import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('uncurse')
@@ -64,10 +65,12 @@ export const execute = withErrorHandler(async (interaction) => {
         const originalMsg = await channel.messages.fetch(originalMessageId);
         await originalMsg.reply({ embeds: [embed] });
         await interaction.reply({ content: '🕊️ Đã gỡ lời nguyền.', flags: MessageFlags.Ephemeral });
-      } catch {
+      } catch (err) {
+        logger.error(`uncurse reply failed (messageId=${originalMessageId}):`, err);
         await interaction.reply({ embeds: [embed] });
       }
     } else {
+      logger.warn(`uncurse: no messageId found, entry keys: ${Object.keys(found.entry[userId] || {})}`);
       await interaction.reply({ embeds: [embed] });
     }
   } finally {

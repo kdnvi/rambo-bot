@@ -149,8 +149,9 @@ async function activateRandom(interaction, match, isUpdate = false) {
     const sent = await interaction.followUp({ embeds: [embed] });
     sentId = sent.id;
   } else {
-    const response = await interaction.reply({ embeds: [embed], withResponse: true });
-    sentId = response.resource.message.id;
+    await interaction.reply({ embeds: [embed] });
+    const sent = await interaction.fetchReply();
+    sentId = sent.id;
   }
   await setWagerMessageId(interaction.user.id, match.id, 'random', sentId);
 }

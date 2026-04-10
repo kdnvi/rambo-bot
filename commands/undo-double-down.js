@@ -2,6 +2,7 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readUserWagers, removePlayerWager, removeWagerMessageId } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
+import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
@@ -66,10 +67,12 @@ export const execute = withErrorHandler(async (interaction) => {
         const originalMsg = await channel.messages.fetch(originalMessageId);
         await originalMsg.reply({ embeds: [embed] });
         await interaction.reply({ content: '🐔 Đã huỷ double-down.', flags: MessageFlags.Ephemeral });
-      } catch {
+      } catch (err) {
+        logger.error(`undo-double-down reply failed (messageId=${originalMessageId}):`, err);
         await interaction.reply({ embeds: [embed] });
       }
     } else {
+      logger.warn(`undo-double-down: no messageId found, entry keys: ${Object.keys(found.entry)}`);
       await interaction.reply({ embeds: [embed] });
     }
   } finally {

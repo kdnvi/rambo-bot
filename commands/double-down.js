@@ -80,8 +80,9 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
-    const response = await interaction.reply({ embeds: [embed], withResponse: true });
-    await setWagerMessageId(userId, matchId, 'doubleDown', response.resource.message.id);
+    await interaction.reply({ embeds: [embed] });
+    const sent = await interaction.fetchReply();
+    await setWagerMessageId(userId, matchId, 'doubleDown', sent.id);
   } finally {
     pendingUsers.delete(userId);
   }

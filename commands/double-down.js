@@ -81,7 +81,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setTimestamp();
 
     const response = await interaction.reply({ embeds: [embed], withResponse: true });
-    await setWagerMessageId(userId, matchId, response.resource.message.id);
+    await setWagerMessageId(userId, matchId, 'doubleDown', response.resource.message.id);
   } finally {
     pendingUsers.delete(userId);
   }

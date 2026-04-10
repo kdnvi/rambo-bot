@@ -2,7 +2,6 @@ import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readUserWagers, removePlayerWager, removeWagerMessageId } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
-import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
@@ -40,12 +39,11 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const activeMatchId = found.matchId;
     const activeMatch = found.match;
-    const originalMessageId = found.entry.messageId;
-    logger.info(`undo-double-down: matchId=${activeMatchId}, messageId=${originalMessageId}, entry=${JSON.stringify(found.entry)}`);
+    const originalMessageId = found.entry.doubleDownMessageId;
 
     await Promise.all([
       removePlayerWager(userId, activeMatchId, 'doubleDown'),
-      removeWagerMessageId(userId, activeMatchId),
+      removeWagerMessageId(userId, activeMatchId, 'doubleDown'),
     ]);
 
     const chickenLine = await pickLine('chicken');

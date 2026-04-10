@@ -159,14 +159,16 @@ export async function setPlayerWager(userId, matchId, flag) {
   logger.info(`Set ${flag} wager for user [${userId}] on match [${matchId}]`);
 }
 
-export async function setWagerMessageId(userId, matchId, messageId) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}/messageId`);
+export async function setWagerMessageId(userId, matchId, flag, messageId) {
+  const key = `${flag}MessageId`;
+  const ref = db.ref(`tournament/wagers/${userId}/${matchId}/${key}`);
   await ref.set(messageId);
   bustPrefix('wagers');
 }
 
-export async function removeWagerMessageId(userId, matchId) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}/messageId`);
+export async function removeWagerMessageId(userId, matchId, flag) {
+  const key = `${flag}MessageId`;
+  const ref = db.ref(`tournament/wagers/${userId}/${matchId}/${key}`);
   await ref.remove();
   bustPrefix('wagers');
 }

@@ -445,9 +445,9 @@ async function clearAnnouncementMessageIds(matches, wagers, curses) {
     for (const match of matches) {
       if (wagers) {
         for (const [userId, userWagers] of Object.entries(wagers)) {
-          if (userWagers?.[match.id]?.messageId) {
-            removals.push(removeWagerMessageId(userId, match.id));
-          }
+          const mw = userWagers?.[match.id];
+          if (mw?.doubleDownMessageId) removals.push(removeWagerMessageId(userId, match.id, 'doubleDown'));
+          if (mw?.randomMessageId) removals.push(removeWagerMessageId(userId, match.id, 'random'));
         }
       }
       if (curses?.[match.id]) {

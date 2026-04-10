@@ -45,10 +45,10 @@ export async function execute(interaction) {
 
       const userWagers = await readUserWagers(interaction.user.id);
       if (userWagers[matchId]?.random) {
-        const randomMsgId = userWagers[matchId]?.messageId;
+        const randomMsgId = userWagers[matchId]?.randomMessageId;
         await Promise.all([
           removePlayerWager(interaction.user.id, matchId, 'random'),
-          removeWagerMessageId(interaction.user.id, matchId),
+          removeWagerMessageId(interaction.user.id, matchId, 'random'),
         ]);
         if (randomMsgId) {
           try {

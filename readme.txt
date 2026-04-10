@@ -1,7 +1,11 @@
 Our Discord bot, its name is Rambo
 -----
 
-* Environment variables (add to `.env` for local dev, or set as GCP instance metadata for production):
+Environment variables
+-----
+
+Add to `.env` for local dev, or set as GCP instance metadata for production:
+
 TOKEN=<your_bot_token>
 APP_ID=<your_bot_application_id>
 GUILD_ID=<your_guild_id>
@@ -17,48 +21,46 @@ VOTE_REMINDER_BEFORE_MINS=30       (optional, default 30 — remind unvoted play
 Local development
 -----
 
-* Install dependencies:
 npm install
+npm run dev                   # run bot locally (reads from .env)
+npm run deploy:commands       # register slash commands with Discord
 
-* Dev bot locally (reads from .env):
-npm run dev
-
-* Deploy slash commands:
-npm run deploy:commands
-
-Docker
+Docker (local)
 -----
 
-* Build and push via GitHub Actions (automatic on push to main):
-  Or trigger manually from the Actions tab / CLI:
+npm run docker:build          # build image
+npm run docker:push           # push to ghcr.io
+npm run docker:deploy         # build + push
+
+CI/CD (GitHub Actions)
+-----
+
+Two workflows in .github/workflows/:
+  build.yml  — builds and pushes Docker image to ghcr.io
+               triggers on push to main, or manually
+  deploy.yml — SSHs into the GCP VM, pulls latest image, restarts container
+               triggers after a successful build, or manually
+
+Trigger manually:
   gh workflow run build
+  gh workflow run deploy
 
-* Build and push locally:
-npm run docker:deploy
+Required repo secret (Settings > Secrets and variables > Actions > Secrets):
+  GCP_SA_KEY          — GCP service account JSON key
 
-* Or separately:
-npm run docker:build
-npm run docker:push
-
-GitHub Actions (CI/CD)
------
-
-Build runs automatically on push to main. Deploy runs after a successful build.
-Both can be triggered manually: gh workflow run build / gh workflow run deploy
-
-Required GitHub repo secrets (Settings > Secrets and variables > Actions > Secrets):
-  GCP_SA_KEY          — GCP service account JSON key (see setup below)
-
-Required GitHub repo variables (Settings > Secrets and variables > Actions > Variables):
+Required repo variables (Settings > Secrets and variables > Actions > Variables):
   GCE_INSTANCE        — GCP VM instance name
   GCE_ZONE            — GCP VM zone (e.g. us-central1-a)
 
-To create the GCP service account and add the secret:
+Service account setup:
   gcloud iam service-accounts create github-deploy \
     --display-name="GitHub Actions Deploy"
   gcloud projects add-iam-policy-binding <PROJECT_ID> \
     --member="serviceAccount:github-deploy@<PROJECT_ID>.iam.gserviceaccount.com" \
     --role="roles/compute.instanceAdmin.v1"
+  gcloud projects add-iam-policy-binding <PROJECT_ID> \
+    --member="serviceAccount:github-deploy@<PROJECT_ID>.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountUser"
   gcloud iam service-accounts keys create gcp-sa-key.json \
     --iam-account=github-deploy@<PROJECT_ID>.iam.gserviceaccount.com
   gh secret set GCP_SA_KEY < gcp-sa-key.json
@@ -66,14 +68,16 @@ To create the GCP service account and add the secret:
   gh variable set GCE_ZONE --body "<ZONE>"
   rm gcp-sa-key.json
 
-GCP Deployment (e2-micro free tier)
+GCP VM setup (one-time)
 -----
 
 Prerequisites: the VM and Firebase must be in the same GCP project.
-The Docker image's entrypoint automatically fetches config from GCP instance metadata.
+The Docker image's entrypoint fetches config from GCP instance metadata on startup.
+The deploy action installs Docker on the VM automatically if needed.
 
 1. Find your VM's service account:
-   gcloud compute instances describe <INSTANCE> --zone <ZONE> --format='get(serviceAccounts[0].email)'
+   gcloud compute instances describe <INSTANCE> --zone <ZONE> \
+     --format='get(serviceAccounts[0].email)'
 
 2. Grant it Firebase Realtime Database access:
    gcloud projects add-iam-policy-binding <PROJECT_ID> \
@@ -95,7 +99,7 @@ The Docker image's entrypoint automatically fetches config from GCP instance met
      --scopes=https://www.googleapis.com/auth/firebase.database,https://www.googleapis.com/auth/userinfo.email,https://www.googleapis.com/auth/logging.write
    gcloud compute instances start <INSTANCE> --zone=<ZONE>
 
-4. Set instance metadata (via console or gcloud CLI):
+4. Set instance metadata:
    gcloud compute instances add-metadata <INSTANCE> --zone <ZONE> --metadata \
      token=<BOT_TOKEN>,\
      app-id=<APP_ID>,\
@@ -109,52 +113,36 @@ The Docker image's entrypoint automatically fetches config from GCP instance met
      match-post-before-mins=720,\
      vote-reminder-before-mins=30
 
-5. SSH into the VM and install Docker:
-   curl -fsSL https://get.docker.com | sh
-
-6. First run (subsequent deploys are automated via GitHub Actions):
-   docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest
-
-7. View logs:
-   docker logs -f rambo-bot
+5. View logs:
+   gcloud compute ssh <INSTANCE> --zone <ZONE> --command 'docker logs -f rambo-bot'
 
 Tournament data
 -----
 
-* Tournament data (matches, groups, config) lives entirely in Firebase
-  under the `tournament/` path. See templates/ for reference JSON files.
+Tournament data lives in Firebase under `tournament/`.
 
-* To set up a new tournament, push the template to Firebase:
+Upload tournament data:
   firebase database:set /tournament templates/worldcup2026.json --project <PROJECT_ID>
 
-* Template files:
-  templates/worldcup2026.json       — production (full 104-match bracket)
-  templates/worldcup2026-test.json  — testing (same structure, smaller dataset)
+Upload test data:
+  firebase database:set /tournament templates/worldcup2026-test.json --project <PROJECT_ID>
 
-* A template contains:
-  - config    — tournament name, rules text, channel overrides
-  - groups    — 12 groups (A–L) with 4 teams each, zeroed standings
-  - matches   — all matches (group stage + knockout), with dates, venues, and team codes
-
-* Validate a template before pushing:
+Validate a template before pushing:
   node validate-playoff.js
-
-* To update config (e.g. rulesText, channelId) without resetting the whole
-  tournament, edit directly in the Firebase console under tournament/config.
 
 Flavor text (bot personality)
 -----
 
-* All flavor text (roasts, curse lines, hype lines, etc.) is stored in
-  Firebase under the `flavor/` path and cached for 24 hours.
+All flavor text (roasts, curse lines, hype lines, etc.) is stored in
+Firebase under `flavor/` and cached for 24 hours.
 
-* To seed or reset flavor text from the template:
+Seed or reset flavor text:
   firebase database:set /flavor templates/flavor.json --project <PROJECT_ID>
 
-* To update lines without redeploying, edit directly in the Firebase
-  console. Changes take effect within 24 hours (or immediately on restart).
+To update lines without redeploying, edit directly in the Firebase console.
+Changes take effect within 24 hours (or immediately on restart).
 
-* See templates/flavor.json for all available keys:
+Available keys (see templates/flavor.json):
   drunk, last_sec, reply, mention, leader, bottom, all_win, all_lose,
   curse_win, curse_lose, curse, relief, roast, hype, chicken, random, rival
 

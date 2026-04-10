@@ -35,8 +35,9 @@ func (c *Client) ref(path string) *db.Ref {
 // --- Tournament config ---
 
 type TournamentConfig struct {
-	ChannelID string `json:"channelId"`
-	Name      string `json:"name"`
+	ChannelID  string `json:"channelId"`
+	Name       string `json:"name"`
+	RulesText  string `json:"rulesText,omitempty"`
 }
 
 func (c *Client) ReadTournamentConfig(ctx context.Context) (*TournamentConfig, error) {
@@ -64,6 +65,7 @@ type Match struct {
 	IsCalculated   bool         `json:"isCalculated"`
 	Result         *MatchResult `json:"result,omitempty"`
 	MessageID      string       `json:"messageId,omitempty"`
+	ChannelID      string       `json:"channelId,omitempty"`
 	Reminded       bool         `json:"reminded"`
 	ResultReminded bool         `json:"resultReminded"`
 	GroupUpdated   bool         `json:"groupUpdated"`

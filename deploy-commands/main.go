@@ -63,9 +63,12 @@ func buildCommands() []discord.CommandDefinition {
 		}},
 		{Name: "rank", Description: "Bảng xếp hạng — ai đầu bảng, ai đội sổ"},
 		{Name: "history", Description: "Lịch sử kết quả — nhìn lại quá khứ đau thương", Options: []discord.CommandOption{
-			{Type: discord.OptionInteger, Name: "count", Description: "Số trận (mặc định 5)", MinValue: intPtr(1), MaxValue: intPtr(10)},
+			{Type: discord.OptionUser, Name: "user", Description: "Soi ai (bỏ trống = soi mình)"},
+			{Type: discord.OptionInteger, Name: "count", Description: "Số trận muốn xem (mặc định 5)", MinValue: intPtr(1), MaxValue: intPtr(20)},
 		}},
-		{Name: "group", Description: "Bảng xếp hạng vòng bảng"},
+		{Name: "group", Description: "Bảng xếp hạng vòng bảng", Options: []discord.CommandOption{
+			{Type: discord.OptionString, Name: "name", Description: "Tên bảng (A–L), bỏ trống = xem hết"},
+		}},
 		{Name: "worldcup-playoff", Description: "Nhánh đấu vòng 32 — ai gặp ai, run chưa?"},
 		{Name: "random", Description: "Giao số phận cho ông trời — random thay vì bị gán đội ít vote nhất"},
 		{Name: "double-down", Description: "Nhân đôi cược — gan thì bấm, mỗi ngày 1 lần"},
@@ -79,8 +82,8 @@ func buildCommands() []discord.CommandDefinition {
 			{Type: discord.OptionInteger, Name: "home-score", Description: "Bàn đội nhà", Required: true, MinValue: intPtr(0), MaxValue: intPtr(99)},
 			{Type: discord.OptionInteger, Name: "away-score", Description: "Bàn đội khách", Required: true, MinValue: intPtr(0), MaxValue: intPtr(99)},
 		}},
-		{Name: "spam", Description: "Spam một tin nhắn vào channel", Options: []discord.CommandOption{
-			{Type: discord.OptionString, Name: "message", Description: "Nội dung spam", Required: true},
+		{Name: "spam", Description: "Spam một người cho vui", Options: []discord.CommandOption{
+			{Type: discord.OptionUser, Name: "user", Description: "Nạn nhân", Required: true},
 		}},
 		{Name: "rule", Description: "Xem luật chơi"},
 		{Name: "wall-of-shame", Description: "Bảng nhục — những kẻ thua đau nhất"},

@@ -18,7 +18,7 @@ vet: ## Run go vet
 	go vet ./...
 
 deploy-commands: ## Register slash commands with Discord
-	go run ./cmd/deploy-commands/
+	go run ./deploy-commands/
 
 docker-build: ## Build Docker image
 	docker build -t $(IMAGE):$(TAG) .

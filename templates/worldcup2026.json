@@ -1,0 +1,193 @@
+{
+  "config": {
+    "name": "World Cup 2026",
+    "shortName": "WC2026",
+    "rulesText": "**⚽ Dự Đoán World Cup 2026!**\nNghĩ mình rành bóng? Chứng minh đi. Đoán kết quả, vượt mặt bạn bè, giành ngôi vương. 🏆\n\n**📜 Cách chơi:**\n- Rambo đăng trận trước giờ đá. Bấm nút vote: **Đội nhà**, **Hoà**, hoặc **Đội khách**.\n- Đổi ý? Vote lại thoải mái, miễn bóng chưa lăn.\n- Lười vote? Rambo gán **cùng một đội ít vote nhất** cho tất cả người không vote. Muốn random thiệt? Gõ `/random`. 🎲\n- Tính kết quả sau 90 phút + hiệp phụ (không tính luân lưu).\n- Gõ `/register` để vào cuộc!\n\n**💰 Điểm — Tổng bằng không:**\n- Mỗi trận có mức cược. Sai thì mất, đúng thì chia nhau điểm phe thua theo tỷ lệ cược.\n- Tất cả đúng hoặc tất cả sai? Không ai được hay mất gì — **+0** cho cả hội.\n- Càng sâu giải, cược càng lớn:\n  Bảng & Vòng 32 = **10** | Vòng 16 = **15** | Tứ kết = **20** | Bán kết = **30** | Tranh 3 & CK = **50** 🔥\n\n**🃏 Chiêu đặc biệt:**\n- `/double-down` — Tự tin? Nhân đôi cược. Mỗi ngày 1 lần. Khôn hay dại tự chịu.\n- `/curse @player` — Nguyền ai đó ở trận tới. Người đó sai thì bạn ăn 5 điểm. Người đó đúng thì bạn mất 5 điểm. Chọn cho kỹ. 🧿\n- `/uncurse` — Hối hận? Gỡ bùa trước giờ đá.\n- `/undo-double-down` — Sợ rồi? Huỷ double-down trước giờ đá.\n- `/random` — Thay vì bị gán đội ít vote nhất, hệ thống sẽ random thiệt cho bạn. Đã vote rồi? Random sẽ xoá vote. Vote lại sau random? Vote mới sẽ thay thế. 🎲\n\n**⭐ MVP hôm nay:**\nHết trận trong ngày, ai ghi nhiều điểm nhất sẽ được vinh danh. Liệu đó là bạn?\n\n**🤖 Lệnh:**\n`/register` — Đăng ký chơi\n`/rule` — Cái bạn đang đọc đây\n`/rank` — Xem ai đầu bảng, ai đội sổ 👑\n`/stats [user]` — Thống kê & huy hiệu. Tag người khác để soi.\n`/history [user] [count]` — Lịch sử vote, mặc định 5 trận gần nhất.\n`/match [id]` — Chi tiết trận với 👑/🤡. Không có ID = trận gần nhất.\n`/schedule [count]` — Lịch sắp tới, mặc định 5 trận.\n`/group [name]` — Bảng đấu. Để trống = xem hết.\n`/random` — Giao cho số phận, random vote thay vì nhận đội ít vote nhất\n`/wall-of-shame` — Bảng phong thần: ai thua dài nhất, fail nặng nhất, nhục nhất."
+  },
+  "groups": {
+    "a": {
+      "mexico": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "south korea": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "south africa": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "czechia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "b": {
+      "canada": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "switzerland": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "qatar": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "bosnia and herzegovina": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "c": {
+      "brazil": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "morocco": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "scotland": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "haiti": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "d": {
+      "usa": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "australia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "paraguay": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "turkey": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "e": {
+      "germany": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "ecuador": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "ivory coast": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "curacao": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "f": {
+      "netherlands": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "japan": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "tunisia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "sweden": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "g": {
+      "belgium": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "iran": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "egypt": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "new zealand": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "h": {
+      "spain": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "uruguay": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "saudi arabia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "cape verde": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "i": {
+      "france": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "senegal": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "norway": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "iraq": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "j": {
+      "argentina": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "austria": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "algeria": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "jordan": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "k": {
+      "portugal": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "colombia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "uzbekistan": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "dr congo": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    },
+    "l": {
+      "england": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "croatia": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "panama": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 },
+      "ghana": { "rank": 0, "played": 0, "won": 0, "drawn": 0, "lost": 0, "for": 0, "against": 0, "goalDifference": 0, "points": 0 }
+    }
+  },
+  "matches": [
+    { "id": 1, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-11T19:00:00Z", "home": "mexico", "away": "south africa", "location": "Mexico City Stadium, Mexico City", "result": { "home": 0, "away": 0 } },
+    { "id": 2, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-12T02:00:00Z", "home": "south korea", "away": "czechia", "location": "Estadio Guadalajara, Guadalajara", "result": { "home": 0, "away": 0 } },
+    { "id": 3, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-12T19:00:00Z", "home": "canada", "away": "bosnia and herzegovina", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 4, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-13T01:00:00Z", "home": "usa", "away": "paraguay", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 5, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-13T19:00:00Z", "home": "qatar", "away": "switzerland", "location": "Levi's Stadium, San Francisco", "result": { "home": 0, "away": 0 } },
+    { "id": 6, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-13T22:00:00Z", "home": "brazil", "away": "morocco", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 7, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-14T01:00:00Z", "home": "haiti", "away": "scotland", "location": "Gillette Stadium, Boston", "result": { "home": 0, "away": 0 } },
+    { "id": 8, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-14T04:00:00Z", "home": "australia", "away": "turkey", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 9, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-14T17:00:00Z", "home": "germany", "away": "curacao", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 10, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-14T20:00:00Z", "home": "netherlands", "away": "japan", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 11, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-14T23:00:00Z", "home": "ivory coast", "away": "ecuador", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 12, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-15T02:00:00Z", "home": "sweden", "away": "tunisia", "location": "Estadio BBVA, Monterrey", "result": { "home": 0, "away": 0 } },
+    { "id": 13, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-15T16:00:00Z", "home": "spain", "away": "cape verde", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 14, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-15T19:00:00Z", "home": "belgium", "away": "egypt", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 15, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-15T22:00:00Z", "home": "saudi arabia", "away": "uruguay", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 16, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-16T01:00:00Z", "home": "iran", "away": "new zealand", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 17, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-16T19:00:00Z", "home": "france", "away": "senegal", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 18, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-16T22:00:00Z", "home": "iraq", "away": "norway", "location": "Gillette Stadium, Foxborough", "result": { "home": 0, "away": 0 } },
+    { "id": 19, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-17T01:00:00Z", "home": "argentina", "away": "algeria", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+    { "id": 20, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-17T04:00:00Z", "home": "austria", "away": "jordan", "location": "Levi's Stadium, Santa Clara", "result": { "home": 0, "away": 0 } },
+    { "id": 21, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-17T17:00:00Z", "home": "portugal", "away": "dr congo", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 22, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-17T20:00:00Z", "home": "england", "away": "croatia", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 23, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-17T23:00:00Z", "home": "ghana", "away": "panama", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 24, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-18T02:00:00Z", "home": "uzbekistan", "away": "colombia", "location": "Estadio Azteca, Mexico City", "result": { "home": 0, "away": 0 } },
+    { "id": 25, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-18T16:00:00Z", "home": "czechia", "away": "south africa", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 26, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-18T19:00:00Z", "home": "bosnia and herzegovina", "away": "switzerland", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 27, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-18T22:00:00Z", "home": "canada", "away": "qatar", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 28, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-19T01:00:00Z", "home": "mexico", "away": "south korea", "location": "Estadio Guadalajara, Guadalajara", "result": { "home": 0, "away": 0 } },
+    { "id": 29, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-19T19:00:00Z", "home": "usa", "away": "australia", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 30, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-19T22:00:00Z", "home": "scotland", "away": "morocco", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 31, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-20T01:00:00Z", "home": "brazil", "away": "haiti", "location": "Gillette Stadium, Boston", "result": { "home": 0, "away": 0 } },
+    { "id": 32, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-20T04:00:00Z", "home": "turkey", "away": "paraguay", "location": "Levi's Stadium, Santa Clara", "result": { "home": 0, "away": 0 } },
+    { "id": 33, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-20T17:00:00Z", "home": "tunisia", "away": "japan", "location": "Estadio BBVA, Monterrey", "result": { "home": 0, "away": 0 } },
+    { "id": 34, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-20T20:00:00Z", "home": "germany", "away": "ivory coast", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 35, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-21T00:00:00Z", "home": "ecuador", "away": "curacao", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+    { "id": 36, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-21T04:00:00Z", "home": "netherlands", "away": "sweden", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 37, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-21T16:00:00Z", "home": "spain", "away": "saudi arabia", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 38, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-21T19:00:00Z", "home": "belgium", "away": "iran", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 39, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-21T22:00:00Z", "home": "uruguay", "away": "cape verde", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 40, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-22T01:00:00Z", "home": "new zealand", "away": "egypt", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 41, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-22T17:00:00Z", "home": "argentina", "away": "austria", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 42, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-22T21:00:00Z", "home": "france", "away": "iraq", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 43, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-23T00:00:00Z", "home": "norway", "away": "senegal", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 44, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-23T03:00:00Z", "home": "jordan", "away": "algeria", "location": "Levi's Stadium, Santa Clara", "result": { "home": 0, "away": 0 } },
+    { "id": 45, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-23T17:00:00Z", "home": "portugal", "away": "uzbekistan", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 46, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-23T20:00:00Z", "home": "england", "away": "ghana", "location": "Gillette Stadium, Foxborough", "result": { "home": 0, "away": 0 } },
+    { "id": 47, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-23T23:00:00Z", "home": "panama", "away": "croatia", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 48, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-24T02:00:00Z", "home": "colombia", "away": "dr congo", "location": "Estadio Akron, Guadalajara", "result": { "home": 0, "away": 0 } },
+    { "id": 49, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T01:00:00Z", "home": "czechia", "away": "mexico", "location": "Mexico City Stadium, Mexico City", "result": { "home": 0, "away": 0 } },
+    { "id": 50, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T01:00:00Z", "home": "south africa", "away": "south korea", "location": "Estadio Monterrey, Monterrey", "result": { "home": 0, "away": 0 } },
+    { "id": 51, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-24T19:00:00Z", "home": "switzerland", "away": "canada", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 52, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-24T19:00:00Z", "home": "bosnia and herzegovina", "away": "qatar", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 53, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-24T22:00:00Z", "home": "scotland", "away": "brazil", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 54, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-24T22:00:00Z", "home": "morocco", "away": "haiti", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 55, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T20:00:00Z", "home": "ecuador", "away": "germany", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 56, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T20:00:00Z", "home": "curacao", "away": "ivory coast", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 57, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T23:00:00Z", "home": "tunisia", "away": "netherlands", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 58, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-25T23:00:00Z", "home": "japan", "away": "sweden", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+    { "id": 59, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-26T02:00:00Z", "home": "turkey", "away": "usa", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 60, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-26T02:00:00Z", "home": "paraguay", "away": "australia", "location": "Levi's Stadium, Santa Clara", "result": { "home": 0, "away": 0 } },
+    { "id": 61, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-26T19:00:00Z", "home": "norway", "away": "france", "location": "Gillette Stadium, Foxborough", "result": { "home": 0, "away": 0 } },
+    { "id": 62, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-26T19:00:00Z", "home": "senegal", "away": "iraq", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 63, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T00:00:00Z", "home": "new zealand", "away": "belgium", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 64, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T00:00:00Z", "home": "egypt", "away": "iran", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 65, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T00:00:00Z", "home": "uruguay", "away": "spain", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 66, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T00:00:00Z", "home": "cape verde", "away": "saudi arabia", "location": "Estadio Akron, Guadalajara", "result": { "home": 0, "away": 0 } },
+    { "id": 67, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-28T02:00:00Z", "home": "jordan", "away": "argentina", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+    { "id": 68, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-28T02:00:00Z", "home": "algeria", "away": "austria", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 69, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T21:00:00Z", "home": "panama", "away": "england", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 70, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T21:00:00Z", "home": "croatia", "away": "ghana", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 71, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T23:30:00Z", "home": "colombia", "away": "portugal", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 72, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-27T23:30:00Z", "home": "dr congo", "away": "uzbekistan", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+
+    { "id": 73, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-28T19:00:00Z", "home": "2A", "away": "2B", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 74, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-29T17:00:00Z", "home": "1C", "away": "2F", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 75, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-29T20:30:00Z", "home": "1E", "away": "3rd", "location": "Gillette Stadium, Foxborough", "result": { "home": 0, "away": 0 } },
+    { "id": 76, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-30T01:00:00Z", "home": "1F", "away": "2C", "location": "Estadio BBVA, Monterrey", "result": { "home": 0, "away": 0 } },
+    { "id": 77, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-30T17:00:00Z", "home": "2E", "away": "2I", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 78, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-06-30T21:00:00Z", "home": "1I", "away": "3rd", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 79, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-01T01:00:00Z", "home": "1A", "away": "3rd", "location": "Estadio Azteca, Mexico City", "result": { "home": 0, "away": 0 } },
+    { "id": 80, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-01T16:00:00Z", "home": "1L", "away": "3rd", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 81, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-01T20:00:00Z", "home": "1G", "away": "3rd", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 82, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-02T00:00:00Z", "home": "1D", "away": "3rd", "location": "Levi's Stadium, Santa Clara", "result": { "home": 0, "away": 0 } },
+    { "id": 83, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-02T19:00:00Z", "home": "1H", "away": "2J", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 84, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-02T23:00:00Z", "home": "2K", "away": "2L", "location": "BMO Field, Toronto", "result": { "home": 0, "away": 0 } },
+    { "id": 85, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-03T03:00:00Z", "home": "1B", "away": "3rd", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+    { "id": 86, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-03T18:00:00Z", "home": "2D", "away": "2G", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 87, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-03T22:00:00Z", "home": "1J", "away": "2H", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 88, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-04T01:30:00Z", "home": "1K", "away": "3rd", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+
+    { "id": 89, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-04T17:00:00Z", "home": "W75", "away": "W78", "location": "Lincoln Financial Field, Philadelphia", "result": { "home": 0, "away": 0 } },
+    { "id": 90, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-04T21:00:00Z", "home": "W73", "away": "W76", "location": "NRG Stadium, Houston", "result": { "home": 0, "away": 0 } },
+    { "id": 91, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-05T20:00:00Z", "home": "W74", "away": "W77", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } },
+    { "id": 92, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-06T00:00:00Z", "home": "W79", "away": "W80", "location": "Estadio Azteca, Mexico City", "result": { "home": 0, "away": 0 } },
+    { "id": 93, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-06T19:00:00Z", "home": "W84", "away": "W83", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 94, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-07T00:00:00Z", "home": "W82", "away": "W81", "location": "Lumen Field, Seattle", "result": { "home": 0, "away": 0 } },
+    { "id": 95, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-07T16:00:00Z", "home": "W87", "away": "W86", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+    { "id": 96, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-07T20:00:00Z", "home": "W85", "away": "W88", "location": "BC Place, Vancouver", "result": { "home": 0, "away": 0 } },
+
+    { "id": 97, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-09T20:00:00Z", "home": "W89", "away": "W90", "location": "Gillette Stadium, Foxborough", "result": { "home": 0, "away": 0 } },
+    { "id": 98, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-10T19:00:00Z", "home": "W93", "away": "W94", "location": "SoFi Stadium, Inglewood", "result": { "home": 0, "away": 0 } },
+    { "id": 99, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-11T21:00:00Z", "home": "W91", "away": "W92", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+    { "id": 100, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-12T01:00:00Z", "home": "W95", "away": "W96", "location": "Arrowhead Stadium, Kansas City", "result": { "home": 0, "away": 0 } },
+
+    { "id": 101, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-14T19:00:00Z", "home": "W97", "away": "W98", "location": "AT&T Stadium, Arlington", "result": { "home": 0, "away": 0 } },
+    { "id": 102, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-15T19:00:00Z", "home": "W99", "away": "W100", "location": "Mercedes-Benz Stadium, Atlanta", "result": { "home": 0, "away": 0 } },
+
+    { "id": 103, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-18T21:00:00Z", "home": "L101", "away": "L102", "location": "Hard Rock Stadium, Miami Gardens", "result": { "home": 0, "away": 0 } },
+
+    { "id": 104, "messageId": "", "hasResult": false, "isCalculated": false, "groupUpdated": false, "date": "2026-07-19T19:00:00Z", "home": "W101", "away": "W102", "location": "MetLife Stadium, East Rutherford", "result": { "home": 0, "away": 0 } }
+  ]
+}

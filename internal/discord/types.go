@@ -266,6 +266,7 @@ type SendMessagePayload struct {
 	Content    string      `json:"content,omitempty"`
 	Embeds     []Embed     `json:"embeds,omitempty"`
 	Components []Component `json:"components,omitempty"`
+	Flags      int         `json:"flags,omitempty"`
 }
 
 // EditMessagePayload is the request body for PATCH /channels/{id}/messages/{id}.

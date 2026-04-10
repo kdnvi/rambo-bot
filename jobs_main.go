@@ -4,11 +4,10 @@ import (
 	"context"
 
 	"github.com/kdnvi/rambo-bot/bot"
+	"github.com/kdnvi/rambo-bot/jobs"
 )
 
 // startJobs launches all background ticker jobs.
-// Populated incrementally as each feature stage is implemented.
 func startJobs(ctx context.Context, b *bot.Bot) {
-	_ = ctx
-	_ = b
+	jobs.StartAll(ctx, b)
 }

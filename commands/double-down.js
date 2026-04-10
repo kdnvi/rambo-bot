@@ -82,7 +82,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
     await interaction.reply({ embeds: [embed] });
     const sent = await interaction.fetchReply();
-    await setWagerMessageId(userId, matchId, 'doubleDown', sent.id);
+    await setWagerMessageId(userId, matchId, 'doubleDown', sent.id, interaction.channelId);
   } finally {
     pendingUsers.delete(userId);
   }

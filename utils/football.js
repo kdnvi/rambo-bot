@@ -452,7 +452,7 @@ async function clearAnnouncementMessageIds(matches, wagers, curses) {
       }
       if (curses?.[match.id]) {
         for (const [curserId, curse] of Object.entries(curses[match.id])) {
-          if (curse?.messageId) {
+          if (curse?.messageId || curse?.channelId) {
             removals.push(removeCurseMessageId(curserId, match.id));
           }
         }

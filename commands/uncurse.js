@@ -41,6 +41,7 @@ export const execute = withErrorHandler(async (interaction) => {
     const activeCurseMatchId = found.matchId;
     const activeCurse = { ...found.entry[userId], match: found.match };
     const originalMessageId = found.entry[userId]?.messageId;
+    const originalChannelId = found.entry[userId]?.channelId;
 
     await removeCurse(userId, activeCurseMatchId);
 
@@ -60,7 +61,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
     if (originalMessageId) {
       try {
-        const channelId = await getChannelId();
+        const channelId = originalChannelId || await getChannelId();
         const channel = await interaction.client.channels.fetch(channelId);
         const originalMsg = await channel.messages.fetch(originalMessageId);
         await originalMsg.reply({ embeds: [embed] });

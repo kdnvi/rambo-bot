@@ -153,6 +153,6 @@ async function activateRandom(interaction, match, isUpdate = false) {
     const sent = await interaction.fetchReply();
     sentId = sent.id;
   }
-  await setWagerMessageId(interaction.user.id, match.id, 'random', sentId);
+  await setWagerMessageId(interaction.user.id, match.id, 'random', sentId, interaction.channelId);
 }
 

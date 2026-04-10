@@ -46,13 +46,14 @@ export async function execute(interaction) {
       const userWagers = await readUserWagers(interaction.user.id);
       if (userWagers[matchId]?.random) {
         const randomMsgId = userWagers[matchId]?.randomMessageId;
+        const randomChannelId = userWagers[matchId]?.randomChannelId;
         await Promise.all([
           removePlayerWager(interaction.user.id, matchId, 'random'),
           removeWagerMessageId(interaction.user.id, matchId, 'random'),
         ]);
         if (randomMsgId) {
           try {
-            const channelId = await getChannelId();
+            const channelId = randomChannelId || await getChannelId();
             const channel = await interaction.client.channels.fetch(channelId);
             const randomMsg = await channel.messages.fetch(randomMsgId);
             const cancelEmbed = new EmbedBuilder()

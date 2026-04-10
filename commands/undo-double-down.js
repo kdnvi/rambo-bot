@@ -41,6 +41,7 @@ export const execute = withErrorHandler(async (interaction) => {
     const activeMatchId = found.matchId;
     const activeMatch = found.match;
     const originalMessageId = found.entry.doubleDownMessageId;
+    const originalChannelId = found.entry.doubleDownChannelId;
 
     await Promise.all([
       removePlayerWager(userId, activeMatchId, 'doubleDown'),
@@ -62,7 +63,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
     if (originalMessageId) {
       try {
-        const channelId = await getChannelId();
+        const channelId = originalChannelId || await getChannelId();
         const channel = await interaction.client.channels.fetch(channelId);
         const originalMsg = await channel.messages.fetch(originalMessageId);
         await originalMsg.reply({ embeds: [embed] });

@@ -85,7 +85,7 @@ export const execute = withErrorHandler(async (interaction) => {
 
     await interaction.reply({ embeds: [embed] });
     const sent = await interaction.fetchReply();
-    await setCurseMessageId(curserId, matchId, sent.id);
+    await setCurseMessageId(curserId, matchId, sent.id, interaction.channelId);
   } finally {
     pendingUsers.delete(curserId);
   }

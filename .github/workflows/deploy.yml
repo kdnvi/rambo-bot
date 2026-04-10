@@ -1,0 +1,25 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [Build]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to VM
+        run: |
+          gcloud compute ssh ${{ vars.GCE_INSTANCE }} \
+            --zone ${{ vars.GCE_ZONE }} \
+            --command 'docker pull ghcr.io/kdnvi/rambo-bot:latest && docker rm -f rambo-bot && docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest'

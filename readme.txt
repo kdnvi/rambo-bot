@@ -90,9 +90,9 @@ The Docker image's entrypoint automatically fetches config from GCP instance met
 6. View logs:
    docker logs -f rambo-bot
 
-7. Deploy updates (from your local machine, then on the VM):
-   npm run docker:deploy
-   docker pull ghcr.io/kdnvi/rambo-bot:latest && docker rm -f rambo-bot && docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest
+7. Deploy updates:
+   Pushing to main automatically builds and deploys via GitHub Actions.
+   Or trigger manually: gh workflow run build
 
 Tournament data
 -----

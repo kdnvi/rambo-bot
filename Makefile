@@ -1,26 +1,32 @@
-APP_DIR := /opt/rambo-bot
-SERVICE := rambo-bot
+DOCKER_IMAGE ?= $(shell grep '"name"' package.json 2>/dev/null | sed 's/.*: "//;s/".*//' || echo rambo-bot)
+DOCKER_HUB_USER ?= $(shell echo $$DOCKER_HUB_USER)
+IMAGE := $(DOCKER_HUB_USER)/$(DOCKER_IMAGE)
+TAG ?= latest
 
-.PHONY: deplc update restart logs status
+.PHONY: build run deploy-commands docker-build docker-push deploy fmt vet
 
-deplc: ## Deploy slash commands using .env.runtime
-	sudo node --env-file=$(APP_DIR)/.env.runtime deploy-commands.js
+build: ## Build the bot binary
+	go build -o rambo-bot .
 
-update: ## Pull latest code and reinstall deps
-	sudo git -C $(APP_DIR) pull
-	sudo npm ci --omit=dev --prefix $(APP_DIR)
-	sudo chown -R rambo:rambo $(APP_DIR)
+run: ## Run locally (requires .env variables exported)
+	go run .
 
-restart: ## Restart the systemd service
-	sudo systemctl restart $(SERVICE)
+fmt: ## Format all Go code
+	gofmt -w .
 
-logs: ## Tail the service logs
-	sudo journalctl -fu $(SERVICE)
+vet: ## Run go vet
+	go vet ./...
 
-status: ## Show service status
-	sudo systemctl status $(SERVICE)
+deploy-commands: ## Register slash commands with Discord
+	go run ./cmd/deploy-commands/
 
-deploy: update deplc restart ## Full deploy: pull, deploy commands, restart
+docker-build: ## Build Docker image
+	docker build -t $(IMAGE):$(TAG) .
+
+docker-push: ## Push image to Docker Hub
+	docker push $(IMAGE):$(TAG)
+
+deploy: docker-build docker-push ## Build and push Docker image
 
 help: ## Show this help
-	@grep -E '^[a-z][a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[1m%-12s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-z][a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F ':.*## ' '{printf "  \033[1m%-18s\033[0m %s\n", $$1, $$2}'

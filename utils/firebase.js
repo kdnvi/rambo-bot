@@ -159,31 +159,6 @@ export async function setPlayerWager(userId, matchId, flag) {
   logger.info(`Set ${flag} wager for user [${userId}] on match [${matchId}]`);
 }
 
-export async function setWagerMessageId(userId, matchId, flag, messageId, channelId) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
-  await ref.update({ [`${flag}MessageId`]: messageId, [`${flag}ChannelId`]: channelId });
-  bustPrefix('wagers');
-}
-
-export async function removeWagerMessageId(userId, matchId, flag) {
-  const ref = db.ref(`tournament/wagers/${userId}/${matchId}`);
-  await ref.update({ [`${flag}MessageId`]: null, [`${flag}ChannelId`]: null });
-  bustPrefix('wagers');
-}
-
-export async function setCurseMessageId(curserId, matchId, messageId, channelId) {
-  const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
-  await ref.update({ messageId, channelId });
-  bustPrefix('curses');
-}
-
-export async function removeCurseMessageId(curserId, matchId) {
-  const ref = db.ref(`tournament/curses/${matchId}/${curserId}`);
-  await ref.update({ messageId: null, channelId: null });
-  bustPrefix('curses');
-}
-
-
 export async function readCurses() {
   return (await cachedRead('curses', 'tournament/curses')) || {};
 }

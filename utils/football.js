@@ -1,6 +1,6 @@
 import logger from './logger.js';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'discord.js';
-import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam, saveMatchRandomPicks, removeWagerMessageId, removeCurseMessageId } from './firebase.js';
+import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam, saveMatchRandomPicks } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
 import { getChannelId } from './command.js';
@@ -410,8 +410,6 @@ export async function calculateMatches(matches, client) {
       await updatePlayers(players);
       logger.info(`Persisted player data after ${calculatedIds.length} match(es)`);
 
-      await clearAnnouncementMessageIds(toProcess, wagers, curses);
-
       const freshPlayers = await readPlayers();
       const allMatches = await readTournamentData('matches') || [];
       const completedMatches = allMatches
@@ -435,36 +433,6 @@ export async function calculateMatches(matches, client) {
     return matchDeltas;
   } finally {
     for (const m of toProcess) calculationLock.delete(m.id);
-  }
-}
-
-async function clearAnnouncementMessageIds(matches, wagers, curses) {
-  try {
-    const removals = [];
-
-    for (const match of matches) {
-      if (wagers) {
-        for (const [userId, userWagers] of Object.entries(wagers)) {
-          const mw = userWagers?.[match.id];
-          if (mw?.doubleDownMessageId) removals.push(removeWagerMessageId(userId, match.id, 'doubleDown'));
-          if (mw?.randomMessageId) removals.push(removeWagerMessageId(userId, match.id, 'random'));
-        }
-      }
-      if (curses?.[match.id]) {
-        for (const [curserId, curse] of Object.entries(curses[match.id])) {
-          if (curse?.messageId || curse?.channelId) {
-            removals.push(removeCurseMessageId(curserId, match.id));
-          }
-        }
-      }
-    }
-
-    if (removals.length > 0) {
-      await Promise.all(removals);
-      logger.info(`Cleared ${removals.length} announcement messageId(s)`);
-    }
-  } catch (err) {
-    logger.error('Failed to clear announcement messageIds:', err);
   }
 }
 

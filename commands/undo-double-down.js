@@ -1,8 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readUserWagers, removePlayerWager, removeWagerMessageId } from '../utils/firebase.js';
-import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
+import { readUserWagers, removePlayerWager } from '../utils/firebase.js';
+import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
-import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('undo-double-down')
@@ -40,13 +39,8 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const activeMatchId = found.matchId;
     const activeMatch = found.match;
-    const originalMessageId = found.entry.doubleDownMessageId;
-    const originalChannelId = found.entry.doubleDownChannelId;
 
-    await Promise.all([
-      removePlayerWager(userId, activeMatchId, 'doubleDown'),
-      removeWagerMessageId(userId, activeMatchId, 'doubleDown'),
-    ]);
+    await removePlayerWager(userId, activeMatchId, 'doubleDown');
 
     const chickenLine = await pickLine('chicken');
 
@@ -61,21 +55,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setColor(0xFEE75C)
       .setTimestamp();
 
-    if (originalMessageId) {
-      try {
-        const channelId = originalChannelId || await getChannelId();
-        const channel = await interaction.client.channels.fetch(channelId);
-        const originalMsg = await channel.messages.fetch(originalMessageId);
-        await originalMsg.reply({ embeds: [embed] });
-        await interaction.reply({ content: '🐔 Đã huỷ double-down.', flags: MessageFlags.Ephemeral });
-      } catch (err) {
-        logger.error(`undo-double-down reply failed (messageId=${originalMessageId}):`, err);
-        await interaction.reply({ embeds: [embed] });
-      }
-    } else {
-      logger.warn(`undo-double-down: no messageId found, entry keys: ${Object.keys(found.entry)}`);
-      await interaction.reply({ embeds: [embed] });
-    }
+    await interaction.reply({ embeds: [embed] });
   } finally {
     pendingUsers.delete(userId);
   }

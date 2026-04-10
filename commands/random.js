@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { readUserWagers, setPlayerWager, setWagerMessageId, readMatchVotes, removeMatchVote, readTournamentData } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager, readMatchVotes, removeMatchVote, readTournamentData } from '../utils/firebase.js';
 import { findNextMatch, updatePollEmbed } from '../utils/helper.js';
 import { withErrorHandler, requirePlayer, requireMatches } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
@@ -140,16 +140,14 @@ async function activateRandom(interaction, match, isUpdate = false) {
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
-  const sent = await interaction.channel.send({ embeds: [embed] });
-  await setWagerMessageId(interaction.user.id, match.id, 'random', sent.id, interaction.channelId);
-
   if (isUpdate) {
     const doneEmbed = new EmbedBuilder()
       .setDescription('✅ Đã xoá vote và kích hoạt random.')
       .setColor(0x57F287);
     await interaction.editReply({ embeds: [doneEmbed], components: [] });
+    await interaction.followUp({ embeds: [embed] });
   } else {
-    await interaction.reply({ content: '🎲 Random đã kích hoạt!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [embed] });
   }
 }
 

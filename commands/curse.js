@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readCurses, setCurse, setCurseMessageId } from '../utils/firebase.js';
+import { readCurses, setCurse } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
 import { findNextMatch } from '../utils/helper.js';
@@ -83,9 +83,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(target.displayAvatarURL())
       .setTimestamp();
 
-    const sent = await interaction.channel.send({ embeds: [embed] });
-    await setCurseMessageId(curserId, matchId, sent.id, interaction.channelId);
-    await interaction.reply({ content: '🧿 Lời nguyền đã kích hoạt!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [embed] });
   } finally {
     pendingUsers.delete(curserId);
   }

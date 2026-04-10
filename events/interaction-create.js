@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, removePlayerWager, removeWagerMessageId, readUserWagers } from '../utils/firebase.js';
+import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, removePlayerWager, readUserWagers } from '../utils/firebase.js';
 import { buildPollEmbedUpdate } from '../utils/helper.js';
 import { handleRandomButton } from '../commands/random.js';
 import { pickLine } from '../utils/flavor.js';
@@ -43,25 +43,9 @@ export async function execute(interaction) {
 
       await updateMatchVote(matchId, interaction.user.id, teamId, interaction.message.id);
 
-      const userWagers = await readUserWagers(interaction.user.id);
-      if (userWagers[matchId]?.random) {
-        const randomMsgId = userWagers[matchId]?.randomMessageId;
-        const randomChannelId = userWagers[matchId]?.randomChannelId;
-        await Promise.all([
-          removePlayerWager(interaction.user.id, matchId, 'random'),
-          removeWagerMessageId(interaction.user.id, matchId, 'random'),
-        ]);
-        if (randomMsgId) {
-          try {
-            const channelId = randomChannelId || await getChannelId();
-            const channel = await interaction.client.channels.fetch(channelId);
-            const randomMsg = await channel.messages.fetch(randomMsgId);
-            const cancelEmbed = new EmbedBuilder()
-              .setDescription(`🎲❌ **${interaction.user}** đã vote — random bị huỷ.`)
-              .setColor(0xFEE75C);
-            await randomMsg.reply({ embeds: [cancelEmbed] });
-          } catch {}
-        }
+      const hadRandom = userWagers[matchId]?.random;
+      if (hadRandom) {
+        await removePlayerWager(interaction.user.id, matchId, 'random');
       }
 
       const votes = await readMatchVotes(matchId, interaction.message.id);
@@ -73,6 +57,13 @@ export async function execute(interaction) {
         .setDescription(`✅ Vote của bạn: **${teamId.toUpperCase()}**`)
         .setColor(0x57F287);
       await interaction.followUp({ embeds: [embed], flags: MessageFlags.Ephemeral });
+
+      if (hadRandom) {
+        const cancelEmbed = new EmbedBuilder()
+          .setDescription(`🎲❌ **${interaction.user}** đã vote — random bị huỷ.`)
+          .setColor(0xFEE75C);
+        await interaction.followUp({ embeds: [cancelEmbed] });
+      }
 
       const changeCount = await incrementVoteChange(matchId, interaction.user.id);
       const minsUntilKickoff = (Date.parse(match.date) - Date.now()) / 60000;

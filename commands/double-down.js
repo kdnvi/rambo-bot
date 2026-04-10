@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readUserWagers, setPlayerWager, setWagerMessageId } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
 import { getMatchStake } from '../utils/football.js';
@@ -80,9 +80,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
-    const sent = await interaction.channel.send({ embeds: [embed] });
-    await setWagerMessageId(userId, matchId, 'doubleDown', sent.id, interaction.channelId);
-    await interaction.reply({ content: '⏫ Double-down đã kích hoạt!', flags: MessageFlags.Ephemeral });
+    await interaction.reply({ embeds: [embed] });
   } finally {
     pendingUsers.delete(userId);
   }

@@ -1,8 +1,7 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readCurses, removeCurse } from '../utils/firebase.js';
-import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
+import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
-import logger from '../utils/logger.js';
 
 export const data = new SlashCommandBuilder()
   .setName('uncurse')
@@ -40,8 +39,6 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const activeCurseMatchId = found.matchId;
     const activeCurse = { ...found.entry[userId], match: found.match };
-    const originalMessageId = found.entry[userId]?.messageId;
-    const originalChannelId = found.entry[userId]?.channelId;
 
     await removeCurse(userId, activeCurseMatchId);
 
@@ -59,21 +56,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setColor(0x57F287)
       .setTimestamp();
 
-    if (originalMessageId) {
-      try {
-        const channelId = originalChannelId || await getChannelId();
-        const channel = await interaction.client.channels.fetch(channelId);
-        const originalMsg = await channel.messages.fetch(originalMessageId);
-        await originalMsg.reply({ embeds: [embed] });
-        await interaction.reply({ content: '🕊️ Đã gỡ lời nguyền.', flags: MessageFlags.Ephemeral });
-      } catch (err) {
-        logger.error(`uncurse reply failed (messageId=${originalMessageId}):`, err);
-        await interaction.reply({ embeds: [embed] });
-      }
-    } else {
-      logger.warn(`uncurse: no messageId found, entry keys: ${Object.keys(found.entry[userId] || {})}`);
-      await interaction.reply({ embeds: [embed] });
-    }
+    await interaction.reply({ embeds: [embed] });
   } finally {
     pendingUsers.delete(userId);
   }

@@ -67,13 +67,13 @@ export const execute = withErrorHandler(async (interaction) => {
 
   if (requested) {
     title.setDescription(groupBlocks[0]);
-    await interaction.reply({ embeds: [title] });
+    await interaction.reply({ embeds: [title], flags: MessageFlags.Ephemeral });
     return;
   }
 
   const allEmbeds = [title, ...embeds];
-  await interaction.reply({ embeds: allEmbeds.slice(0, 10) });
+  await interaction.reply({ embeds: allEmbeds.slice(0, 10), flags: MessageFlags.Ephemeral });
   for (let i = 10; i < allEmbeds.length; i += 10) {
-    await interaction.followUp({ embeds: allEmbeds.slice(i, i + 10) });
+    await interaction.followUp({ embeds: allEmbeds.slice(i, i + 10), flags: MessageFlags.Ephemeral });
   }
 });

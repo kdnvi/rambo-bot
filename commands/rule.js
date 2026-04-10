@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentConfig } from '../utils/firebase.js';
 import { withErrorHandler } from '../utils/command.js';
 
@@ -20,11 +20,11 @@ export const execute = withErrorHandler(async (interaction) => {
     let description = rulesText.replace(/\\n/g, '\n');
     if (description.length > 4096) description = description.slice(0, 4093) + '...';
     embed.setDescription(description);
+    await interaction.reply({ embeds: [embed] });
   } else {
     embed
       .setDescription('Chưa có luật chơi cho giải này.')
       .setColor(0xFEE75C);
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
-
-  await interaction.reply({ embeds: [embed] });
 });

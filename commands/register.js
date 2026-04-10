@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { registerPlayer } from '../utils/firebase.js';
 import { withErrorHandler } from '../utils/command.js';
 
@@ -21,12 +21,12 @@ export const execute = withErrorHandler(async (interaction) => {
       .setTitle('✅  Đăng ký thành công')
       .setDescription('Vào cuộc rồi! Gõ `/rank` xem BXH nha.')
       .setColor(0x57F287);
+    await interaction.reply({ embeds: [embed] });
   } else {
     embed
       .setTitle('ℹ️  Đã đăng ký')
       .setDescription(result.message)
       .setColor(0xFEE75C);
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
   }
-
-  await interaction.reply({ embeds: [embed] });
 });

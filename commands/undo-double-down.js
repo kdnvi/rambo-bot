@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readUserWagers, removePlayerWager } from '../utils/firebase.js';
-import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler } from '../utils/command.js';
+import { readUserWagers, removePlayerWager, removeWagerMessageId } from '../utils/firebase.js';
+import { requirePlayer, requireMatches, findActiveEntry, withErrorHandler, getChannelId } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
 
 export const data = new SlashCommandBuilder()
@@ -39,8 +39,12 @@ export const execute = withErrorHandler(async (interaction) => {
 
     const activeMatchId = found.matchId;
     const activeMatch = found.match;
+    const originalMessageId = found.entry.messageId;
 
-    await removePlayerWager(userId, activeMatchId, 'doubleDown');
+    await Promise.all([
+      removePlayerWager(userId, activeMatchId, 'doubleDown'),
+      removeWagerMessageId(userId, activeMatchId),
+    ]);
 
     const chickenLine = await pickLine('chicken');
 
@@ -55,7 +59,19 @@ export const execute = withErrorHandler(async (interaction) => {
       .setColor(0xFEE75C)
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    if (originalMessageId) {
+      try {
+        const channelId = await getChannelId();
+        const channel = await interaction.client.channels.fetch(channelId);
+        const originalMsg = await channel.messages.fetch(originalMessageId);
+        await originalMsg.reply({ embeds: [embed] });
+        await interaction.reply({ content: '🐔 Đã huỷ double-down.', flags: MessageFlags.Ephemeral });
+      } catch {
+        await interaction.reply({ embeds: [embed] });
+      }
+    } else {
+      await interaction.reply({ embeds: [embed] });
+    }
   } finally {
     pendingUsers.delete(userId);
   }

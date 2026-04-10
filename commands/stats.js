@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readPlayers, readAllVotes, readUserWagers, readPlayerBadges } from '../utils/firebase.js';
 import { formatBadgesDetailed } from '../utils/badges.js';
 import { getWinner, getMatchVote, VND_FORMATTER } from '../utils/helper.js';
@@ -12,9 +12,6 @@ export const data = new SlashCommandBuilder()
     .setRequired(false));
 
 export const execute = withErrorHandler(async (interaction) => {
-  await interaction.deferReply();
-
-  const tournamentName = await getTournamentName();
   const targetUser = interaction.options.get('user')?.user || interaction.user;
   const userId = targetUser.id;
 
@@ -28,9 +25,12 @@ export const execute = withErrorHandler(async (interaction) => {
           : `${targetUser} chưa đăng ký.`
       )
       .setColor(0xED4245);
-    await interaction.editReply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return;
   }
+
+  await interaction.deferReply();
+  const tournamentName = await getTournamentName();
 
   const player = players[userId];
   const [allMatches, votes, userWagers] = await Promise.all([

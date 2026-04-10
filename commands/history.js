@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readAllVotes, readUserWagers, readCurses } from '../utils/firebase.js';
 import { getWinner, getMatchVote } from '../utils/helper.js';
 import { withErrorHandler, getTournamentName } from '../utils/command.js';
@@ -16,7 +16,7 @@ export const data = new SlashCommandBuilder()
     .setRequired(false));
 
 export const execute = withErrorHandler(async (interaction) => {
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const tournamentName = await getTournamentName();
   const targetUser = interaction.options.get('user')?.user || interaction.user;

@@ -45,5 +45,5 @@ export const execute = withErrorHandler(async (interaction) => {
     .setFooter({ text: `${upcoming.length} trận tiếp theo` })
     .setTimestamp();
 
-  await interaction.reply({ embeds: [embed] });
+  await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
 });

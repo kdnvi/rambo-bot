@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readUserWagers, setPlayerWager } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager, setWagerMessageId } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
 import { getMatchStake } from '../utils/football.js';
@@ -80,7 +80,8 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
+    await setWagerMessageId(userId, matchId, sent.id);
   } finally {
     pendingUsers.delete(userId);
   }

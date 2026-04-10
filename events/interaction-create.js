@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 import { Events, EmbedBuilder, MessageFlags } from 'discord.js';
-import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, removePlayerWager, readUserWagers } from '../utils/firebase.js';
+import { updateMatchVote, readMatchVotes, readTournamentData, readPlayers, incrementVoteChange, removePlayerWager, removeWagerMessageId, readUserWagers } from '../utils/firebase.js';
 import { buildPollEmbedUpdate } from '../utils/helper.js';
 import { handleRandomButton } from '../commands/random.js';
 import { pickLine } from '../utils/flavor.js';
@@ -45,7 +45,22 @@ export async function execute(interaction) {
 
       const userWagers = await readUserWagers(interaction.user.id);
       if (userWagers[matchId]?.random) {
-        await removePlayerWager(interaction.user.id, matchId, 'random');
+        const randomMsgId = userWagers[matchId]?.messageId;
+        await Promise.all([
+          removePlayerWager(interaction.user.id, matchId, 'random'),
+          removeWagerMessageId(interaction.user.id, matchId),
+        ]);
+        if (randomMsgId) {
+          try {
+            const channelId = await getChannelId();
+            const channel = await interaction.client.channels.fetch(channelId);
+            const randomMsg = await channel.messages.fetch(randomMsgId);
+            const cancelEmbed = new EmbedBuilder()
+              .setDescription(`🎲❌ **${interaction.user}** đã vote — random bị huỷ.`)
+              .setColor(0xFEE75C);
+            await randomMsg.reply({ embeds: [cancelEmbed] });
+          } catch {}
+        }
       }
 
       const votes = await readMatchVotes(matchId, interaction.message.id);

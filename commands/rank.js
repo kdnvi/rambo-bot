@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readPlayers, readAllBadges } from '../utils/firebase.js';
 import { formatBadges } from '../utils/badges.js';
 import { VND_FORMATTER } from '../utils/helper.js';
@@ -19,7 +19,7 @@ export const execute = withErrorHandler(async (interaction) => {
       .setTitle(`🏆  ${tournamentName} Bảng xếp hạng`)
       .setDescription('Chưa ai đăng ký cả. `/register` đi rồi chiến!')
       .setColor(0xFEE75C);
-    await interaction.reply({ embeds: [embed] });
+    await interaction.reply({ embeds: [embed], flags: MessageFlags.Ephemeral });
     return;
   }
 

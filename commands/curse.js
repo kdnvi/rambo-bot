@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
-import { readCurses, setCurse } from '../utils/firebase.js';
+import { readCurses, setCurse, setCurseMessageId } from '../utils/firebase.js';
 import { requirePlayer, requireMatches, withErrorHandler } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
 import { findNextMatch } from '../utils/helper.js';
@@ -83,7 +83,8 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(target.displayAvatarURL())
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
+    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
+    await setCurseMessageId(curserId, matchId, sent.id);
   } finally {
     pendingUsers.delete(curserId);
   }

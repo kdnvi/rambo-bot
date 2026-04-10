@@ -1,5 +1,5 @@
 import { SlashCommandBuilder, EmbedBuilder, MessageFlags, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { readUserWagers, setPlayerWager, readMatchVotes, removeMatchVote, readTournamentData } from '../utils/firebase.js';
+import { readUserWagers, setPlayerWager, setWagerMessageId, readMatchVotes, removeMatchVote, readTournamentData } from '../utils/firebase.js';
 import { findNextMatch, updatePollEmbed } from '../utils/helper.js';
 import { withErrorHandler, requirePlayer, requireMatches } from '../utils/command.js';
 import { pickLine } from '../utils/flavor.js';
@@ -140,14 +140,18 @@ async function activateRandom(interaction, match, isUpdate = false) {
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
+  let sentId;
   if (isUpdate) {
     const doneEmbed = new EmbedBuilder()
       .setDescription('✅ Đã xoá vote và kích hoạt random.')
       .setColor(0x57F287);
     await interaction.editReply({ embeds: [doneEmbed], components: [] });
-    await interaction.followUp({ embeds: [embed] });
+    const sent = await interaction.followUp({ embeds: [embed], fetchReply: true });
+    sentId = sent.id;
   } else {
-    await interaction.reply({ embeds: [embed] });
+    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
+    sentId = sent.id;
   }
+  await setWagerMessageId(interaction.user.id, match.id, sentId);
 }
 

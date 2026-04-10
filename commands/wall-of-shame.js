@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, EmbedBuilder } from 'discord.js';
+import { SlashCommandBuilder, EmbedBuilder, MessageFlags } from 'discord.js';
 import { readTournamentData, readAllVotes, readPlayers } from '../utils/firebase.js';
 import { getWinner, getMatchVote } from '../utils/helper.js';
 import { withErrorHandler, getTournamentName } from '../utils/command.js';
@@ -8,27 +8,30 @@ export const data = new SlashCommandBuilder()
   .setDescription('Bảng phong thần — ai tệ nhất, nhục nhất, fail nặng nhất');
 
 export const execute = withErrorHandler(async (interaction) => {
-  await interaction.deferReply();
-
-  const tournamentName = await getTournamentName();
-  const allMatches = await readTournamentData('matches') || [];
-  const votes = await readAllVotes();
-  const players = await readPlayers();
-  const users = interaction.client.cachedUsers;
+  const [allMatches, players] = await Promise.all([
+    readTournamentData('matches'),
+    readPlayers(),
+  ]);
 
   if (!players || Object.keys(players).length === 0) {
-    await interaction.editReply({ content: '❌ Chưa có người chơi.' });
+    await interaction.reply({ content: '❌ Chưa có người chơi.', flags: MessageFlags.Ephemeral });
     return;
   }
 
-  const completed = allMatches
+  const completed = (allMatches || [])
     .filter((m) => m.hasResult && m.isCalculated)
     .sort((a, b) => Date.parse(a.date) - Date.parse(b.date));
 
   if (completed.length === 0) {
-    await interaction.editReply({ content: '❌ Chưa có trận nào hoàn thành.' });
+    await interaction.reply({ content: '❌ Chưa có trận nào hoàn thành.', flags: MessageFlags.Ephemeral });
     return;
   }
+
+  await interaction.deferReply();
+
+  const tournamentName = await getTournamentName();
+  const votes = await readAllVotes();
+  const users = interaction.client.cachedUsers;
 
   const playerIds = Object.keys(players);
   const loseStreaks = {};

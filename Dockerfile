@@ -9,5 +9,6 @@ RUN npm ci --omit=dev
 
 COPY . .
 
+STOPSIGNAL SIGTERM
 ENTRYPOINT ["sh", "entrypoint.sh"]
 CMD ["node", "index.js"]

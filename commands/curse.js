@@ -83,8 +83,8 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(target.displayAvatarURL())
       .setTimestamp();
 
-    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
-    await setCurseMessageId(curserId, matchId, sent.id);
+    const response = await interaction.reply({ embeds: [embed], withResponse: true });
+    await setCurseMessageId(curserId, matchId, response.resource.message.id);
   } finally {
     pendingUsers.delete(curserId);
   }

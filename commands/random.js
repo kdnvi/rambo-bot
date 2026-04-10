@@ -146,11 +146,11 @@ async function activateRandom(interaction, match, isUpdate = false) {
       .setDescription('✅ Đã xoá vote và kích hoạt random.')
       .setColor(0x57F287);
     await interaction.editReply({ embeds: [doneEmbed], components: [] });
-    const sent = await interaction.followUp({ embeds: [embed], fetchReply: true });
+    const sent = await interaction.followUp({ embeds: [embed] });
     sentId = sent.id;
   } else {
-    const sent = await interaction.reply({ embeds: [embed], fetchReply: true });
-    sentId = sent.id;
+    const response = await interaction.reply({ embeds: [embed], withResponse: true });
+    sentId = response.resource.message.id;
   }
   await setWagerMessageId(interaction.user.id, match.id, sentId);
 }

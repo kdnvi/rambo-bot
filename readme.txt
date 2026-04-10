@@ -29,9 +29,9 @@ npm run deploy:commands
 Docker
 -----
 
-* Build and push via GitHub Actions (recommended):
-  Trigger from the Actions tab on GitHub, or via CLI:
-  gh workflow run deploy
+* Build and push via GitHub Actions (automatic on push to main):
+  Or trigger manually from the Actions tab / CLI:
+  gh workflow run build
 
 * Build and push locally:
 npm run docker:deploy

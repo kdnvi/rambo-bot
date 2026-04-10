@@ -140,19 +140,16 @@ async function activateRandom(interaction, match, isUpdate = false) {
     .setThumbnail(interaction.user.displayAvatarURL())
     .setTimestamp();
 
-  let sentId;
+  const sent = await interaction.channel.send({ embeds: [embed] });
+  await setWagerMessageId(interaction.user.id, match.id, 'random', sent.id, interaction.channelId);
+
   if (isUpdate) {
     const doneEmbed = new EmbedBuilder()
       .setDescription('✅ Đã xoá vote và kích hoạt random.')
       .setColor(0x57F287);
     await interaction.editReply({ embeds: [doneEmbed], components: [] });
-    const sent = await interaction.followUp({ embeds: [embed] });
-    sentId = sent.id;
   } else {
-    await interaction.reply({ embeds: [embed] });
-    const sent = await interaction.fetchReply();
-    sentId = sent.id;
+    await interaction.reply({ content: '🎲 Random đã kích hoạt!', flags: MessageFlags.Ephemeral });
   }
-  await setWagerMessageId(interaction.user.id, match.id, 'random', sentId, interaction.channelId);
 }
 

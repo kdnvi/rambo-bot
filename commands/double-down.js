@@ -80,9 +80,9 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(interaction.user.displayAvatarURL())
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
-    const sent = await interaction.fetchReply();
+    const sent = await interaction.channel.send({ embeds: [embed] });
     await setWagerMessageId(userId, matchId, 'doubleDown', sent.id, interaction.channelId);
+    await interaction.reply({ content: '⏫ Double-down đã kích hoạt!', flags: MessageFlags.Ephemeral });
   } finally {
     pendingUsers.delete(userId);
   }

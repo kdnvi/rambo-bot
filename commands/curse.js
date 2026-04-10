@@ -83,9 +83,9 @@ export const execute = withErrorHandler(async (interaction) => {
       .setThumbnail(target.displayAvatarURL())
       .setTimestamp();
 
-    await interaction.reply({ embeds: [embed] });
-    const sent = await interaction.fetchReply();
+    const sent = await interaction.channel.send({ embeds: [embed] });
     await setCurseMessageId(curserId, matchId, sent.id, interaction.channelId);
+    await interaction.reply({ content: '🧿 Lời nguyền đã kích hoạt!', flags: MessageFlags.Ephemeral });
   } finally {
     pendingUsers.delete(curserId);
   }

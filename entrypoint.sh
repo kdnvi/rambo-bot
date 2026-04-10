@@ -23,4 +23,6 @@ if curl -sf -H "$HEADER" "$METADATA_URL/" >/dev/null 2>&1; then
   export VOTE_REMINDER_BEFORE_MINS=$(fetch_meta vote-reminder-before-mins || echo 30)
 fi
 
+node deploy-commands.js
+
 exec "$@"

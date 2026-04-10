@@ -40,6 +40,32 @@ npm run docker:deploy
 npm run docker:build
 npm run docker:push
 
+GitHub Actions (CI/CD)
+-----
+
+Build runs automatically on push to main. Deploy runs after a successful build.
+Both can be triggered manually: gh workflow run build / gh workflow run deploy
+
+Required GitHub repo secrets (Settings > Secrets and variables > Actions > Secrets):
+  GCP_SA_KEY          — GCP service account JSON key (see setup below)
+
+Required GitHub repo variables (Settings > Secrets and variables > Actions > Variables):
+  GCE_INSTANCE        — GCP VM instance name
+  GCE_ZONE            — GCP VM zone (e.g. us-central1-a)
+
+To create the GCP service account and add the secret:
+  gcloud iam service-accounts create github-deploy \
+    --display-name="GitHub Actions Deploy"
+  gcloud projects add-iam-policy-binding <PROJECT_ID> \
+    --member="serviceAccount:github-deploy@<PROJECT_ID>.iam.gserviceaccount.com" \
+    --role="roles/compute.instanceAdmin.v1"
+  gcloud iam service-accounts keys create gcp-sa-key.json \
+    --iam-account=github-deploy@<PROJECT_ID>.iam.gserviceaccount.com
+  gh secret set GCP_SA_KEY < gcp-sa-key.json
+  gh variable set GCE_INSTANCE --body "<INSTANCE>"
+  gh variable set GCE_ZONE --body "<ZONE>"
+  rm gcp-sa-key.json
+
 GCP Deployment (e2-micro free tier)
 -----
 
@@ -83,16 +109,14 @@ The Docker image's entrypoint automatically fetches config from GCP instance met
      match-post-before-mins=720,\
      vote-reminder-before-mins=30
 
-5. SSH into the VM, install Docker, and run the bot:
+5. SSH into the VM and install Docker:
    curl -fsSL https://get.docker.com | sh
+
+6. First run (subsequent deploys are automated via GitHub Actions):
    docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest
 
-6. View logs:
+7. View logs:
    docker logs -f rambo-bot
-
-7. Deploy updates:
-   Pushing to main automatically builds and deploys via GitHub Actions.
-   Or trigger manually: gh workflow run build
 
 Tournament data
 -----

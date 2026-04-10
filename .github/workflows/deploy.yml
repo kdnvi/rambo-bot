@@ -22,4 +22,4 @@ jobs:
         run: |
           gcloud compute ssh ${{ vars.GCE_INSTANCE }} \
             --zone ${{ vars.GCE_ZONE }} \
-            --command 'docker pull ghcr.io/kdnvi/rambo-bot:latest && docker rm -f rambo-bot && docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest'
+            --command 'command -v docker >/dev/null || curl -fsSL https://get.docker.com | sh; docker pull ghcr.io/kdnvi/rambo-bot:latest && docker rm -f rambo-bot && docker run -d --restart unless-stopped --name rambo-bot ghcr.io/kdnvi/rambo-bot:latest'

@@ -19,9 +19,10 @@ export async function execute(interaction) {
     try {
       await interaction.deferUpdate();
 
-      const [allMatches, players] = await Promise.all([
+      const [allMatches, players, userWagers] = await Promise.all([
         readTournamentData('matches'),
         readPlayers(),
+        readUserWagers(interaction.user.id),
       ]);
       const match = allMatches?.find((m) => m.id === matchId);
 

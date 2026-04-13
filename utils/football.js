@@ -3,7 +3,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle, EmbedBuilder } from 'disc
 import { readTournamentData, readTournamentConfig, updateMatch, updatePlayers, readMatchVotes, readAllVotes, readPlayers, readPlayerWagers, readCurses, readAllBadges, updateGroupTeam, saveMatchRandomPicks } from './firebase.js';
 import { getWinner, getMatchDay, getMatchVotes } from './helper.js';
 import { checkAndAwardBadges } from './badges.js';
-import { getChannelId } from './command.js';
+import { getChannelId, getTournamentName } from './command.js';
 import { pickLine } from './flavor.js';
 import { CronJob } from 'cron';
 
@@ -27,6 +27,119 @@ const MATCH_POST_BEFORE_MS = (parseInt(process.env.MATCH_POST_BEFORE_MINS) || 72
 const VOTE_REMINDER_BEFORE_MS = (parseInt(process.env.VOTE_REMINDER_BEFORE_MINS) || 30) * 60 * 1000;
 const RESULT_REMINDER_AFTER_MS = 3 * 60 * 60 * 1000;
 
+const BRACKET_CODE_RE = /^([WL])(\d+)$|^(\d)([A-L])$|^3rd$/i;
+const FIRST_PLAYOFF_ID = 73;
+const LAST_GROUP_ID = 72;
+const R32_MATCH_IDS = Array.from({ length: 16 }, (_, i) => FIRST_PLAYOFF_ID + i);
+
+const KNOCKOUT_ROUNDS = [
+  { name: 'Vòng 32', prerequisite: { min: 1, max: LAST_GROUP_ID }, targets: { min: 73, max: 88 } },
+  { name: 'Vòng 16', prerequisite: { min: 73, max: 88 }, targets: { min: 89, max: 96 } },
+  { name: 'Tứ kết', prerequisite: { min: 89, max: 96 }, targets: { min: 97, max: 100 } },
+  { name: 'Bán kết', prerequisite: { min: 97, max: 100 }, targets: { min: 101, max: 102 } },
+  { name: 'Tranh 3 & Chung kết', prerequisite: { min: 101, max: 102 }, targets: { min: 103, max: 104 } },
+];
+
+function getGroupStandings(groups) {
+  const standings = {};
+  for (const [key, teams] of Object.entries(groups)) {
+    standings[key] = Object.entries(teams)
+      .map(([name, s]) => ({ name, ...s }))
+      .sort((a, b) =>
+        b.points - a.points ||
+        b.goalDifference - a.goalDifference ||
+        b.for - a.for
+      );
+  }
+  return standings;
+}
+
+function getThirdPlaceRanking(standings) {
+  return Object.entries(standings)
+    .filter(([, teams]) => teams.length >= 3)
+    .map(([group, teams]) => ({ group: group.toUpperCase(), ...teams[2] }))
+    .sort((a, b) =>
+      b.points - a.points ||
+      b.goalDifference - a.goalDifference ||
+      b.for - a.for
+    );
+}
+
+function resolveTeam(code, standings) {
+  const match = code.match(/^(\d)([A-L])$/i);
+  if (!match) return null;
+  const pos = parseInt(match[1]) - 1;
+  const group = match[2].toLowerCase();
+  return standings[group]?.[pos]?.name || null;
+}
+
+function buildBracket(matches, standings) {
+  const r32 = matches.filter((m) => R32_MATCH_IDS.includes(m.id));
+  const thirdPlace = getThirdPlaceRanking(standings);
+  const qualified = thirdPlace.slice(0, 8);
+  let thirdIdx = 0;
+
+  return r32.map((m) => {
+    const resolveSlot = (code) => {
+      if (code === '3rd') {
+        const t = thirdIdx < qualified.length ? qualified[thirdIdx++] : null;
+        return { label: t ? `${t.group}3` : '3rd', team: t?.name || null };
+      }
+      return { label: code, team: resolveTeam(code, standings) };
+    };
+
+    const home = resolveSlot(m.home);
+    const away = resolveSlot(m.away);
+    return { id: m.id, home, away };
+  });
+}
+
+function isBracketCode(value) {
+  return BRACKET_CODE_RE.test(value);
+}
+
+async function getR32Bracket(allMatches) {
+  const groups = await readTournamentData('groups');
+  if (!groups) return null;
+  const standings = getGroupStandings(groups);
+  const bracket = buildBracket(allMatches, standings);
+  return new Map(bracket.map((p) => [p.id, { home: p.home.team, away: p.away.team }]));
+}
+
+function resolveWinnerLoser(code, allMatches) {
+  const wlMatch = code.match(/^([WL])(\d+)$/i);
+  if (!wlMatch) return null;
+  const type = wlMatch[1].toUpperCase();
+  const refId = parseInt(wlMatch[2]);
+  const refMatch = allMatches.find((m) => m.id === refId);
+  if (!refMatch?.hasResult) return null;
+  const winner = getWinner(refMatch);
+  if (!winner) return null;
+  return type === 'W'
+    ? winner
+    : (winner === refMatch.home ? refMatch.away : refMatch.home);
+}
+
+async function resolvePlayoffTeams(match, allMatches) {
+  if (match.id >= FIRST_PLAYOFF_ID && match.id <= 88) {
+    const bracket = await getR32Bracket(allMatches);
+    if (!bracket) return null;
+    const pair = bracket.get(match.id);
+    if (!pair?.home || !pair?.away) return null;
+    return { home: pair.home, away: pair.away };
+  }
+
+  const resolved = {};
+  for (const side of ['home', 'away']) {
+    const code = match[side];
+    if (!isBracketCode(code)) continue;
+    const team = resolveWinnerLoser(code, allMatches);
+    if (!team) return null;
+    resolved[side] = team;
+  }
+  return Object.keys(resolved).length > 0 ? resolved : null;
+}
+
 export function matchPostJob(client) {
   return CronJob.from({
     cronTime: '0 */15 * * * *',
@@ -49,6 +162,17 @@ export function matchPostJob(client) {
         const channel = await client.channels.fetch(channelId);
 
         for (const match of matches) {
+          if (match.id >= FIRST_PLAYOFF_ID && (isBracketCode(match.home) || isBracketCode(match.away))) {
+            const resolved = await resolvePlayoffTeams(match, allMatches);
+            if (!resolved) {
+              logger.warn(`Cannot resolve bracket codes for match #${match.id} (${match.home} vs ${match.away}) — skipping`);
+              continue;
+            }
+            Object.assign(match, resolved);
+            await updateMatch(match.id - 1, resolved);
+            logger.info(`Resolved playoff match #${match.id}: ${match.home} vs ${match.away}`);
+          }
+
           const message = matchVoteMessageComponent(match, config);
           const msg = await channel.send(message);
           logger.info(`Match between ${match.home} and ${match.away} is sent with message ID [${msg.id}]`);
@@ -428,6 +552,10 @@ export async function calculateMatches(matches, client) {
       if (client && Object.keys(newBadges).length > 0) {
         await announceBadges(client, newBadges);
       }
+
+      if (client) {
+        await resolveAndAnnounceKnockouts(client, allMatches);
+      }
     }
 
     return matchDeltas;
@@ -462,6 +590,121 @@ async function announceBadges(client, newBadges) {
   } catch (err) {
     logger.error('Failed to announce badges:', err);
   }
+}
+
+async function resolveAndAnnounceKnockouts(client, allMatches) {
+  for (const round of KNOCKOUT_ROUNDS) {
+    try {
+      await resolveAndAnnounceRound(client, allMatches, round);
+    } catch (err) {
+      logger.error(`Failed to announce ${round.name}:`, err);
+    }
+  }
+}
+
+async function resolveAndAnnounceRound(client, allMatches, round) {
+  const prereqs = allMatches.filter((m) => m.id >= round.prerequisite.min && m.id <= round.prerequisite.max);
+  if (prereqs.length === 0) return;
+  if (!prereqs.every((m) => m.isCalculated)) return;
+
+  const targets = allMatches.filter((m) => m.id >= round.targets.min && m.id <= round.targets.max);
+  const alreadyResolved = targets.some((m) => !isBracketCode(m.home) && !isBracketCode(m.away));
+  if (alreadyResolved) return;
+
+  const isR32 = round.targets.min === FIRST_PLAYOFF_ID;
+  let resolvedPairs;
+
+  if (isR32) {
+    const groups = await readTournamentData('groups');
+    if (!groups) return;
+    const standings = getGroupStandings(groups);
+    resolvedPairs = buildBracket(allMatches, standings);
+  } else {
+    resolvedPairs = targets.map((m) => {
+      const home = resolveWinnerLoser(m.home, allMatches);
+      const away = resolveWinnerLoser(m.away, allMatches);
+      return { id: m.id, home: { team: home, label: m.home }, away: { team: away, label: m.away } };
+    });
+  }
+
+  for (const p of resolvedPairs) {
+    if (!p.home.team || !p.away.team) {
+      logger.warn(`Cannot resolve match #${p.id} for ${round.name} — skipping`);
+      return;
+    }
+    await updateMatch(p.id - 1, { home: p.home.team, away: p.away.team });
+  }
+  logger.info(`Resolved ${round.name} bracket codes (matches ${round.targets.min}-${round.targets.max})`);
+
+  const tournamentName = await getTournamentName();
+  const channelId = await getChannelId();
+  const channel = await client.channels.fetch(channelId);
+
+  const bracketLines = resolvedPairs.map((p) => {
+    const home = p.home.team.toUpperCase();
+    const away = p.away.team.toUpperCase();
+    const m = allMatches.find((x) => x.id === p.id);
+    const kickoff = new Date(m.date);
+    const timeStr = kickoff.toLocaleString('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh' });
+    const mid = `#${p.id}  ${timeStr}`;
+    const pad = Math.max(home.length, away.length, mid.length);
+    return [
+      `┌ ${home}`,
+      `│ ${mid}`,
+      `└ ${away}`,
+    ].join('\n');
+  });
+
+  const embeds = [];
+
+  embeds.push(new EmbedBuilder()
+    .setTitle(`🏆  ${tournamentName} — ${round.name}`)
+    .setDescription(`**${resolvedPairs.length} cặp đấu** đã được xác định.`)
+    .setColor(0xFFD700)
+    .setTimestamp());
+
+  const chunkSize = 8;
+  for (let i = 0; i < bracketLines.length; i += chunkSize) {
+    const chunk = bracketLines.slice(i, i + chunkSize);
+    embeds.push(new EmbedBuilder()
+      .setDescription('```\n' + chunk.join('\n\n') + '\n```')
+      .setColor(0x5865F2));
+  }
+
+  if (isR32) {
+    const groups = await readTournamentData('groups');
+    const standings = getGroupStandings(groups);
+    const thirdPlace = getThirdPlaceRanking(standings);
+    const qualified = thirdPlace.slice(0, 8);
+
+    if (qualified.length > 0) {
+      const thirdLines = qualified.map((t, i) => {
+        const rank = `\`${i + 1}.\``;
+        const gd = t.goalDifference >= 0 ? `+${t.goalDifference}` : `${t.goalDifference}`;
+        return `${rank} **${t.name.toUpperCase()}** (${t.group}) — ${t.points} pts, ${gd} GD`;
+      });
+
+      const eliminated = thirdPlace.slice(8);
+      const eliminatedLines = eliminated.map((t) => {
+        const gd = t.goalDifference >= 0 ? `+${t.goalDifference}` : `${t.goalDifference}`;
+        return `~~${t.name.toUpperCase()} (${t.group}) — ${t.points} pts, ${gd} GD~~`;
+      });
+
+      embeds.push(new EmbedBuilder()
+        .setTitle('📋  Đội xếp thứ 3 tốt nhất')
+        .setDescription(
+          thirdLines.join('\n') +
+          (eliminatedLines.length > 0 ? '\n\n' + eliminatedLines.join('\n') : '')
+        )
+        .setColor(0x57F287));
+    }
+  }
+
+  for (let i = 0; i < embeds.length; i += 10) {
+    await channel.send({ embeds: embeds.slice(i, i + 10) });
+  }
+
+  logger.info(`Announced ${round.name} bracket to channel`);
 }
 
 function matchVoteMessageComponent(match, config) {

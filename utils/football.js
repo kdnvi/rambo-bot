@@ -246,9 +246,52 @@ export function voteReminderJob(client) {
   });
 }
 
+const ORPHAN_THRESHOLD_MS = 6 * 60 * 60 * 1000;
+
+async function checkOrphanMatches(client, allMatches, now) {
+  const devChannelId = process.env.DEV_CHANNEL_ID;
+  if (!devChannelId) return;
+
+  const issues = [];
+
+  for (const match of allMatches) {
+    const kickoff = Date.parse(match.date);
+    const elapsed = now - kickoff;
+    if (elapsed < ORPHAN_THRESHOLD_MS) continue;
+
+    const label = `**#${match.id}** ${match.home.toUpperCase()} vs ${match.away.toUpperCase()}`;
+    const elapsedH = Math.floor(elapsed / 3600000);
+
+    if (!match.messageId) {
+      issues.push(`📭 ${label} — not posted (${elapsedH}h)`);
+    } else if (!match.hasResult) {
+      issues.push(`⏳ ${label} — no result (${elapsedH}h)`);
+    } else if (!match.isCalculated) {
+      issues.push(`🔴 ${label} — not calculated (${elapsedH}h)`);
+    } else if (match.id <= MAX_GROUP_STAGE_ID && !match.groupUpdated) {
+      issues.push(`📊 ${label} — group standings not updated (${elapsedH}h)`);
+    }
+  }
+
+  if (issues.length === 0) return;
+
+  try {
+    const channel = await client.channels.fetch(devChannelId);
+    const embed = new EmbedBuilder()
+      .setTitle('🚨  Orphan matches detected')
+      .setDescription(issues.join('\n'))
+      .setColor(0xED4245)
+      .setTimestamp();
+    await channel.send({ embeds: [embed] });
+    logger.warn(`Orphan match check: ${issues.length} issue(s) found`);
+  } catch (err) {
+    logger.error('Failed to send orphan match notification:', err);
+  }
+}
+
 export function calculatingJob(client) {
   return CronJob.from({
-    cronTime: '0 */30 * * * *',
+    cronTime: '0 0 */2 * * *',
     onTick: async () => {
       try {
         const allMatches = await readTournamentData('matches');
@@ -263,6 +306,7 @@ export function calculatingJob(client) {
           await calculateMatches(uncalculated, client);
           const freshMatches = await readTournamentData('matches');
           await checkMatchdayMVP(client, freshMatches || allMatches, uncalculated);
+          await resolveAndAnnounceKnockouts(client, freshMatches || allMatches);
         }
 
         const pending = allMatches.filter((match) => {
@@ -271,29 +315,31 @@ export function calculatingJob(client) {
           return now - kickoff >= RESULT_REMINDER_AFTER_MS;
         });
 
-        if (pending.length === 0) return;
+        if (pending.length > 0) {
+          const channelId = await getChannelId();
+          const channel = await client.channels.fetch(channelId);
 
-        const channelId = await getChannelId();
-        const channel = await client.channels.fetch(channelId);
+          for (const match of pending) {
+            const elapsed = Math.floor((now - Date.parse(match.date)) / 60000);
+            const hours = Math.floor(elapsed / 60);
+            const mins = elapsed % 60;
 
-        for (const match of pending) {
-          const elapsed = Math.floor((now - Date.parse(match.date)) / 60000);
-          const hours = Math.floor(elapsed / 60);
-          const mins = elapsed % 60;
+            const embed = new EmbedBuilder()
+              .setTitle(`🔔  Chờ kết quả — Trận #${match.id}`)
+              .setDescription(
+                `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
+                `Đá được **${hours}h ${mins}m** rồi — cập nhật kết quả đi!\n\n` +
+                `Gõ \`/update-result match-id:${match.id} home-score:? away-score:?\``,
+              )
+              .setColor(0xED4245);
 
-          const embed = new EmbedBuilder()
-            .setTitle(`🔔  Chờ kết quả — Trận #${match.id}`)
-            .setDescription(
-              `**${match.home.toUpperCase()} vs ${match.away.toUpperCase()}**\n` +
-              `Đá được **${hours}h ${mins}m** rồi — cập nhật kết quả đi!\n\n` +
-              `Gõ \`/update-result match-id:${match.id} home-score:? away-score:?\``,
-            )
-            .setColor(0xED4245);
-
-          await channel.send({ embeds: [embed] });
-          await updateMatch(match.id - 1, { resultReminded: true });
-          logger.info(`Sent result reminder for match ${match.id}`);
+            await channel.send({ embeds: [embed] });
+            await updateMatch(match.id - 1, { resultReminded: true });
+            logger.info(`Sent result reminder for match ${match.id}`);
+          }
         }
+
+        await checkOrphanMatches(client, allMatches, now);
       } catch (err) {
         logger.error(err);
       }
@@ -335,26 +381,13 @@ async function checkMatchdayMVP(client, allMatches, justCalculated) {
         if (!winner) continue;
         const key = `${match.id - 1}`;
         const matchVotes = getMatchVotes(votes, key, match.messageId);
+
         const storedRandomPicks = match.randomPicks || {};
+        const effectiveVotes = matchVotes
+          ? { ...Object.fromEntries(Object.entries(matchVotes).map(([k, v]) => [k, { vote: v.vote }])) }
+          : null;
 
-        const picks = {};
-        if (matchVotes) {
-          for (const [k, v] of Object.entries(matchVotes)) {
-            if (playerIds.includes(k)) picks[k] = v.vote;
-          }
-        }
-        for (const k of playerIds) {
-          if (!(k in picks)) picks[k] = storedRandomPicks[k] || null;
-        }
-
-        const baseStake = getMatchStake(match.id);
-        const playerStakes = {};
-        for (const k of Object.keys(picks)) {
-          if (picks[k] === null) continue;
-          const hasDoubleDown = wagers?.[k]?.[match.id]?.doubleDown === true;
-          playerStakes[k] = baseStake * (hasDoubleDown ? 2 : 1);
-        }
-
+        const { picks, playerStakes } = resolveMatchPicksWithStored(playerIds, effectiveVotes, match, wagers, storedRandomPicks);
         const validPicks = Object.fromEntries(Object.entries(picks).filter(([, v]) => v !== null));
         const deltas = computeDeltas(validPicks, playerStakes, winner);
 
@@ -552,10 +585,6 @@ export async function calculateMatches(matches, client) {
       if (client && Object.keys(newBadges).length > 0) {
         await announceBadges(client, newBadges);
       }
-
-      if (client) {
-        await resolveAndAnnounceKnockouts(client, allMatches);
-      }
     }
 
     return matchDeltas;
@@ -627,11 +656,15 @@ async function resolveAndAnnounceRound(client, allMatches, round) {
     });
   }
 
-  for (const p of resolvedPairs) {
-    if (!p.home.team || !p.away.team) {
-      logger.warn(`Cannot resolve match #${p.id} for ${round.name} — skipping`);
-      return;
+  const unresolved = resolvedPairs.filter((p) => !p.home.team || !p.away.team);
+  if (unresolved.length > 0) {
+    for (const p of unresolved) {
+      logger.warn(`Cannot resolve match #${p.id} for ${round.name} — aborting round announcement`);
     }
+    return;
+  }
+
+  for (const p of resolvedPairs) {
     await updateMatch(p.id - 1, { home: p.home.team, away: p.away.team });
   }
   logger.info(`Resolved ${round.name} bracket codes (matches ${round.targets.min}-${round.targets.max})`);
@@ -800,6 +833,35 @@ export function resolveMatchPicks(playerIds, votes, match, wagers) {
   }
 
   return { picks, votedPlayers, randomPicks, playerStakes };
+}
+
+/**
+ * Like resolveMatchPicks but uses already-saved random picks from Firebase
+ * instead of generating new ones. Used for read-only score queries (e.g. MVP)
+ * so results stay consistent with what was calculated and persisted.
+ */
+function resolveMatchPicksWithStored(playerIds, votes, match, wagers, storedRandomPicks) {
+  const baseStake = getMatchStake(match.id);
+  const picks = {};
+
+  if (votes) {
+    for (const [k, v] of Object.entries(votes)) {
+      if (playerIds.includes(k)) picks[k] = v.vote;
+    }
+  }
+
+  for (const k of playerIds) {
+    if (!(k in picks)) picks[k] = storedRandomPicks[k] ?? null;
+  }
+
+  const playerStakes = {};
+  for (const k of Object.keys(picks)) {
+    if (picks[k] === null) continue;
+    const hasDoubleDown = wagers?.[k]?.[match.id]?.doubleDown === true;
+    playerStakes[k] = baseStake * (hasDoubleDown ? 2 : 1);
+  }
+
+  return { picks, playerStakes };
 }
 
 function computeDeltas(picks, playerStakes, winner) {

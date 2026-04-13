@@ -602,7 +602,9 @@ function calculatePlayerPoints(players, votes, match, wagers) {
 
   const deltas = {};
   for (const [k, d] of Object.entries(rawDeltas)) {
-    deltas[k] = { ...d, random: k in randomPicks };
+    const isAuto = k in randomPicks;
+    const usedRandom = isAuto && wagers?.[k]?.[match.id]?.random === true;
+    deltas[k] = { ...d, random: isAuto, usedRandom };
 
     const newPoints = Math.round((players[k].points + d.delta) * 100) / 100;
     players[k] = {

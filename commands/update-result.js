@@ -136,7 +136,7 @@ async function postMatchBreakdown(interaction, match, deltas) {
     const lines = entries.map((e) => {
       const sign = e.delta >= 0 ? '+' : '';
       const icon = e.isWinner ? '👑' : '🤡';
-      const tag = e.random ? ' 🎲' : '';
+      const tag = e.random ? (e.usedRandom ? ' 🎲' : ' 🤖') : '';
       return `${icon} **${e.name}** — ${e.pick.toUpperCase()}${tag} → **${sign}${e.delta}** pts`;
     });
 
@@ -178,7 +178,9 @@ async function postCurseResults(interaction, match, deltas) {
       if (targetPick === null) continue;
 
       const targetCorrect = targetPick === winner;
-      const autoTag = deltas?.[target]?.random ? ' *(auto)*' : '';
+      const autoTag = deltas?.[target]?.random
+        ? (deltas[target].usedRandom ? ' *(random)*' : ' *(auto)*')
+        : '';
       if (targetCorrect) {
         lines.push(`🧿 **${curserName}** nguyền **${targetName}**${autoTag} — người đó đúng! **${curserName}** mất **${CURSE_PTS}** pts. ${await pickLine('curse_lose')}`);
       } else {

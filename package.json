@@ -10,7 +10,27 @@
     "dev": "node --env-file=.env index.js",
     "docker:build": "docker build -t ghcr.io/kdnvi/rambo-bot:latest .",
     "docker:push": "docker push ghcr.io/kdnvi/rambo-bot:latest",
-    "docker:deploy": "npm run docker:build && npm run docker:push"
+    "docker:deploy": "npm run docker:build && npm run docker:push",
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test:coverage": "node --experimental-vm-modules node_modules/.bin/jest --coverage"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "transform": {},
+    "testMatch": [
+      "**/utils/*.test.js"
+    ],
+    "coverageProvider": "v8",
+    "collectCoverageFrom": [
+      "utils/*.js",
+      "!utils/*.test.js",
+      "!utils/firebase.js"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "lines": 80
+      }
+    }
   },
   "repository": {
     "type": "git",
@@ -31,6 +51,8 @@
     "firebase-admin": "^13.5.0"
   },
   "devDependencies": {
-    "eslint": "^9.35.0"
+    "@jest/globals": "^30.3.0",
+    "eslint": "^9.35.0",
+    "jest": "^30.3.0"
   }
 }

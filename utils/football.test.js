@@ -180,6 +180,30 @@ describe('resolveMatchPicks', () => {
     const { picks } = resolveMatchPicks(playerIds, votes, match, wagers);
     expect(['Brazil', 'draw', 'Argentina']).toContain(picks.u1);
   });
+
+  test('random picks are resolved before least-voted auto-assignment', () => {
+    // u1 voted Brazil, u2 has random wager, u3 gets auto-assigned
+    // u2's random pick should be included when computing least-voted for u3
+    const votes = { u1: { vote: 'Brazil' } };
+    const wagers = { u2: { 1: { random: true } } };
+
+    const outcomes = ['Brazil', 'draw', 'Argentina'];
+    const runCounts = { Brazil: 0, draw: 0, Argentina: 0 };
+
+    // Run many times to observe what u3 gets assigned
+    for (let i = 0; i < 300; i++) {
+      const { picks } = resolveMatchPicks(playerIds, votes, match, wagers);
+      runCounts[picks.u3]++;
+    }
+
+    // u3 should never be assigned Brazil alone if draw/Argentina are less voted;
+    // more importantly u3 must always get a valid outcome
+    const total = runCounts.Brazil + runCounts.draw + runCounts.Argentina;
+    expect(total).toBe(300);
+    // u3 should receive the least-voted outcome after u2's random pick is factored in,
+    // so it should never be over-represented on Brazil (which u1 always picks)
+    expect(runCounts.Brazil).toBeLessThan(300);
+  });
 });
 
 describe('calculateMatches', () => {

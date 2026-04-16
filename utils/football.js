@@ -814,14 +814,19 @@ export function resolveMatchPicks(playerIds, votes, match, wagers) {
 
   const unvoted = playerIds.filter((k) => !votedPlayers.includes(k));
   if (unvoted.length > 0) {
+    for (const k of unvoted) {
+      if (wagers?.[k]?.[match.id]?.random === true) {
+        const pick = outcomes[Math.floor(Math.random() * outcomes.length)];
+        picks[k] = pick;
+        randomPicks[k] = pick;
+      }
+    }
     const leastPicked = getLeastVotedOutcome(outcomes, picks);
     for (const k of unvoted) {
-      const usesRandom = wagers?.[k]?.[match.id]?.random === true;
-      const pick = usesRandom
-        ? outcomes[Math.floor(Math.random() * outcomes.length)]
-        : leastPicked;
-      picks[k] = pick;
-      randomPicks[k] = pick;
+      if (!(k in picks)) {
+        picks[k] = leastPicked;
+        randomPicks[k] = leastPicked;
+      }
     }
   }
 
